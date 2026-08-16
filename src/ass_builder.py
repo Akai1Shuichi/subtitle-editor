@@ -1,235 +1,241 @@
-"""
-ass_builder.py
-──────────────
-Tạo file .ass với style Normal hoặc Word-Highlight (karaoke) từ SSAFile,
-rồi lưu vào thư mục temp/ để FFmpeg đọc.
+"""TikTok-style, word-by-word subtitle renderer for ASS/FFmpeg exports.
 
-Hai chế độ highlight:
-  - simple (sentence-level): cả câu fill màu highlight theo thời lượng câu,
-    không cần word timing. Dùng 1 tag \\kf cho toàn câu.
-  - per-word: mỗi từ có \\kf riêng dựa trên WordTiming chính xác.
-    Yêu cầu truyền word_timings vào build_ass().
+The renderer deliberately does *not* use ASS karaoke (``\\kf``): karaoke
+paints a word from left to right, whereas this module swaps the active word
+between white and yellow and gives only that word a short pop animation.
 """
 
 from __future__ import annotations
 
 import copy
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
 import pysubs2
 from pysubs2 import Alignment
 
-from .word_timing import TimingFile, LineTiming
-
-
-# ---------------------------------------------------------------------------
-# Style definitions
-# ---------------------------------------------------------------------------
-
-# Normal: text trắng, outline tối, shadow nhẹ, căn đáy màn hình
-NORMAL_STYLE = pysubs2.SSAStyle(
-    fontname="Montserrat",
-    fontsize=48,
-    primarycolor=pysubs2.Color(255, 255, 255, 0),   # trắng, không trong suốt
-    secondarycolor=pysubs2.Color(255, 255, 0, 0),   # vàng (dùng cho highlight)
-    outlinecolor=pysubs2.Color(0, 0, 0, 0),          # outline đen
-    backcolor=pysubs2.Color(0, 0, 0, 80),            # shadow bán trong suốt
-    bold=False,
-    italic=False,
-    underline=False,
-    scalex=100,
-    scaley=100,
-    spacing=0,
-    angle=0.0,
-    borderstyle=1,       # outline + shadow
-    outline=2.5,         # độ dày outline
-    shadow=1.5,          # shadow nhẹ
-    alignment=Alignment.BOTTOM_CENTER,
-    marginl=60,
-    marginr=60,
-    marginv=30,
-    encoding=1,
-)
-
-# Word-Highlight:
-# ASS \kf: text hiển thị bằng secondarycolor TRƯỚC, rồi fill sang primarycolor.
-# Muốn "bắt đầu trắng → fill vàng":
-#   secondarycolor = trắng (màu ban đầu, chưa fill)
-#   primarycolor   = vàng  (màu sau khi fill / đang được highlight)
-HIGHLIGHT_STYLE = copy.deepcopy(NORMAL_STYLE)
-HIGHLIGHT_STYLE.secondarycolor = pysubs2.Color(255, 255, 255, 0)  # trắng – trước fill
-HIGHLIGHT_STYLE.primarycolor   = pysubs2.Color(255, 200, 0, 0)   # vàng  – sau fill
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+from .word_timing import LineTiming, TimingFile, WordTiming
 
 StyleMode = Literal["normal", "highlight"]
+
+
+@dataclass(frozen=True)
+class SubtitleSettings:
+    """Visual settings in the actual ASS/video pixel coordinate system."""
+
+    fontname: str = "Arial Black"
+    fontsize: int = 54
+    fontweight: int = 900
+    text_color: tuple[int, int, int] = (255, 255, 255)
+    highlight_color: tuple[int, int, int] = (255, 217, 0)
+    stroke_color: tuple[int, int, int] = (0, 0, 0)
+    stroke_width: float = 4.0
+    shadow: float = 2.0
+    position_y: int = 82  # top-origin percentage; equivalent to bottom: 18%
+    max_words_per_group: int = 5
+    alignment: Alignment = Alignment.BOTTOM_CENTER
+
+
+@dataclass(frozen=True)
+class SubtitleWord:
+    text: str
+    start_ms: int
+    end_ms: int
+
+
+@dataclass(frozen=True)
+class SubtitleSegment:
+    """A compact 2–5 word caption group, with individual word timings."""
+
+    start_ms: int
+    end_ms: int
+    words: tuple[SubtitleWord, ...]
+
+
+def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAStyle:
+    # ASS uses the video's PlayRes.  Do not downscale a configured 54px font
+    # merely because the source is 720×1280: 54px must remain 54px there.
+    return pysubs2.SSAStyle(
+        fontname=settings.fontname,
+        fontsize=max(10, settings.fontsize),
+        primarycolor=pysubs2.Color(*settings.text_color, 0),
+        secondarycolor=pysubs2.Color(*settings.highlight_color, 0),
+        outlinecolor=pysubs2.Color(*settings.stroke_color, 0),
+        backcolor=pysubs2.Color(*settings.stroke_color, 0),
+        bold=True,
+        italic=False,
+        scalex=100,
+        scaley=100,
+        spacing=0,
+        borderstyle=1,
+        outline=max(1, settings.stroke_width),
+        shadow=max(0, settings.shadow),
+        alignment=settings.alignment,
+        marginl=60,
+        marginr=60,
+        marginv=max(0, round((100 - settings.position_y) * video_height / 100))
+        if video_height else 30,
+        encoding=1,
+    )
+
+
+class SubtitleRenderer:
+    """Converts SRT events into compact, stable ASS word-highlight events."""
+
+    def __init__(self, settings: SubtitleSettings, mode: StyleMode = "normal"):
+        self.settings = settings
+        self.mode = mode
+
+    def build(
+        self,
+        subs: pysubs2.SSAFile,
+        *,
+        word_timings: Optional[TimingFile] = None,
+        video_width: int = 0,
+        video_height: int = 0,
+    ) -> pysubs2.SSAFile:
+        out = pysubs2.SSAFile()
+        if video_width > 0 and video_height > 0:
+            out.info["PlayResX"] = str(video_width)
+            out.info["PlayResY"] = str(video_height)
+        out.info["ScaledBorderAndShadow"] = "yes"
+        out.styles["Default"] = _style_for(self.settings, video_height=video_height)
+
+        for index, event in enumerate(subs.events):
+            if not event.text.strip():
+                continue
+            text = _strip_srt_tags(event.text)
+            if self.mode == "normal":
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                clean.text = text
+                out.events.append(clean)
+                continue
+
+            timing = word_timings.get_line(index) if word_timings else None
+            for segment in self._segments(event, text, timing):
+                out.events.extend(self._segment_events(segment))
+        return out
+
+    def _segments(
+        self, event: pysubs2.SSAEvent, text: str, timing: Optional[LineTiming]
+    ) -> list[SubtitleSegment]:
+        words = text.split()
+        if not words:
+            return []
+        exact = timing and len(timing.words) == len(words) and timing.has_word_timing
+        if exact:
+            timed = [SubtitleWord(w, t.start_ms, t.end_ms) for w, t in zip(words, timing.words)]
+        else:
+            duration = max(1, event.end - event.start)
+            timed = [
+                SubtitleWord(word, event.start + round(i * duration / len(words)),
+                             event.start + round((i + 1) * duration / len(words)))
+                for i, word in enumerate(words)
+            ]
+
+        # Keep a long SRT sentence from becoming a third/fourth subtitle line.
+        size = max(2, min(5, self.settings.max_words_per_group))
+        return [
+            SubtitleSegment(chunk[0].start_ms, chunk[-1].end_ms, tuple(chunk))
+            for chunk in (timed[i:i + size] for i in range(0, len(timed), size))
+        ]
+
+    def _segment_events(self, segment: SubtitleSegment) -> list[pysubs2.SSAEvent]:
+        events: list[pysubs2.SSAEvent] = []
+        for active_index, active in enumerate(segment.words):
+            end = (segment.words[active_index + 1].start_ms
+                   if active_index + 1 < len(segment.words) else segment.end_ms)
+            events.extend(self._word_events(segment, active_index, active.start_ms, max(active.start_ms + 1, end)))
+        return events
+
+    def _word_events(
+        self, segment: SubtitleSegment, active_index: int, start: int, end: int
+    ) -> list[pysubs2.SSAEvent]:
+        # ASS applies inline scale to glyph advance width, unlike CSS
+        # transform. That makes neighbouring words shift. Keep the full group
+        # geometrically identical and switch colour only, so highlighting can
+        # never move or shake the caption.
+        return [pysubs2.SSAEvent(
+            start=start,
+            end=end,
+            style="Default",
+            text=self._render_words(segment.words, active_index),
+        )]
+
+    def _render_words(
+        self, words: tuple[SubtitleWord, ...], active_index: int
+    ) -> str:
+        rendered: list[str] = []
+        split_at = max(1, (len(words) + 1) // 2)  # at most two balanced lines
+        # All tokens are present from the beginning of the segment. Never
+        # build up a sentence word-by-word: that causes width changes, reflow,
+        # and a visibly jumping caption.
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(
+                    r"{\1c&H00D9FF&}%s{\r}" % word.text
+                )
+            else:
+                rendered.append(word.text)
+            if index + 1 == split_at and index + 1 < len(words):
+                rendered.append(r"\N")
+        text = " ".join(rendered).replace(" \\N ", r"\N")
+        return text
 
 
 def build_ass(
     subs: pysubs2.SSAFile,
     mode: StyleMode = "normal",
     *,
-    fontname: str = "Montserrat",
-    fontsize: int = 48,
+    fontname: str = "Arial Black",
+    fontsize: int = 54,
     text_color: tuple[int, int, int] = (255, 255, 255),
-    highlight_color: tuple[int, int, int] = (255, 200, 0),
+    highlight_color: tuple[int, int, int] = (255, 217, 0),
     alignment: int | Alignment = Alignment.BOTTOM_CENTER,
     margin_v: int = 30,
     word_timings: Optional[TimingFile] = None,
     video_width: int = 0,
     video_height: int = 0,
+    position_y: int = 82,
+    stroke_color: tuple[int, int, int] = (0, 0, 0),
+    stroke_width: float = 4.0,
 ) -> pysubs2.SSAFile:
+    """Build a reusable normal or word-pop-highlight ASS subtitle track.
+
+    ``alignment`` and ``margin_v`` remain accepted for backward compatibility;
+    TikTok-style captions always use centered, lower-screen placement.
     """
-    Xây dựng SSAFile mới (định dạng ASS) từ `subs` gốc.
-
-    Parameters
-    ----------
-    subs            : SSAFile đã load từ SRT
-    mode            : "normal" hoặc "highlight"
-    fontname        : tên font
-    fontsize        : cỡ chữ (px tại script resolution)
-    text_color      : màu RGB chính
-                      Normal   → màu text
-                      Highlight→ màu text TRƯỚC KHI được fill (trạng thái ban đầu)
-    highlight_color : màu RGB khi highlight (fill karaoke)
-    alignment       : ASS alignment enum hoặc int (2 = bottom-center)
-    margin_v        : lề dọc tính từ cạnh màn hình (px)
-    word_timings    : TimingFile với per-word timing.
-    video_width     : chiều rộng video thực tế – dùng để set PlayResX.
-    video_height    : chiều cao video thực tế – dùng để set PlayResY.
-                      Khi được set, fontsize là px trực tiếp trên video.
-    """
-    out = pysubs2.SSAFile()
-
-    # Set script resolution = video resolution để fontsize là px thực tế
-    if video_width > 0 and video_height > 0:
-        out.info["PlayResX"] = str(video_width)
-        out.info["PlayResY"] = str(video_height)
-
-    # Build style
-    style = copy.deepcopy(NORMAL_STYLE if mode == "normal" else HIGHLIGHT_STYLE)
-    style.fontname = fontname
-    style.fontsize = fontsize
-
-    if mode == "normal":
-        # Normal: primarycolor = màu text duy nhất
-        style.primarycolor = pysubs2.Color(*text_color, 0)
-        style.secondarycolor = pysubs2.Color(*highlight_color, 0)
-    else:
-        # Highlight: secondarycolor = trắng (trước fill), primarycolor = vàng (sau fill)
-        # ASS \kf: fill từ secondarycolor → primarycolor
-        style.secondarycolor = pysubs2.Color(*text_color, 0)      # trắng – ban đầu
-        style.primarycolor   = pysubs2.Color(*highlight_color, 0) # vàng  – sau fill
-
-    style.alignment = Alignment(alignment) if isinstance(alignment, int) else alignment
-    style.marginv = margin_v
-
-    out.styles["Default"] = style
-    out.info["ScaledBorderAndShadow"] = "yes"
-
-    for i, event in enumerate(subs.events):
-        if not event.text.strip():
-            continue
-
-        new_event = copy.deepcopy(event)
-        new_event.style = "Default"
-
-        if mode == "normal":
-            new_event.text = _strip_srt_tags(event.text)
-
-        elif mode == "highlight":
-            # Lấy LineTiming cho dòng này (nếu có)
-            line_timing: Optional[LineTiming] = None
-            if word_timings is not None:
-                line_timing = word_timings.get_line(i)
-
-            if line_timing is not None and line_timing.has_word_timing:
-                # Per-word karaoke: timing chính xác từng từ
-                new_event.text = _make_perword_karaoke(event, line_timing)
-            else:
-                # Simple sentence-level: cả câu fill theo thời lượng câu
-                new_event.text = _make_sentence_karaoke(event)
-
-        out.events.append(new_event)
-
-    return out
+    settings = SubtitleSettings(
+        fontname=fontname, fontsize=fontsize, text_color=text_color,
+        highlight_color=highlight_color, stroke_color=stroke_color,
+        stroke_width=stroke_width, position_y=position_y,
+        alignment=Alignment(alignment) if isinstance(alignment, int) else alignment,
+    )
+    return SubtitleRenderer(settings, mode).build(
+        subs, word_timings=word_timings, video_width=video_width, video_height=video_height
+    )
 
 
 def save_ass(ass: pysubs2.SSAFile, dest: str | Path) -> Path:
-    """Lưu SSAFile ASS ra đĩa và trả về đường dẫn tuyệt đối."""
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
     ass.save(str(dest))
     return dest.resolve()
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
 def _strip_srt_tags(text: str) -> str:
-    """Bỏ các thẻ HTML đơn giản thường gặp trong SRT (<i>, <b>, <u>, <font ...>)."""
     return re.sub(r"<[^>]+>", "", text)
 
 
+# Kept as private compatibility helpers for existing integrations. They are no
+# longer called by ``build_ass`` because the product intentionally has no
+# karaoke-fill animation.
 def _make_sentence_karaoke(event: pysubs2.SSAEvent) -> str:
-    """
-    Simple sentence-level highlight.
-
-    Cả câu hiển thị với màu secondarycolor (fill color).
-    Khi thời gian trong câu trôi qua, màu "wipes" từng từ sang primarycolor.
-    Vì chỉ có 1 tag \\kf cho toàn câu → toàn câu chuyển màu cùng lúc khi hết thời gian.
-
-    Hiệu ứng: câu xuất hiện màu highlight, sau khoảng thời gian đó đổi về màu trắng.
-
-    Để dùng hiệu ứng "câu trắng, khi active fill vàng từng từ đều nhau",
-    ta chia đều centiseconds cho từng từ (equal-weight per-word).
-    """
-    text = _strip_srt_tags(event.text)
-    words = text.split()
-    if not words:
-        return text
-
-    duration_cs = max(1, (event.end - event.start) // 10)
-    per_word_cs = max(1, duration_cs // len(words))
-    remainder = duration_cs - per_word_cs * (len(words) - 1)
-
-    parts = []
-    for i, word in enumerate(words):
-        cs = remainder if i == len(words) - 1 else per_word_cs
-        parts.append(f"{{\\kf{cs}}}{word}")
-
-    return " ".join(parts)
+    return _strip_srt_tags(event.text)
 
 
-def _make_perword_karaoke(
-    event: pysubs2.SSAEvent,
-    line_timing: LineTiming,
-) -> str:
-    """
-    Per-word karaoke với timing chính xác từng từ.
-
-    Mỗi từ có \\kf{cs} riêng dựa trên WordTiming.start_ms / end_ms.
-    Các khoảng gap giữa các từ được gộp vào từ tiếp theo.
-
-    Nếu số từ trong LineTiming không khớp với số từ trong event.text,
-    fallback về sentence-level.
-    """
-    text = _strip_srt_tags(event.text)
-    words_text = text.split()
-
-    if len(words_text) != len(line_timing.words):
-        # Số từ không khớp → fallback an toàn
-        return _make_sentence_karaoke(event)
-
-    parts = []
-    for i, (word, timing) in enumerate(zip(words_text, line_timing.words)):
-        cs = timing.duration_cs()
-        parts.append(f"{{\\kf{cs}}}{word}")
-
-    return " ".join(parts)
+def _make_perword_karaoke(event: pysubs2.SSAEvent, line_timing: LineTiming) -> str:
+    return _strip_srt_tags(event.text)

@@ -221,76 +221,48 @@ class TestTimingFromSubs:
 
 
 # ──────────────────────────────────────────────────────────────────────────
-# Sentence-level karaoke
+# TikTok word-pop renderer
 # ──────────────────────────────────────────────────────────────────────────
 
-class TestSentenceKaraoke:
-    def test_all_words_have_kf_tag(self, subs):
-        event = subs.events[0]
-        text = _make_sentence_karaoke(event)
-        words = "AI đang thay đổi".split()
-        for word in words:
-            assert word in text
-        assert text.count(r"\kf") == 4
+class TestWordPopHighlight:
+    def test_font_size_is_not_downscaled_for_720_by_1280_video(self, subs):
+        ass = build_ass(subs, "highlight", fontsize=60, video_width=720, video_height=1280)
+        assert ass.styles["Default"].fontsize == 60
 
-    def test_total_cs_equals_duration(self, subs):
-        """Tổng centiseconds của các tag \\kf phải bằng duration câu."""
-        import re
-        event = subs.events[0]
-        duration_cs = (event.end - event.start) // 10   # 2000ms → 200cs
-        text = _make_sentence_karaoke(event)
-        tags = list(map(int, re.findall(r"\\kf(\d+)", text)))
-        assert sum(tags) == duration_cs
-
-    def test_highlight_mode_uses_sentence_karaoke_without_timing(self, subs):
-        """Khi không có word_timings → dùng sentence-level karaoke."""
-        ass = build_ass(subs, "highlight")
-        for event in ass.events:
-            assert r"\kf" in event.text
-
-
-# ──────────────────────────────────────────────────────────────────────────
-# Per-word karaoke
-# ──────────────────────────────────────────────────────────────────────────
-
-class TestPerWordKaraoke:
-    def test_uses_exact_word_durations(self, subs, line_timing_exact):
-        event = subs.events[0]
-        text = _make_perword_karaoke(event, line_timing_exact)
-        # "AI" = 400ms → 40cs
-        assert r"\kf40}" in text or r"\kf40}" in text
-        # "đang" = 280ms → 28cs
-        assert r"\kf28}" in text
-
-    def test_word_count_matches(self, subs, line_timing_exact):
-        import re
-        event = subs.events[0]
-        text = _make_perword_karaoke(event, line_timing_exact)
-        tags = re.findall(r"\\kf(\d+)", text)
-        assert len(tags) == 4   # 4 từ
-
-    def test_fallback_when_word_count_mismatch(self, subs):
-        """Nếu số từ không khớp → fallback sentence-level, không crash."""
-        bad_timing = LineTiming(
-            index=0, start_ms=1000, end_ms=3000,
-            words=[WordTiming("only_one", 1000, 3000)],  # 1 từ vs 4 từ
-        )
-        event = subs.events[0]  # "AI đang thay đổi" = 4 từ
-        text = _make_perword_karaoke(event, bad_timing)
-        # Fallback: vẫn có kf tag nhưng dùng sentence mode
-        assert r"\kf" in text
-
-    def test_highlight_mode_with_word_timings(self, subs, timing_file):
-        """Dòng có word timing → per-word; dòng không có → sentence-level."""
-        import re
+    def test_whole_segment_is_rendered_from_its_first_word(self, subs, timing_file):
         ass = build_ass(subs, "highlight", word_timings=timing_file)
-        assert len(ass.events) == 2
+        first = min(ass.events, key=lambda event: event.start)
+        assert "AI" in first.text
+        assert "đang" in first.text
+        assert "thay" in first.text
+        assert "đổi" in first.text
+        assert r"\1c&H00D9FF&" in first.text
 
-        # Dòng 0: per-word → tag \kf40 cho "AI" (400ms = 40cs)
-        tags_0 = list(map(int, re.findall(r"\\kf(\d+)", ass.events[0].text)))
-        assert len(tags_0) == 4
+    def test_word_timing_drives_the_next_active_word(self, subs, timing_file):
+        ass = build_ass(subs, "highlight", word_timings=timing_file)
+        active_dang = [event for event in ass.events if event.start >= 1400 and "đang" in event.text]
+        assert active_dang
+        assert any("AI" in event.text and r"\1c&H00D9FF&" in event.text for event in active_dang)
 
-        # Dòng 1: không có word timing → sentence-level (5 từ, tổng = 200cs)
-        tags_1 = list(map(int, re.findall(r"\\kf(\d+)", ass.events[1].text)))
-        assert len(tags_1) == 5   # "cách chúng ta lập trình" → 5 từ
-        assert sum(tags_1) == 200  # 2000ms → 200cs
+    def test_renderer_preserves_source_case(self, subs, timing_file):
+        ass = build_ass(subs, "highlight", word_timings=timing_file)
+        first = min(ass.events, key=lambda event: event.start)
+        assert "đang" in first.text
+        assert "ĐANG" not in first.text
+
+    def test_no_karaoke_fill_tags(self, subs, timing_file):
+        ass = build_ass(subs, "highlight", word_timings=timing_file)
+        assert all(r"\kf" not in event.text for event in ass.events)
+
+    def test_highlight_does_not_scale_or_shift_the_group(self, subs, timing_file):
+        ass = build_ass(subs, "highlight", word_timings=timing_file)
+        text = "\n".join(event.text for event in ass.events)
+        assert r"\fscx" not in text
+        assert r"\fscy" not in text
+
+    def test_line_break_is_identical_for_every_active_word(self, subs, timing_file):
+        ass = build_ass(subs, "highlight", word_timings=timing_file)
+        first_word_events = [event for event in ass.events if event.start < 1420]
+        second_word_events = [event for event in ass.events if 1420 <= event.start < 1720]
+        assert first_word_events and second_word_events
+        assert all(r"\N" in event.text for event in first_word_events + second_word_events)

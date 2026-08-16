@@ -27,6 +27,7 @@ from .export_bar import ExportBar
 
 from ..subtitle_parser import load_srt, count_lines, SubtitleError
 from ..ass_builder import build_ass, save_ass
+from ..word_timing import load_timing, TimingFile
 from ..video_info import probe_video, VideoInfo, FFmpegNotFoundError, VideoReadError
 from ..exporter import (
     export_video, generate_preview_clip, open_with_system_player,
@@ -105,6 +106,7 @@ class MainWindow(QMainWindow):
         # State
         self._video_info: VideoInfo | None = None
         self._srt_path: str | None = None
+        self._word_timings: TimingFile | None = None
         self._cancel_event: threading.Event | None = None
         self._export_thread: QThread | None = None
         self._temp_ass: str | None = None
@@ -209,6 +211,14 @@ class MainWindow(QMainWindow):
             return
 
         self._srt_path = path
+        # Word timing is optional.  When present next to the SRT it enables
+        # frame-accurate word highlighting; otherwise timings are divided
+        # evenly as a safe preview/export fallback.
+        timing_path = Path(path).with_suffix(".words.json")
+        try:
+            self._word_timings = load_timing(timing_path)
+        except (FileNotFoundError, ValueError):
+            self._word_timings = None
         self._sidebar.set_srt_info(path, n)
         self._update_export_btn()
 
@@ -238,6 +248,9 @@ class MainWindow(QMainWindow):
                 text_color=settings["text_color"],
                 highlight_color=settings["highlight_color"],
                 alignment=settings["alignment"],
+                position_y=settings["position_y"],
+                stroke_width=settings["stroke_width"],
+                word_timings=self._word_timings,
                 video_width=self._video_info.width if self._video_info else 0,
                 video_height=self._video_info.height if self._video_info else 0,
             )

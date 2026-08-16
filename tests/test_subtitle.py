@@ -119,17 +119,19 @@ class TestBuildAss:
             assert r"\kf" not in e.text
             assert r"\k" not in e.text
 
-    def test_highlight_mode_has_karaoke_tags(self):
+    def test_highlight_mode_uses_word_pop_not_karaoke(self):
         ass = build_ass(self.subs, "highlight")
+        assert len(ass.events) > len(self.subs.events)
         for e in ass.events:
-            assert r"\kf" in e.text
+            assert r"\kf" not in e.text
+        assert any(r"\1c&H00D9FF&" in e.text for e in ass.events)
 
     def test_default_style_applied(self):
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles
         style = ass.styles["Default"]
         assert style.fontname == "Montserrat"
-        assert style.fontsize == 48
+        assert style.fontsize == 54
 
     def test_custom_style_params(self):
         ass = build_ass(

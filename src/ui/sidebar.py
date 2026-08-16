@@ -31,7 +31,8 @@ from .color_button import ColorButton
 
 
 FONTS = [
-    "Montserrat", "Inter", "Roboto", "Open Sans", "Lato",
+    "Arial Black", "Impact", "Anton", "Montserrat ExtraBold", "Montserrat",
+    "Inter", "Roboto", "Open Sans", "Lato",
     "Nunito", "Poppins", "Source Sans Pro", "Ubuntu", "Arial",
     "Helvetica Neue", "Georgia", "Times New Roman",
 ]
@@ -91,6 +92,8 @@ class Sidebar(QWidget):
             "text_color": self._text_color_btn.rgb_tuple(),
             "highlight_color": self._hl_color_btn.rgb_tuple(),
             "alignment": POSITIONS[self._pos_combo.currentIndex()][1],
+            "position_y": self._position_y_spin.value(),
+            "stroke_width": self._stroke_spin.value(),
         }
 
     def set_srt_info(self, path: str, line_count: int) -> None:
@@ -189,7 +192,7 @@ class Sidebar(QWidget):
         # Size
         self._size_spin = QSpinBox()
         self._size_spin.setRange(10, 120)
-        self._size_spin.setValue(48)
+        self._size_spin.setValue(54)
         self._size_spin.setSuffix(" px")
         self._size_spin.valueChanged.connect(self._emit_style)
         form.addRow("Cỡ chữ", self._size_spin)
@@ -200,9 +203,25 @@ class Sidebar(QWidget):
         form.addRow("Màu chữ", self._text_color_btn)
 
         # Highlight color
-        self._hl_color_btn = ColorButton("#ffc800")
+        self._hl_color_btn = ColorButton("#ffd900")
         self._hl_color_btn.colorChanged.connect(self._emit_style)
         form.addRow("Highlight", self._hl_color_btn)
+
+        # 82 means subtitle's baseline is at 82% of the video height — the
+        # requested lower-middle position (bottom: 18%).
+        self._position_y_spin = QSpinBox()
+        self._position_y_spin.setRange(50, 95)
+        self._position_y_spin.setValue(82)
+        self._position_y_spin.setSuffix(" %")
+        self._position_y_spin.valueChanged.connect(self._emit_style)
+        form.addRow("Vị trí dọc", self._position_y_spin)
+
+        self._stroke_spin = QSpinBox()
+        self._stroke_spin.setRange(1, 8)
+        self._stroke_spin.setValue(4)
+        self._stroke_spin.setSuffix(" px")
+        self._stroke_spin.valueChanged.connect(self._emit_style)
+        form.addRow("Viền chữ", self._stroke_spin)
 
         # Position
         self._pos_combo = QComboBox()
