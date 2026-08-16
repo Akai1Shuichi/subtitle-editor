@@ -3,16 +3,25 @@ ass_builder.py
 ──────────────
 Tạo file .ass với style Normal hoặc Word-Highlight (karaoke) từ SSAFile,
 rồi lưu vào thư mục temp/ để FFmpeg đọc.
+
+Hai chế độ highlight:
+  - simple (sentence-level): cả câu fill màu highlight theo thời lượng câu,
+    không cần word timing. Dùng 1 tag \\kf cho toàn câu.
+  - per-word: mỗi từ có \\kf riêng dựa trên WordTiming chính xác.
+    Yêu cầu truyền word_timings vào build_ass().
 """
 
 from __future__ import annotations
 
 import copy
+import re
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 import pysubs2
 from pysubs2 import Alignment
+
+from .word_timing import TimingFile, LineTiming
 
 
 # ---------------------------------------------------------------------------
@@ -44,10 +53,12 @@ NORMAL_STYLE = pysubs2.SSAStyle(
     encoding=1,
 )
 
-# Word-Highlight: giống Normal nhưng dùng karaoke tag \kf
+# Word-Highlight: primarycolor = màu "chưa được fill" (trắng),
+#                secondarycolor = màu fill karaoke (vàng).
+# ASS: \kf "wipes" từ secondarycolor → primarycolor theo thời gian.
 HIGHLIGHT_STYLE = copy.deepcopy(NORMAL_STYLE)
-HIGHLIGHT_STYLE.primarycolor = pysubs2.Color(255, 255, 255, 0)   # chưa highlight: trắng
-HIGHLIGHT_STYLE.secondarycolor = pysubs2.Color(255, 200, 0, 0)   # highlight: vàng
+HIGHLIGHT_STYLE.primarycolor = pysubs2.Color(255, 255, 255, 0)   # sau khi fill: trắng
+HIGHLIGHT_STYLE.secondarycolor = pysubs2.Color(255, 200, 0, 0)   # màu fill: vàng
 
 
 # ---------------------------------------------------------------------------
@@ -67,6 +78,7 @@ def build_ass(
     highlight_color: tuple[int, int, int] = (255, 200, 0),
     alignment: int | Alignment = Alignment.BOTTOM_CENTER,
     margin_v: int = 30,
+    word_timings: Optional[TimingFile] = None,
 ) -> pysubs2.SSAFile:
     """
     Xây dựng SSAFile mới (định dạng ASS) từ `subs` gốc.
@@ -77,14 +89,17 @@ def build_ass(
     mode            : "normal" hoặc "highlight"
     fontname        : tên font
     fontsize        : cỡ chữ (px)
-    text_color      : màu RGB chính
-    highlight_color : màu RGB khi highlight (chỉ dùng với mode="highlight")
-    alignment       : ASS alignment (2 = bottom-center)
+    text_color      : màu RGB chính (màu text sau khi highlight)
+    highlight_color : màu RGB fill karaoke (chỉ dùng với mode="highlight")
+    alignment       : ASS alignment enum hoặc int (2 = bottom-center)
     margin_v        : lề dọc tính từ cạnh màn hình (px)
+    word_timings    : TimingFile với per-word timing.
+                      Nếu None và mode="highlight" → dùng simple sentence-level.
+                      Nếu có → dùng per-word \\kf chính xác từng từ.
     """
     out = pysubs2.SSAFile()
 
-    # Tạo style từ template
+    # Build style
     style = copy.deepcopy(NORMAL_STYLE if mode == "normal" else HIGHLIGHT_STYLE)
     style.fontname = fontname
     style.fontsize = fontsize
@@ -96,17 +111,28 @@ def build_ass(
     out.styles["Default"] = style
     out.info["ScaledBorderAndShadow"] = "yes"
 
-    for event in subs.events:
+    for i, event in enumerate(subs.events):
         if not event.text.strip():
             continue
 
         new_event = copy.deepcopy(event)
         new_event.style = "Default"
 
-        if mode == "highlight":
-            new_event.text = _make_karaoke_text(event)
-        else:
+        if mode == "normal":
             new_event.text = _strip_srt_tags(event.text)
+
+        elif mode == "highlight":
+            # Lấy LineTiming cho dòng này (nếu có)
+            line_timing: Optional[LineTiming] = None
+            if word_timings is not None:
+                line_timing = word_timings.get_line(i)
+
+            if line_timing is not None and line_timing.has_word_timing:
+                # Per-word karaoke: timing chính xác từng từ
+                new_event.text = _make_perword_karaoke(event, line_timing)
+            else:
+                # Simple sentence-level: cả câu fill theo thời lượng câu
+                new_event.text = _make_sentence_karaoke(event)
 
         out.events.append(new_event)
 
@@ -127,33 +153,62 @@ def save_ass(ass: pysubs2.SSAFile, dest: str | Path) -> Path:
 
 def _strip_srt_tags(text: str) -> str:
     """Bỏ các thẻ HTML đơn giản thường gặp trong SRT (<i>, <b>, <u>, <font ...>)."""
-    import re
     return re.sub(r"<[^>]+>", "", text)
 
 
-def _make_karaoke_text(event: pysubs2.SSAEvent) -> str:
+def _make_sentence_karaoke(event: pysubs2.SSAEvent) -> str:
     """
-    Tạo text với hiệu ứng karaoke đơn giản:
-    toàn bộ câu hiển thị màu trắng, rồi fill sang màu highlight
-    theo thời lượng câu (dùng \\kf – fill karaoke).
+    Simple sentence-level highlight.
 
-    Khi có word-level timing thực sự, hàm này sẽ được thay bằng
-    logic chia từng từ.
+    Cả câu hiển thị với màu secondarycolor (fill color).
+    Khi thời gian trong câu trôi qua, màu "wipes" từng từ sang primarycolor.
+    Vì chỉ có 1 tag \\kf cho toàn câu → toàn câu chuyển màu cùng lúc khi hết thời gian.
+
+    Hiệu ứng: câu xuất hiện màu highlight, sau khoảng thời gian đó đổi về màu trắng.
+
+    Để dùng hiệu ứng "câu trắng, khi active fill vàng từng từ đều nhau",
+    ta chia đều centiseconds cho từng từ (equal-weight per-word).
     """
-    import re
-    text = re.sub(r"<[^>]+>", "", event.text)
+    text = _strip_srt_tags(event.text)
     words = text.split()
     if not words:
         return text
 
-    duration_cs = (event.end - event.start) // 10  # centiseconds
+    duration_cs = max(1, (event.end - event.start) // 10)
     per_word_cs = max(1, duration_cs // len(words))
+    remainder = duration_cs - per_word_cs * (len(words) - 1)
 
     parts = []
-    remaining = duration_cs
     for i, word in enumerate(words):
-        cs = per_word_cs if i < len(words) - 1 else remaining
-        remaining -= cs
+        cs = remainder if i == len(words) - 1 else per_word_cs
+        parts.append(f"{{\\kf{cs}}}{word}")
+
+    return " ".join(parts)
+
+
+def _make_perword_karaoke(
+    event: pysubs2.SSAEvent,
+    line_timing: LineTiming,
+) -> str:
+    """
+    Per-word karaoke với timing chính xác từng từ.
+
+    Mỗi từ có \\kf{cs} riêng dựa trên WordTiming.start_ms / end_ms.
+    Các khoảng gap giữa các từ được gộp vào từ tiếp theo.
+
+    Nếu số từ trong LineTiming không khớp với số từ trong event.text,
+    fallback về sentence-level.
+    """
+    text = _strip_srt_tags(event.text)
+    words_text = text.split()
+
+    if len(words_text) != len(line_timing.words):
+        # Số từ không khớp → fallback an toàn
+        return _make_sentence_karaoke(event)
+
+    parts = []
+    for i, (word, timing) in enumerate(zip(words_text, line_timing.words)):
+        cs = timing.duration_cs()
         parts.append(f"{{\\kf{cs}}}{word}")
 
     return " ".join(parts)
