@@ -34,6 +34,7 @@ class ExportBar(QWidget):
 
     export_requested = Signal(str)
     cancel_requested = Signal()
+    preview_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -60,6 +61,15 @@ class ExportBar(QWidget):
         browse_btn.setToolTip("Chọn thư mục output")
         browse_btn.clicked.connect(self._pick_output)
         row1.addWidget(browse_btn)
+
+        self._preview_btn = QPushButton("▶ Preview")
+        self._preview_btn.setObjectName("PreviewBtn")
+        self._preview_btn.setFixedWidth(100)
+        self._preview_btn.setCursor(Qt.PointingHandCursor)
+        self._preview_btn.setEnabled(False)
+        self._preview_btn.setToolTip("Render 5 giây đầu và mở bằng media player")
+        self._preview_btn.clicked.connect(self.preview_requested)
+        row1.addWidget(self._preview_btn)
 
         self._export_btn = QPushButton("Export MP4")
         self._export_btn.setObjectName("ExportBtn")
@@ -110,8 +120,9 @@ class ExportBar(QWidget):
     # ──────────────────────────────────────────────────────────────────────
 
     def set_export_enabled(self, enabled: bool) -> None:
-        """Bật/tắt nút Export từ MainWindow."""
+        """Bật/tắt nút Export và Preview từ MainWindow."""
         self._export_btn.setEnabled(enabled)
+        self._preview_btn.setEnabled(enabled)
 
     def output_path(self) -> str:
         return self._path_edit.text().strip()
@@ -124,10 +135,12 @@ class ExportBar(QWidget):
         """Gọi từ worker thread (qua signal) để cập nhật progress bar."""
         self._progress.setValue(int(percent))
 
-    def start_export_ui(self) -> None:
-        """Chuyển UI sang trạng thái đang export."""
+    def start_export_ui(self, is_preview: bool = False) -> None:
+        """Chuyển UI sang trạng thái đang export/preview."""
         self._export_btn.setEnabled(False)
-        self._export_btn.setText("Đang xuất…")
+        self._preview_btn.setEnabled(False)
+        self._export_btn.setText("Đang xuất…" if not is_preview else "Đang xuất…")
+        self._preview_btn.setText("⏳ Đang tạo…" if is_preview else "▶ Preview")
         self._cancel_btn.setVisible(True)
         self._progress.setValue(0)
         self._elapsed_secs = 0
@@ -139,7 +152,9 @@ class ExportBar(QWidget):
         self._qtimer.stop()
         self._cancel_btn.setVisible(False)
         self._export_btn.setText("Export MP4")
+        self._preview_btn.setText("▶ Preview")
         self._export_btn.setEnabled(True)
+        self._preview_btn.setEnabled(True)
         if success:
             self._progress.setValue(100)
         else:

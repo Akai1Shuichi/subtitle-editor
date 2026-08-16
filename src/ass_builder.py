@@ -53,12 +53,14 @@ NORMAL_STYLE = pysubs2.SSAStyle(
     encoding=1,
 )
 
-# Word-Highlight: primarycolor = màu "chưa được fill" (trắng),
-#                secondarycolor = màu fill karaoke (vàng).
-# ASS: \kf "wipes" từ secondarycolor → primarycolor theo thời gian.
+# Word-Highlight:
+# ASS \kf: text hiển thị bằng secondarycolor TRƯỚC, rồi fill sang primarycolor.
+# Muốn "bắt đầu trắng → fill vàng":
+#   secondarycolor = trắng (màu ban đầu, chưa fill)
+#   primarycolor   = vàng  (màu sau khi fill / đang được highlight)
 HIGHLIGHT_STYLE = copy.deepcopy(NORMAL_STYLE)
-HIGHLIGHT_STYLE.primarycolor = pysubs2.Color(255, 255, 255, 0)   # sau khi fill: trắng
-HIGHLIGHT_STYLE.secondarycolor = pysubs2.Color(255, 200, 0, 0)   # màu fill: vàng
+HIGHLIGHT_STYLE.secondarycolor = pysubs2.Color(255, 255, 255, 0)  # trắng – trước fill
+HIGHLIGHT_STYLE.primarycolor   = pysubs2.Color(255, 200, 0, 0)   # vàng  – sau fill
 
 
 # ---------------------------------------------------------------------------
@@ -79,6 +81,8 @@ def build_ass(
     alignment: int | Alignment = Alignment.BOTTOM_CENTER,
     margin_v: int = 30,
     word_timings: Optional[TimingFile] = None,
+    video_width: int = 0,
+    video_height: int = 0,
 ) -> pysubs2.SSAFile:
     """
     Xây dựng SSAFile mới (định dạng ASS) từ `subs` gốc.
@@ -88,23 +92,40 @@ def build_ass(
     subs            : SSAFile đã load từ SRT
     mode            : "normal" hoặc "highlight"
     fontname        : tên font
-    fontsize        : cỡ chữ (px)
-    text_color      : màu RGB chính (màu text sau khi highlight)
-    highlight_color : màu RGB fill karaoke (chỉ dùng với mode="highlight")
+    fontsize        : cỡ chữ (px tại script resolution)
+    text_color      : màu RGB chính
+                      Normal   → màu text
+                      Highlight→ màu text TRƯỚC KHI được fill (trạng thái ban đầu)
+    highlight_color : màu RGB khi highlight (fill karaoke)
     alignment       : ASS alignment enum hoặc int (2 = bottom-center)
     margin_v        : lề dọc tính từ cạnh màn hình (px)
     word_timings    : TimingFile với per-word timing.
-                      Nếu None và mode="highlight" → dùng simple sentence-level.
-                      Nếu có → dùng per-word \\kf chính xác từng từ.
+    video_width     : chiều rộng video thực tế – dùng để set PlayResX.
+    video_height    : chiều cao video thực tế – dùng để set PlayResY.
+                      Khi được set, fontsize là px trực tiếp trên video.
     """
     out = pysubs2.SSAFile()
+
+    # Set script resolution = video resolution để fontsize là px thực tế
+    if video_width > 0 and video_height > 0:
+        out.info["PlayResX"] = str(video_width)
+        out.info["PlayResY"] = str(video_height)
 
     # Build style
     style = copy.deepcopy(NORMAL_STYLE if mode == "normal" else HIGHLIGHT_STYLE)
     style.fontname = fontname
     style.fontsize = fontsize
-    style.primarycolor = pysubs2.Color(*text_color, 0)
-    style.secondarycolor = pysubs2.Color(*highlight_color, 0)
+
+    if mode == "normal":
+        # Normal: primarycolor = màu text duy nhất
+        style.primarycolor = pysubs2.Color(*text_color, 0)
+        style.secondarycolor = pysubs2.Color(*highlight_color, 0)
+    else:
+        # Highlight: secondarycolor = trắng (trước fill), primarycolor = vàng (sau fill)
+        # ASS \kf: fill từ secondarycolor → primarycolor
+        style.secondarycolor = pysubs2.Color(*text_color, 0)      # trắng – ban đầu
+        style.primarycolor   = pysubs2.Color(*highlight_color, 0) # vàng  – sau fill
+
     style.alignment = Alignment(alignment) if isinstance(alignment, int) else alignment
     style.marginv = margin_v
 

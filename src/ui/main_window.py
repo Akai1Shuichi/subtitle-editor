@@ -28,7 +28,10 @@ from .export_bar import ExportBar
 from ..subtitle_parser import load_srt, count_lines, SubtitleError
 from ..ass_builder import build_ass, save_ass
 from ..video_info import probe_video, VideoInfo, FFmpegNotFoundError, VideoReadError
-from ..exporter import export_video, ExportCancelledError, DiskSpaceError, ExportError
+from ..exporter import (
+    export_video, generate_preview_clip, open_with_system_player,
+    ExportCancelledError, DiskSpaceError, ExportError,
+)
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -41,6 +44,7 @@ class ExportWorker(QObject):
     progress = Signal(float)
     finished = Signal(str)    # path của file output
     error = Signal(str)       # message lỗi
+    mode = "export"           # "export" hoặc "preview"
 
     def __init__(
         self,
@@ -48,23 +52,34 @@ class ExportWorker(QObject):
         ass_path: str,
         output_path: str,
         cancel_event: threading.Event,
+        preview: bool = False,
     ):
         super().__init__()
         self._video_info = video_info
         self._ass_path = ass_path
         self._output_path = output_path
         self._cancel_event = cancel_event
+        self._preview = preview
 
     @Slot()
     def run(self) -> None:
         try:
-            result = export_video(
-                self._video_info,
-                self._ass_path,
-                self._output_path,
-                cancel_event=self._cancel_event,
-                on_progress=lambda pct: self.progress.emit(pct),
-            )
+            if self._preview:
+                result = generate_preview_clip(
+                    self._video_info,
+                    self._ass_path,
+                    duration=6.0,
+                    cancel_event=self._cancel_event,
+                    on_progress=lambda pct: self.progress.emit(pct),
+                )
+            else:
+                result = export_video(
+                    self._video_info,
+                    self._ass_path,
+                    self._output_path,
+                    cancel_event=self._cancel_event,
+                    on_progress=lambda pct: self.progress.emit(pct),
+                )
             self.finished.emit(str(result))
         except ExportCancelledError:
             self.error.emit("__cancelled__")
@@ -93,6 +108,7 @@ class MainWindow(QMainWindow):
         self._cancel_event: threading.Event | None = None
         self._export_thread: QThread | None = None
         self._temp_ass: str | None = None
+        self._is_preview: bool = False
 
         self._build_ui()
         self._apply_stylesheet()
@@ -141,6 +157,7 @@ class MainWindow(QMainWindow):
         self._export_bar = ExportBar()
         self._export_bar.export_requested.connect(self._on_export_requested)
         self._export_bar.cancel_requested.connect(self._on_cancel_requested)
+        self._export_bar.preview_requested.connect(self._on_preview_requested)
         root.addWidget(self._export_bar)
 
     # ──────────────────────────────────────────────────────────────────────
@@ -208,12 +225,8 @@ class MainWindow(QMainWindow):
     # Slots – Export
     # ──────────────────────────────────────────────────────────────────────
 
-    @Slot(str)
-    def _on_export_requested(self, output_path: str) -> None:
-        if not self._video_info or not self._srt_path:
-            return
-
-        # Build ASS file tạm
+    def _build_ass_to_temp(self) -> bool:
+        """Xây dựng file ASS tạm. Return True nếu thành công."""
         try:
             subs = load_srt(self._srt_path)
             settings = self._sidebar.get_style_settings()
@@ -225,18 +238,22 @@ class MainWindow(QMainWindow):
                 text_color=settings["text_color"],
                 highlight_color=settings["highlight_color"],
                 alignment=settings["alignment"],
+                video_width=self._video_info.width if self._video_info else 0,
+                video_height=self._video_info.height if self._video_info else 0,
             )
-            # Lưu ra temp/
             temp_dir = Path("temp")
             temp_dir.mkdir(exist_ok=True)
             ass_path = temp_dir / "subtitle_temp.ass"
             save_ass(ass, ass_path)
             self._temp_ass = str(ass_path)
+            return True
         except Exception as exc:
             self._show_error("Không tạo được subtitle", str(exc))
-            return
+            return False
 
-        # Khởi chạy export thread
+    def _start_worker(self, output_path: str, preview: bool = False) -> None:
+        """Khởi chạy ExportWorker trong QThread."""
+        self._is_preview = preview
         self._cancel_event = threading.Event()
         self._export_thread = QThread()
         self._worker = ExportWorker(
@@ -244,6 +261,7 @@ class MainWindow(QMainWindow):
             self._temp_ass,
             output_path,
             self._cancel_event,
+            preview=preview,
         )
         self._worker.moveToThread(self._export_thread)
         self._export_thread.started.connect(self._worker.run)
@@ -253,8 +271,24 @@ class MainWindow(QMainWindow):
         self._worker.finished.connect(self._export_thread.quit)
         self._worker.error.connect(self._export_thread.quit)
 
-        self._export_bar.start_export_ui()
+        self._export_bar.start_export_ui(is_preview=preview)
         self._export_thread.start()
+
+    @Slot(str)
+    def _on_export_requested(self, output_path: str) -> None:
+        if not self._video_info or not self._srt_path:
+            return
+        if not self._build_ass_to_temp():
+            return
+        self._start_worker(output_path, preview=False)
+
+    @Slot()
+    def _on_preview_requested(self) -> None:
+        if not self._video_info or not self._srt_path:
+            return
+        if not self._build_ass_to_temp():
+            return
+        self._start_worker("", preview=True)
 
     @Slot()
     def _on_cancel_requested(self) -> None:
@@ -264,7 +298,10 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_export_finished(self, output_path: str) -> None:
         self._export_bar.finish_export_ui(success=True)
-        self._show_success(output_path)
+        if self._is_preview:
+            open_with_system_player(output_path)
+        else:
+            self._show_success(output_path)
 
     @Slot(str)
     def _on_export_error(self, msg: str) -> None:
@@ -536,6 +573,30 @@ QFormLayout QLabel {
 #ExportBtn:disabled {
     background-color: rgba(79,138,255,0.25);
     color: rgba(255,255,255,0.3);
+}
+
+/* ── Preview Button ─────────────────────────────────────────────────────── */
+#PreviewBtn {
+    background-color: rgba(79,138,255,0.1);
+    color: #4f8aff;
+    border: 1px solid rgba(79,138,255,0.35);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+}
+#PreviewBtn:hover:enabled {
+    background-color: rgba(79,138,255,0.2);
+    border-color: rgba(79,138,255,0.6);
+    color: #7bb3ff;
+}
+#PreviewBtn:pressed {
+    background-color: rgba(79,138,255,0.12);
+}
+#PreviewBtn:disabled {
+    background-color: transparent;
+    color: rgba(79,138,255,0.3);
+    border-color: rgba(79,138,255,0.15);
 }
 
 /* ── Cancel Button ─────────────────────────────────────────────────────── */

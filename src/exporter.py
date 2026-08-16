@@ -190,3 +190,108 @@ def _cleanup(path: Path) -> None:
             path.unlink()
     except OSError:
         pass
+
+
+# ---------------------------------------------------------------------------
+# Preview
+# ---------------------------------------------------------------------------
+
+def generate_preview_clip(
+    video_info: VideoInfo,
+    ass_path: str | Path,
+    duration: float = 5.0,
+    cancel_event: threading.Event | None = None,
+    on_progress: Callable[[float], None] | None = None,
+) -> Path:
+    """
+    Render đoạn video ngắn (mặc định 5 giây đầu) với subtitle đã burn
+    vào temp/preview.mp4, rồi trả về đường dẫn để mở bằng media player.
+
+    Parameters
+    ----------
+    video_info   : VideoInfo từ probe_video()
+    ass_path     : đường dẫn file .ass tạm
+    duration     : số giây cần preview (mặc định 5s)
+    cancel_event : để hủy nếu cần
+    on_progress  : callback(percent) báo tiến trình
+
+    Returns
+    -------
+    Path tới temp/preview.mp4
+    """
+    preview_path = Path("temp") / "preview.mp4"
+    preview_path.parent.mkdir(exist_ok=True)
+    _cleanup(preview_path)
+
+    ass_path = Path(ass_path).resolve()
+    ffmpeg = get_ffmpeg()
+    ass_escaped = str(ass_path).replace("\\", "/").replace(":", "\\:")
+
+    # Lấy thời gian bắt đầu hợp lý (không start từ 0 nếu video dài)
+    start_offset = 0.0
+
+    cmd = [
+        ffmpeg, "-y",
+        "-ss", str(start_offset),
+        "-i", str(video_info.path),
+        "-t", str(duration),
+        "-vf", f"ass='{ass_escaped}'",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",   # nhanh nhất cho preview
+        "-crf", "28",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        str(preview_path),
+    ]
+
+    try:
+        proc = subprocess.Popen(
+            cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, bufsize=1
+        )
+    except FileNotFoundError as exc:
+        raise FFmpegNotFoundError("ffmpeg không tìm thấy.") from exc
+
+    preview_duration = min(duration, video_info.duration or duration)
+
+    try:
+        for line in proc.stderr:
+            if cancel_event and cancel_event.is_set():
+                proc.kill()
+                proc.wait()
+                _cleanup(preview_path)
+                raise ExportCancelledError("Preview bị hủy.")
+            if on_progress:
+                secs = _parse_progress_seconds(line)
+                if secs is not None:
+                    pct = min(secs / preview_duration * 100, 99.9)
+                    on_progress(pct)
+        proc.wait()
+    except ExportCancelledError:
+        raise
+    except Exception as exc:
+        proc.kill()
+        _cleanup(preview_path)
+        raise ExportError(f"Lỗi tạo preview: {exc}") from exc
+
+    if proc.returncode != 0:
+        _cleanup(preview_path)
+        raise ExportError("FFmpeg không tạo được preview. Kiểm tra lại video và subtitle.")
+
+    if on_progress:
+        on_progress(100.0)
+
+    return preview_path.resolve()
+
+
+def open_with_system_player(path: str | Path) -> None:
+    """Mở file bằng media player mặc định của hệ thống."""
+    import platform
+    import subprocess
+    path = str(path)
+    system = platform.system()
+    if system == "Windows":
+        subprocess.Popen(["start", "", path], shell=True)
+    elif system == "Darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
