@@ -1,0 +1,53 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environment ────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── pytest / coverage ──────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ── PyInstaller output ────────────────────────────────────────────────────
+*.spec
+dist/
+build/
+
+# ── Project-specific ──────────────────────────────────────────────────────
+# File ASS tạm sinh ra khi export
+temp/
+
+# Video output (nặng, không cần commit)
+output/
+
+# FFmpeg binary bundled (user tự tải)
+binaries/
+
+# File cấu hình project local (đường dẫn riêng của từng máy)
+*.project.json
+*.json.local
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
