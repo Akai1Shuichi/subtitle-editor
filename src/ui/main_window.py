@@ -1,13 +1,26 @@
 """
 src/ui/main_window.py
 ──────────────────────
-QMainWindow chính: ghép VideoPanel + Sidebar + ExportBar,
-điều phối logic giữa các widget và các module backend.
+QMainWindow chính của MVP2:
+
+  HeaderBar
+  ─────────────────────────────────────────────────────
+  VideoPanel (stretch=1) │ Inspector (fixed width=280)
+  ─────────────────────────────────────────────────────
+  TimelinePlaceholder
+  ─────────────────────────────────────────────────────
+  ExportBar
+
+State machine:
+  State 1 — chưa có video:      drop zone / hint
+  State 2 — video, chưa có SRT: video info, style controls
+  State 3 — có subtitle:        style controls, chip list
+  State 4 — clip được chọn:     text editor + style + Delete
 """
 from __future__ import annotations
 
 import threading
-import tempfile
+import uuid
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject
@@ -15,21 +28,25 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
-    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-from .video_panel import VideoPanel
-from .sidebar import Sidebar
-from .export_bar import ExportBar
+from .header_bar          import HeaderBar
+from .video_panel         import VideoPanel
+from .inspector           import Inspector
+from .timeline_placeholder import TimelinePlaceholder
+from .export_bar          import ExportBar
 
-from ..models import EditorProject, clips_from_srt, clips_to_ssa, SubtitleStyle
-from ..ass_builder import save_ass
+from ..models import (
+    EditorProject, SubtitleClip, SubtitleStyle,
+    clips_from_srt, clips_to_ssa,
+)
+from ..ass_builder    import save_ass
 from ..subtitle_parser import SubtitleError
-from ..word_timing import load_timing
-from ..video_info import probe_video, FFmpegNotFoundError, VideoReadError
+from ..word_timing    import load_timing
+from ..video_info     import probe_video, FFmpegNotFoundError, VideoReadError
 from ..exporter import (
     export_video, generate_preview_clip, open_with_system_player,
     ExportCancelledError, DiskSpaceError, ExportError,
@@ -37,48 +54,44 @@ from ..exporter import (
 
 
 # ──────────────────────────────────────────────────────────────────────────
-# Worker thread (để không block UI)
+# Worker thread
 # ──────────────────────────────────────────────────────────────────────────
 
 class ExportWorker(QObject):
-    """Chạy FFmpeg trong thread riêng, gửi progress / kết quả về UI thread."""
+    """Chạy FFmpeg trong thread riêng."""
 
     progress = Signal(float)
-    finished = Signal(str)    # path của file output
-    error = Signal(str)       # message lỗi
-    mode = "export"           # "export" hoặc "preview"
+    finished = Signal(str)
+    error    = Signal(str)
 
     def __init__(
         self,
-        video_info: VideoInfo,
+        video_info,
         ass_path: str,
         output_path: str,
         cancel_event: threading.Event,
         preview: bool = False,
     ):
         super().__init__()
-        self._video_info = video_info
-        self._ass_path = ass_path
-        self._output_path = output_path
+        self._video_info   = video_info
+        self._ass_path     = ass_path
+        self._output_path  = output_path
         self._cancel_event = cancel_event
-        self._preview = preview
+        self._preview      = preview
 
     @Slot()
     def run(self) -> None:
         try:
             if self._preview:
                 result = generate_preview_clip(
-                    self._video_info,
-                    self._ass_path,
+                    self._video_info, self._ass_path,
                     duration=6.0,
                     cancel_event=self._cancel_event,
                     on_progress=lambda pct: self.progress.emit(pct),
                 )
             else:
                 result = export_video(
-                    self._video_info,
-                    self._ass_path,
-                    self._output_path,
+                    self._video_info, self._ass_path, self._output_path,
                     cancel_event=self._cancel_event,
                     on_progress=lambda pct: self.progress.emit(pct),
                 )
@@ -101,18 +114,23 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Subtitle Video Editor")
-        self.setMinimumSize(1000, 650)
-        self.resize(1200, 720)
+        self.setMinimumSize(1100, 700)
+        self.resize(1280, 780)
 
-        # State – EditorProject là single source of truth
-        self._project: EditorProject = EditorProject()
+        # ── Application state ──────────────────────────────────────────
+        self._project: EditorProject     = EditorProject()
+        self._selected_clip_id: str | None = None
+        self._current_time_ms: int        = 0   # playhead (step 3 sẽ wire QMediaPlayer)
+
+        # ── Export state ───────────────────────────────────────────────
         self._cancel_event: threading.Event | None = None
-        self._export_thread: QThread | None = None
-        self._temp_ass: str | None = None
-        self._is_preview: bool = False
+        self._export_thread: QThread | None        = None
+        self._temp_ass: str | None                 = None
+        self._is_preview: bool                     = False
 
         self._build_ui()
         self._apply_stylesheet()
+        self._update_ui_state()
 
     # ──────────────────────────────────────────────────────────────────────
     # Build UI
@@ -126,40 +144,113 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # ── Top: video panel + sidebar ────────────────────────────────────
-        top = QHBoxLayout()
-        top.setContentsMargins(0, 0, 0, 0)
-        top.setSpacing(0)
+        # ── Header ─────────────────────────────────────────────────────
+        self._header_bar = HeaderBar()
+        self._header_bar.import_video_requested.connect(self._on_video_selected)
+        self._header_bar.import_srt_requested.connect(self._on_srt_loaded)
+        self._header_bar.export_requested.connect(self._on_header_export)
+        root.addWidget(self._header_bar)
+
+        # Separator
+        root.addWidget(self._make_hsep())
+
+        # ── Main content: VideoPanel | Inspector ────────────────────────
+        content = QHBoxLayout()
+        content.setContentsMargins(0, 0, 0, 0)
+        content.setSpacing(0)
 
         self._video_panel = VideoPanel()
         self._video_panel.video_selected.connect(self._on_video_selected)
-        top.addWidget(self._video_panel, stretch=1)
+        content.addWidget(self._video_panel, stretch=1)
 
-        # Vertical separator
-        sep = QWidget()
-        sep.setFixedWidth(1)
-        sep.setObjectName("VSeparator")
-        top.addWidget(sep)
+        content.addWidget(self._make_vsep())
 
-        self._sidebar = Sidebar()
-        self._sidebar.srt_loaded.connect(self._on_srt_loaded)
-        self._sidebar.style_changed.connect(self._on_style_changed)
-        top.addWidget(self._sidebar)
+        self._inspector = Inspector()
+        self._inspector.style_changed.connect(self._on_style_changed)
+        self._inspector.clip_text_changed.connect(self._on_clip_text_changed)
+        self._inspector.clip_delete_requested.connect(self._on_clip_delete_requested)
+        self._inspector.add_subtitle_requested.connect(self._on_add_subtitle_requested)
+        content.addWidget(self._inspector)
 
-        root.addLayout(top, stretch=1)
+        root.addLayout(content, stretch=1)
 
-        # ── Horizontal separator ──────────────────────────────────────────
-        hsep = QWidget()
-        hsep.setFixedHeight(1)
-        hsep.setObjectName("HSeparator")
-        root.addWidget(hsep)
+        # Separator
+        root.addWidget(self._make_hsep())
 
-        # ── Bottom: export bar ────────────────────────────────────────────
+        # ── Timeline Placeholder ────────────────────────────────────────
+        self._timeline = TimelinePlaceholder()
+        self._timeline.clip_selected.connect(self._on_clip_selected)
+        self._timeline.clip_deselected.connect(self._on_clip_deselected)
+        self._timeline.add_subtitle_requested.connect(self._on_add_subtitle_requested)
+        root.addWidget(self._timeline)
+
+        # Separator
+        root.addWidget(self._make_hsep())
+
+        # ── Export Bar ──────────────────────────────────────────────────
         self._export_bar = ExportBar()
         self._export_bar.export_requested.connect(self._on_export_requested)
         self._export_bar.cancel_requested.connect(self._on_cancel_requested)
         self._export_bar.preview_requested.connect(self._on_preview_requested)
         root.addWidget(self._export_bar)
+
+    @staticmethod
+    def _make_hsep() -> QWidget:
+        w = QWidget()
+        w.setFixedHeight(1)
+        w.setObjectName("HSeparator")
+        return w
+
+    @staticmethod
+    def _make_vsep() -> QWidget:
+        w = QWidget()
+        w.setFixedWidth(1)
+        w.setObjectName("VSeparator")
+        return w
+
+    # ──────────────────────────────────────────────────────────────────────
+    # State management
+    # ──────────────────────────────────────────────────────────────────────
+
+    def _update_ui_state(self) -> None:
+        """Master function: cập nhật toàn bộ UI dựa theo project state."""
+        has_video = self._project.has_video
+        has_clips = self._project.has_clips
+        can_export = has_video and has_clips
+
+        selected_clip = (
+            self._project.clip_by_id(self._selected_clip_id)
+            if self._selected_clip_id
+            else None
+        )
+
+        # Header
+        self._header_bar.set_has_video(has_video)
+        self._header_bar.set_export_enabled(can_export)
+
+        # Video panel
+        if has_video:
+            vi = self._project.video_info
+            self._video_panel.set_video_info(
+                name=vi.path.name,
+                resolution=vi.resolution,
+                duration_str=vi.duration_str,
+                clip_count=len(self._project.clips),
+            )
+
+        # Inspector
+        self._inspector.set_has_video(has_video)
+        self._inspector.select_clip(selected_clip)
+
+        # Timeline
+        self._timeline.set_has_video(has_video)
+        self._timeline.set_clips(
+            self._project.sorted_clips() if has_clips else [],
+            selected_clip_id=self._selected_clip_id,
+        )
+
+        # Export bar
+        self._export_bar.set_export_enabled(can_export)
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Video
@@ -180,18 +271,12 @@ class MainWindow(QMainWindow):
             return
 
         self._project.video_info = info
-        self._video_panel.set_video_info(
-            name=info.path.name,
-            resolution=info.resolution,
-            duration_str=info.duration_str,
-        )
 
         # Gợi ý output path
-        default_out = str(
-            Path("output") / (info.path.stem + "_subtitled.mp4")
-        )
+        default_out = str(Path("output") / (info.path.stem + "_subtitled.mp4"))
         self._export_bar.set_output_path(default_out)
-        self._update_export_btn()
+
+        self._update_ui_state()
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – SRT
@@ -200,8 +285,6 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_srt_loaded(self, path: str) -> None:
         try:
-            # Parse SRT → SubtitleClip[] — chỉ làm MỘT LẦN duy nhất khi import.
-            # Sau đó editor làm việc hoàn toàn trên project.clips.
             clips = clips_from_srt(path)
         except FileNotFoundError as exc:
             self._show_error("File không tồn tại", str(exc))
@@ -211,32 +294,88 @@ class MainWindow(QMainWindow):
             return
 
         self._project.clips = clips
+        self._selected_clip_id = None  # bỏ selection cũ khi load SRT mới
 
-        # Word timing tùy chọn — dùng để highlight từng từ khi export.
+        # Word timing tuỳ chọn
         timing_path = Path(path).with_suffix(".words.json")
         try:
             self._project.word_timings = load_timing(timing_path)
         except (FileNotFoundError, ValueError):
             self._project.word_timings = None
 
-        self._sidebar.set_srt_info(path, len(clips))
-        self._update_export_btn()
+        self._update_ui_state()
 
     # ──────────────────────────────────────────────────────────────────────
-    # Slots – Style changed
+    # Slots – Style
     # ──────────────────────────────────────────────────────────────────────
 
     @Slot(object)
     def _on_style_changed(self, style: SubtitleStyle) -> None:
-        """Lưu style mới vào project khi người dùng thay đổi control."""
         self._project.style = style
 
     # ──────────────────────────────────────────────────────────────────────
-    # Slots – Export
+    # Slots – Clip operations
+    # ──────────────────────────────────────────────────────────────────────
+
+    @Slot(str, str)
+    def _on_clip_text_changed(self, clip_id: str, new_text: str) -> None:
+        """Cập nhật text của clip trong project khi người dùng sửa inspector."""
+        clip = self._project.clip_by_id(clip_id)
+        if clip:
+            clip.text = new_text
+            # Cập nhật chip trên timeline (không cần rebuild toàn bộ)
+            self._timeline.set_clips(
+                self._project.sorted_clips(),
+                selected_clip_id=self._selected_clip_id,
+            )
+
+    @Slot(str)
+    def _on_clip_delete_requested(self, clip_id: str) -> None:
+        """Xóa clip khỏi project."""
+        self._project.clips = [
+            c for c in self._project.clips if c.id != clip_id
+        ]
+        self._selected_clip_id = None
+        self._update_ui_state()
+
+    @Slot()
+    def _on_add_subtitle_requested(self) -> None:
+        """Thêm clip mới tại vị trí playhead (mặc định 2 giây)."""
+        new_clip = SubtitleClip(
+            id=str(uuid.uuid4()),
+            text="New subtitle",
+            start_ms=self._current_time_ms,
+            end_ms=self._current_time_ms + 2000,
+        )
+        self._project.clips.append(new_clip)
+        self._selected_clip_id = new_clip.id
+        self._update_ui_state()
+
+    @Slot(str)
+    def _on_clip_selected(self, clip_id: str) -> None:
+        self._selected_clip_id = clip_id
+        self._update_ui_state()
+
+    @Slot()
+    def _on_clip_deselected(self) -> None:
+        self._selected_clip_id = None
+        self._update_ui_state()
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Slots – Export (header button)
+    # ──────────────────────────────────────────────────────────────────────
+
+    @Slot()
+    def _on_header_export(self) -> None:
+        """Header Export MP4 button → dùng path từ ExportBar."""
+        output_path = self._export_bar.get_output_path()
+        self._on_export_requested(output_path)
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Slots – Export (ExportBar)
     # ──────────────────────────────────────────────────────────────────────
 
     def _build_ass_to_temp(self) -> bool:
-        """Xây dựng file ASS tạm từ project.clips. Return True nếu thành công."""
         try:
             vi = self._project.video_info
             ass = clips_to_ssa(
@@ -257,9 +396,8 @@ class MainWindow(QMainWindow):
             return False
 
     def _start_worker(self, output_path: str, preview: bool = False) -> None:
-        """Khởi chạy ExportWorker trong QThread."""
-        self._is_preview = preview
-        self._cancel_event = threading.Event()
+        self._is_preview    = preview
+        self._cancel_event  = threading.Event()
         self._export_thread = QThread()
         self._worker = ExportWorker(
             self._project.video_info,
@@ -277,6 +415,7 @@ class MainWindow(QMainWindow):
         self._worker.error.connect(self._export_thread.quit)
 
         self._export_bar.start_export_ui(is_preview=preview)
+        self._header_bar.set_exporting(True)
         self._export_thread.start()
 
     @Slot(str)
@@ -303,6 +442,10 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_export_finished(self, output_path: str) -> None:
         self._export_bar.finish_export_ui(success=True)
+        self._header_bar.set_exporting(False)
+        self._header_bar.set_export_enabled(
+            self._project.has_video and self._project.has_clips
+        )
         if self._is_preview:
             open_with_system_player(output_path)
         else:
@@ -311,16 +454,16 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_export_error(self, msg: str) -> None:
         self._export_bar.finish_export_ui(success=False)
+        self._header_bar.set_exporting(False)
+        self._header_bar.set_export_enabled(
+            self._project.has_video and self._project.has_clips
+        )
         if msg != "__cancelled__":
             self._show_error("Lỗi export", msg)
 
     # ──────────────────────────────────────────────────────────────────────
     # Helpers
     # ──────────────────────────────────────────────────────────────────────
-
-    def _update_export_btn(self) -> None:
-        ready = self._project.has_video and self._project.has_clips
-        self._export_bar.set_export_enabled(ready)
 
     def _show_error(self, title: str, msg: str) -> None:
         dlg = QMessageBox(self)
@@ -373,64 +516,217 @@ QMainWindow, QWidget {
     background-color: rgba(255, 255, 255, 0.06);
 }
 
-/* ── Sidebar ───────────────────────────────────────────────────────────── */
-#Sidebar, #SidebarInner {
+/* ══════════════════════════════════════════════════════════════════════
+   HEADER BAR
+   ══════════════════════════════════════════════════════════════════════ */
+#HeaderBar {
+    background-color: #0d0f15;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#AppTitle {
+    color: #e8eaf0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+#HeaderSecBtn {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #9ba3bb;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+}
+#HeaderSecBtn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #e8eaf0;
+}
+#HeaderSecBtn:pressed {
+    background-color: rgba(255, 255, 255, 0.07);
+}
+#HeaderSecBtn:disabled {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: rgba(155, 163, 187, 0.3);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+#HeaderExportBtn {
+    background-color: #4f8aff;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 6px 18px;
+    font-size: 13px;
+    font-weight: 600;
+}
+#HeaderExportBtn:hover:enabled {
+    background-color: #6b9fff;
+}
+#HeaderExportBtn:pressed {
+    background-color: #3d74e8;
+}
+#HeaderExportBtn:disabled {
+    background-color: rgba(79, 138, 255, 0.2);
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   INSPECTOR
+   ══════════════════════════════════════════════════════════════════════ */
+#Inspector {
+    background-color: #161a22;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#InspectorInner {
     background-color: #161a22;
 }
 
 #SectionHeader {
     color: #5b6278;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    margin-bottom: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+}
+
+#FieldLabel {
+    color: #7a8099;
+    font-size: 12px;
+}
+
+#AddSubtitleBtn {
+    background-color: rgba(79, 138, 255, 0.08);
+    color: #4f8aff;
+    border: 1px solid rgba(79, 138, 255, 0.25);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+}
+#AddSubtitleBtn:hover:enabled {
+    background-color: rgba(79, 138, 255, 0.16);
+    border-color: rgba(79, 138, 255, 0.5);
+    color: #7bb3ff;
+}
+#AddSubtitleBtn:pressed {
+    background-color: rgba(79, 138, 255, 0.1);
+}
+#AddSubtitleBtn:disabled {
+    background-color: rgba(79, 138, 255, 0.03);
+    color: rgba(79, 138, 255, 0.3);
+    border-color: rgba(79, 138, 255, 0.1);
+}
+
+#SubtitleTextEdit {
+    background-color: #1e2230;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px;
+    color: #e8eaf0;
+    font-size: 13px;
+    line-height: 1.5;
+    selection-background-color: #2a3558;
+}
+#SubtitleTextEdit:focus {
+    border-color: rgba(79, 138, 255, 0.5);
+}
+
+#DeleteBtn {
+    background-color: rgba(255, 80, 80, 0.08);
+    color: #ff6060;
+    border: 1px solid rgba(255, 80, 80, 0.2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+}
+#DeleteBtn:hover {
+    background-color: rgba(255, 80, 80, 0.16);
+    border-color: rgba(255, 80, 80, 0.4);
+    color: #ff8080;
+}
+#DeleteBtn:pressed {
+    background-color: rgba(255, 80, 80, 0.1);
 }
 
 #Divider {
     color: rgba(255, 255, 255, 0.06);
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+    max-height: 1px;
 }
 
-#SrtLabel {
-    color: #c8ccd8;
+/* ══════════════════════════════════════════════════════════════════════
+   TIMELINE PLACEHOLDER
+   ══════════════════════════════════════════════════════════════════════ */
+#TimelinePanel {
+    background-color: #0e1016;
+}
+
+#TimelineCtrlBar {
+    background-color: #0e1016;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#TimelineLabel {
+    color: #3e4558;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+}
+
+#TimelineScroll {
+    background-color: #0e1016;
+}
+#TimelineClips {
+    background-color: #0e1016;
+}
+
+#TimelineHint {
+    color: #3e4558;
     font-size: 12px;
 }
 
-#SrtMeta {
-    color: #5b6278;
+/* Clip Chip */
+#ClipChip {
+    background-color: rgba(79, 138, 255, 0.08);
+    border: 1px solid rgba(79, 138, 255, 0.2);
+    border-radius: 8px;
+}
+#ClipChip:hover {
+    background-color: rgba(79, 138, 255, 0.14);
+    border-color: rgba(79, 138, 255, 0.4);
+}
+#ClipChip[selected="true"] {
+    background-color: rgba(79, 138, 255, 0.22);
+    border-color: rgba(79, 138, 255, 0.7);
+}
+
+#ChipTime {
+    color: #4f8aff;
+    font-size: 10px;
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    font-weight: 500;
+}
+#ChipText {
+    color: #c8ccd8;
     font-size: 11px;
 }
 
-/* ── Import SRT Button ─────────────────────────────────────────────────── */
-#ImportBtn {
-    background-color: rgba(255, 255, 255, 0.06);
-    color: #c8ccd8;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 500;
-}
-#ImportBtn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.18);
-    color: #fff;
-}
-#ImportBtn:pressed {
-    background-color: rgba(255, 255, 255, 0.07);
-}
-
-/* ── Radio buttons ─────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   SHARED FORM CONTROLS
+   ══════════════════════════════════════════════════════════════════════ */
 QRadioButton {
     color: #c8ccd8;
     font-size: 13px;
     spacing: 8px;
 }
 QRadioButton::indicator {
-    width: 16px;
-    height: 16px;
+    width: 15px; height: 15px;
     border-radius: 8px;
     border: 2px solid #3a3f50;
     background-color: #1e2230;
@@ -439,127 +735,93 @@ QRadioButton::indicator:checked {
     border-color: #4f8aff;
     background-color: #4f8aff;
 }
-QRadioButton:hover {
-    color: #fff;
-}
+QRadioButton:hover { color: #fff; }
 
-/* ── ComboBox ──────────────────────────────────────────────────────────── */
 QComboBox {
     background-color: #1e2230;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 7px;
     padding: 5px 10px;
     color: #c8ccd8;
     font-size: 12px;
-    min-width: 140px;
+    min-width: 130px;
 }
-QComboBox:hover {
-    border-color: rgba(255,255,255,0.2);
-}
-QComboBox::drop-down {
-    border: none;
-    padding-right: 8px;
-}
+QComboBox:hover { border-color: rgba(255, 255, 255, 0.2); }
+QComboBox::drop-down { border: none; padding-right: 8px; }
 QComboBox QAbstractItemView {
     background-color: #1e2230;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     selection-background-color: #2a2f42;
     color: #c8ccd8;
 }
 
-/* ── SpinBox ───────────────────────────────────────────────────────────── */
 QSpinBox {
     background-color: #1e2230;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 7px;
     padding: 5px 8px;
     color: #c8ccd8;
     font-size: 12px;
-    min-width: 80px;
+    min-width: 75px;
 }
-QSpinBox:hover {
-    border-color: rgba(255,255,255,0.2);
-}
+QSpinBox:hover { border-color: rgba(255, 255, 255, 0.2); }
 QSpinBox::up-button, QSpinBox::down-button {
-    background: transparent;
-    border: none;
-    width: 14px;
+    background: transparent; border: none; width: 14px;
 }
 
-/* ── Form labels ───────────────────────────────────────────────────────── */
 QFormLayout QLabel {
     color: #7a8099;
     font-size: 12px;
-    min-width: 68px;
+    min-width: 72px;
 }
 
-/* ── Drop Zone ─────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   VIDEO PANEL
+   ══════════════════════════════════════════════════════════════════════ */
 #DropZone {
     background-color: #13161e;
-    border: 2px dashed rgba(255,255,255,0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.08);
     border-radius: 0px;
 }
 #DropZone:hover {
-    border-color: rgba(79,138,255,0.35);
-    background-color: rgba(79,138,255,0.04);
+    border-color: rgba(79, 138, 255, 0.3);
+    background-color: rgba(79, 138, 255, 0.04);
 }
 #DropZone[dragHover="true"] {
     border-color: #4f8aff;
-    background-color: rgba(79,138,255,0.08);
+    background-color: rgba(79, 138, 255, 0.08);
 }
-#DropIcon {
-    font-size: 42px;
-}
-#DropTitle {
-    color: #c8ccd8;
-    font-size: 15px;
-    font-weight: 600;
-}
-#DropSub {
-    color: #4a5168;
-    font-size: 12px;
-}
+#DropIcon  { font-size: 44px; }
+#DropTitle { color: #c8ccd8; font-size: 15px; font-weight: 600; }
+#DropSub   { color: #4a5168; font-size: 12px; }
+#MetaBar   { background-color: #0e1016; }
+#MetaLabel { color: #5b6278; font-size: 12px; }
 
-/* ── Meta Bar ──────────────────────────────────────────────────────────── */
-#MetaBar {
-    background-color: #0e1016;
-}
-#MetaLabel {
-    color: #5b6278;
-    font-size: 12px;
-}
-
-/* ── Export Bar ────────────────────────────────────────────────────────── */
-#ExportBar {
-    background-color: #0e1016;
-}
+/* ══════════════════════════════════════════════════════════════════════
+   EXPORT BAR
+   ══════════════════════════════════════════════════════════════════════ */
+#ExportBar { background-color: #0d0f15; }
 
 #PathEdit {
     background-color: #1e2230;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 7px;
     padding: 6px 12px;
     color: #c8ccd8;
     font-size: 12px;
 }
-#PathEdit:focus {
-    border-color: rgba(79,138,255,0.5);
-}
+#PathEdit:focus { border-color: rgba(79, 138, 255, 0.5); }
 
 #BrowseBtn {
-    background-color: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 7px;
     color: #7a8099;
     font-weight: 600;
     font-size: 14px;
 }
-#BrowseBtn:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: #fff;
-}
+#BrowseBtn:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
 
-/* ── Export Button ─────────────────────────────────────────────────────── */
 #ExportBtn {
     background-color: #4f8aff;
     color: #fff;
@@ -569,56 +831,34 @@ QFormLayout QLabel {
     font-size: 13px;
     font-weight: 600;
 }
-#ExportBtn:hover:enabled {
-    background-color: #6b9fff;
-}
-#ExportBtn:pressed {
-    background-color: #3d74e8;
-}
-#ExportBtn:disabled {
-    background-color: rgba(79,138,255,0.25);
-    color: rgba(255,255,255,0.3);
-}
+#ExportBtn:hover:enabled { background-color: #6b9fff; }
+#ExportBtn:pressed       { background-color: #3d74e8; }
+#ExportBtn:disabled      { background-color: rgba(79,138,255,0.25); color: rgba(255,255,255,0.3); }
 
-/* ── Preview Button ─────────────────────────────────────────────────────── */
 #PreviewBtn {
-    background-color: rgba(79,138,255,0.1);
+    background-color: rgba(79, 138, 255, 0.1);
     color: #4f8aff;
-    border: 1px solid rgba(79,138,255,0.35);
+    border: 1px solid rgba(79, 138, 255, 0.35);
     border-radius: 8px;
     padding: 7px 14px;
     font-size: 13px;
     font-weight: 500;
 }
-#PreviewBtn:hover:enabled {
-    background-color: rgba(79,138,255,0.2);
-    border-color: rgba(79,138,255,0.6);
-    color: #7bb3ff;
-}
-#PreviewBtn:pressed {
-    background-color: rgba(79,138,255,0.12);
-}
-#PreviewBtn:disabled {
-    background-color: transparent;
-    color: rgba(79,138,255,0.3);
-    border-color: rgba(79,138,255,0.15);
-}
+#PreviewBtn:hover:enabled  { background-color: rgba(79,138,255,0.2); border-color: rgba(79,138,255,0.6); color: #7bb3ff; }
+#PreviewBtn:pressed        { background-color: rgba(79,138,255,0.12); }
+#PreviewBtn:disabled       { background-color: transparent; color: rgba(79,138,255,0.3); border-color: rgba(79,138,255,0.15); }
 
-/* ── Cancel Button ─────────────────────────────────────────────────────── */
 #CancelBtn {
     background-color: rgba(255, 80, 80, 0.12);
     color: #ff5050;
-    border: 1px solid rgba(255,80,80,0.3);
+    border: 1px solid rgba(255, 80, 80, 0.3);
     border-radius: 7px;
     font-size: 12px;
 }
-#CancelBtn:hover {
-    background-color: rgba(255, 80, 80, 0.22);
-}
+#CancelBtn:hover { background-color: rgba(255, 80, 80, 0.22); }
 
-/* ── Progress Bar ──────────────────────────────────────────────────────── */
 QProgressBar#ExportProgress {
-    background-color: rgba(255,255,255,0.06);
+    background-color: rgba(255, 255, 255, 0.06);
     border: none;
     border-radius: 4px;
 }
@@ -628,43 +868,46 @@ QProgressBar#ExportProgress::chunk {
     border-radius: 4px;
 }
 
-/* ── Timer Label ───────────────────────────────────────────────────────── */
 #TimerLabel {
     color: #5b6278;
     font-size: 11px;
     font-family: "JetBrains Mono", "Courier New", monospace;
 }
 
-/* ── Scroll Area ───────────────────────────────────────────────────────── */
-QScrollArea {
-    background: transparent;
-}
+/* ══════════════════════════════════════════════════════════════════════
+   SCROLL + MESSAGE
+   ══════════════════════════════════════════════════════════════════════ */
+QScrollArea { background: transparent; }
 QScrollBar:vertical {
     background: transparent;
     width: 5px;
 }
 QScrollBar::handle:vertical {
-    background: rgba(255,255,255,0.12);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 2px;
     min-height: 30px;
 }
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;
-}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
 
-/* ── Message Box ───────────────────────────────────────────────────────── */
-QMessageBox {
-    background-color: #1a1e2a;
+QScrollBar:horizontal {
+    background: transparent;
+    height: 5px;
 }
+QScrollBar::handle:horizontal {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 2px;
+    min-width: 30px;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0px; }
+
+QMessageBox { background-color: #1a1e2a; }
 QMessageBox QPushButton {
-    background-color: rgba(255,255,255,0.08);
+    background-color: rgba(255, 255, 255, 0.08);
     color: #c8ccd8;
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 7px;
     padding: 6px 18px;
     min-width: 80px;
 }
-QMessageBox QPushButton:hover {
-    background-color: rgba(255,255,255,0.14);
-}
+QMessageBox QPushButton:hover { background-color: rgba(255, 255, 255, 0.14); }
 """

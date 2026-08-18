@@ -127,6 +127,10 @@ class ExportBar(QWidget):
     def output_path(self) -> str:
         return self._path_edit.text().strip()
 
+    def get_output_path(self) -> str:
+        """Alias cho output_path() — dùng từ MainWindow header export."""
+        return self._path_edit.text().strip()
+
     def set_output_path(self, path: str) -> None:
         self._path_edit.setText(path)
 

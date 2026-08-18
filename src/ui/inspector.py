@@ -1,23 +1,23 @@
 """
-src/ui/sidebar.py
-──────────────────
-Panel bên phải: Subtitle import, Style controls.
+src/ui/inspector.py
+────────────────────
+Panel Inspector bên phải: thích ứng theo 4 trạng thái của editor.
+
+State 1 (no video)         : ẩn hết, chỉ label gợi ý
+State 2 (video, no clips)  : nút Add Subtitle + style controls
+State 3 (has clips)        : nút Add Subtitle + style controls
+State 4 (clip selected)    : text editor + style controls + Delete
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont, QIntValidator
 from PySide6.QtWidgets import (
     QButtonGroup,
     QComboBox,
-    QFileDialog,
     QFormLayout,
     QFrame,
-    QHBoxLayout,
     QLabel,
-    QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QRadioButton,
     QScrollArea,
@@ -28,9 +28,10 @@ from PySide6.QtWidgets import (
 )
 
 from .color_button import ColorButton
-from ..models import SubtitleStyle
+from ..models import SubtitleClip, SubtitleStyle
 
 
+# ── Constants ──────────────────────────────────────────────────────────────
 
 FONTS = [
     "Arial Black", "Impact", "Anton", "Montserrat ExtraBold", "Montserrat",
@@ -46,37 +47,83 @@ POSITIONS = [
 ]
 
 
-class Sidebar(QWidget):
-    # ── Signals ──────────────────────────────────────────────────────────
-    srt_loaded = Signal(str)              # path tới file .srt
-    style_changed = Signal(object)        # SubtitleStyle object
+# ── Inspector widget ───────────────────────────────────────────────────────
+
+class Inspector(QWidget):
+    """
+    Panel phải của editor. Thích ứng theo clip được chọn.
+
+    Signals
+    -------
+    style_changed(SubtitleStyle)         – người dùng thay đổi style controls
+    clip_text_changed(clip_id, new_text) – người dùng sửa text clip
+    clip_delete_requested(clip_id)       – người dùng nhấn Delete
+    add_subtitle_requested()             – người dùng nhấn + Add Subtitle
+    """
+
+    style_changed          = Signal(object)      # SubtitleStyle
+    clip_text_changed      = Signal(str, str)    # (clip_id, new_text)
+    clip_delete_requested  = Signal(str)         # clip_id
+    add_subtitle_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("Sidebar")
+        self.setObjectName("Inspector")
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.setFixedWidth(280)
 
+        self._selected_clip_id: str | None = None
+        self._block_text_signal: bool = False
+
+        # ── Root layout ────────────────────────────────────────────────
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Scroll area để sidebar không bị clip trên màn hình nhỏ
+        # ── Scrollable content ─────────────────────────────────────────
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         inner = QWidget()
-        inner.setObjectName("SidebarInner")
-        layout = QVBoxLayout(inner)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
+        inner.setObjectName("InspectorInner")
+        self._inner_layout = QVBoxLayout(inner)
+        self._inner_layout.setContentsMargins(20, 20, 20, 20)
+        self._inner_layout.setSpacing(0)
 
-        layout.addWidget(self._build_subtitle_section())
-        layout.addWidget(self._build_divider())
-        layout.addWidget(self._build_style_section())
-        layout.addStretch()
+        # Section: SUBTITLE header + Add button
+        self._inner_layout.addWidget(self._build_subtitle_header())
+        self._inner_layout.addSpacing(12)
+        self._inner_layout.addWidget(self._build_add_btn())
+        self._inner_layout.addSpacing(14)
+
+        # Section: Clip text (shown when clip selected)
+        self._clip_section = self._build_clip_section()
+        self._clip_section.hide()
+        self._inner_layout.addWidget(self._clip_section)
+
+        # Divider
+        self._style_divider = self._build_divider()
+        self._style_divider.hide()
+        self._inner_layout.addWidget(self._style_divider)
+        self._inner_layout.addSpacing(14)
+
+        # Section: STYLE controls (shown when has_video)
+        self._style_section = self._build_style_section()
+        self._style_section.hide()
+        self._inner_layout.addWidget(self._style_section)
+        self._inner_layout.addSpacing(16)
+
+        # Delete button (shown when clip selected)
+        self._delete_btn = QPushButton("🗑  Delete Subtitle")
+        self._delete_btn.setObjectName("DeleteBtn")
+        self._delete_btn.setCursor(Qt.PointingHandCursor)
+        self._delete_btn.clicked.connect(self._on_delete)
+        self._delete_btn.hide()
+        self._inner_layout.addWidget(self._delete_btn)
+
+        self._inner_layout.addStretch()
 
         scroll.setWidget(inner)
         root.addWidget(scroll)
@@ -85,7 +132,30 @@ class Sidebar(QWidget):
     # Public API
     # ──────────────────────────────────────────────────────────────────────
 
-    def get_style_settings(self) -> SubtitleStyle:
+    def set_has_video(self, has_video: bool) -> None:
+        """Bật/tắt phần style và nút Add Subtitle."""
+        self._add_btn.setEnabled(has_video)
+        self._style_section.setVisible(has_video)
+        self._style_divider.setVisible(has_video)
+
+    def select_clip(self, clip: SubtitleClip | None) -> None:
+        """
+        Hiển thị / ẩn phần text editor dựa theo clip đang được chọn.
+        Gọi với None để bỏ chọn.
+        """
+        self._selected_clip_id = clip.id if clip else None
+        self._block_text_signal = True
+        if clip:
+            self._text_edit.setPlainText(clip.text)
+            self._clip_section.show()
+            self._delete_btn.show()
+        else:
+            self._text_edit.clear()
+            self._clip_section.hide()
+            self._delete_btn.hide()
+        self._block_text_signal = False
+
+    def get_style(self) -> SubtitleStyle:
         """Trả về SubtitleStyle hiện tại từ các control."""
         return SubtitleStyle(
             mode="highlight" if self._radio_highlight.isChecked() else "normal",
@@ -106,58 +176,49 @@ class Sidebar(QWidget):
             (i for i, (_, v) in enumerate(POSITIONS) if v == style.alignment), 0
         )
         self._pos_combo.setCurrentIndex(idx)
-        font_idx = self._font_combo.findText(style.fontname)
-        if font_idx >= 0:
-            self._font_combo.setCurrentIndex(font_idx)
+        fi = self._font_combo.findText(style.fontname)
+        if fi >= 0:
+            self._font_combo.setCurrentIndex(fi)
         self._size_spin.setValue(style.fontsize)
         self._position_y_spin.setValue(style.position_y)
         self._stroke_spin.setValue(int(style.stroke_width))
         self._text_color_btn.set_color_rgb(style.text_color)
         self._hl_color_btn.set_color_rgb(style.highlight_color)
 
-    def set_srt_info(self, path: str, line_count: int) -> None:
-        """Cập nhật label sau khi load SRT thành công."""
-        name = Path(path).name
-        self._srt_label.setText(f"📄 {name}")
-        self._srt_meta.setText(f"{line_count} dòng subtitle")
-        self._srt_meta.show()
-
-    def clear_srt(self) -> None:
-        self._srt_label.setText("Chưa chọn file")
-        self._srt_meta.hide()
-
     # ──────────────────────────────────────────────────────────────────────
     # Build sections
     # ──────────────────────────────────────────────────────────────────────
 
-    def _build_subtitle_section(self) -> QWidget:
+    def _build_subtitle_header(self) -> QLabel:
+        lbl = QLabel("SUBTITLE")
+        lbl.setObjectName("SectionHeader")
+        return lbl
+
+    def _build_add_btn(self) -> QPushButton:
+        self._add_btn = QPushButton("＋ Add Subtitle")
+        self._add_btn.setObjectName("AddSubtitleBtn")
+        self._add_btn.setCursor(Qt.PointingHandCursor)
+        self._add_btn.setEnabled(False)
+        self._add_btn.clicked.connect(self.add_subtitle_requested)
+        return self._add_btn
+
+    def _build_clip_section(self) -> QWidget:
         w = QWidget()
         layout = QVBoxLayout(w)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(0, 0, 0, 14)
+        layout.setSpacing(8)
 
-        # Header
-        header = QLabel("SUBTITLE")
-        header.setObjectName("SectionHeader")
-        layout.addWidget(header)
+        label = QLabel("Text")
+        label.setObjectName("FieldLabel")
+        layout.addWidget(label)
 
-        # Import SRT button
-        import_btn = QPushButton("Import SRT")
-        import_btn.setObjectName("ImportBtn")
-        import_btn.setCursor(Qt.PointingHandCursor)
-        import_btn.clicked.connect(self._on_import_srt)
-        layout.addWidget(import_btn)
-
-        # SRT info labels
-        self._srt_label = QLabel("Chưa chọn file")
-        self._srt_label.setObjectName("SrtLabel")
-        self._srt_label.setWordWrap(True)
-        layout.addWidget(self._srt_label)
-
-        self._srt_meta = QLabel("")
-        self._srt_meta.setObjectName("SrtMeta")
-        self._srt_meta.hide()
-        layout.addWidget(self._srt_meta)
+        self._text_edit = QPlainTextEdit()
+        self._text_edit.setObjectName("SubtitleTextEdit")
+        self._text_edit.setPlaceholderText("Nội dung subtitle…")
+        self._text_edit.setMinimumHeight(72)
+        self._text_edit.setMaximumHeight(120)
+        self._text_edit.textChanged.connect(self._on_text_changed)
+        layout.addWidget(self._text_edit)
 
         return w
 
@@ -167,16 +228,16 @@ class Sidebar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
 
-        # Header
+        # STYLE header
         header = QLabel("STYLE")
         header.setObjectName("SectionHeader")
         layout.addWidget(header)
 
         # Mode radio
-        mode_widget = QWidget()
-        mode_layout = QVBoxLayout(mode_widget)
-        mode_layout.setContentsMargins(0, 0, 0, 0)
-        mode_layout.setSpacing(6)
+        mode_w = QWidget()
+        mode_l = QVBoxLayout(mode_w)
+        mode_l.setContentsMargins(0, 0, 0, 0)
+        mode_l.setSpacing(6)
 
         self._radio_normal = QRadioButton("Normal")
         self._radio_normal.setChecked(True)
@@ -187,28 +248,27 @@ class Sidebar(QWidget):
         self._mode_group.addButton(self._radio_highlight)
         self._mode_group.buttonClicked.connect(self._emit_style)
 
-        mode_layout.addWidget(self._radio_normal)
-        mode_layout.addWidget(self._radio_highlight)
-        layout.addWidget(mode_widget)
+        mode_l.addWidget(self._radio_normal)
+        mode_l.addWidget(self._radio_highlight)
+        layout.addWidget(mode_w)
 
-        # Divider nhỏ
-        layout.addWidget(self._build_divider())
+        # Small divider
+        div = self._build_divider()
+        layout.addWidget(div)
 
-        # Form layout cho font, size, color, position
+        # Form
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignLeft)
         form.setFormAlignment(Qt.AlignLeft)
         form.setHorizontalSpacing(12)
         form.setVerticalSpacing(10)
 
-        # Font
         self._font_combo = QComboBox()
         self._font_combo.addItems(FONTS)
         self._font_combo.setCursor(Qt.PointingHandCursor)
         self._font_combo.currentTextChanged.connect(self._emit_style)
         form.addRow("Font", self._font_combo)
 
-        # Size
         self._size_spin = QSpinBox()
         self._size_spin.setRange(10, 120)
         self._size_spin.setValue(54)
@@ -216,18 +276,14 @@ class Sidebar(QWidget):
         self._size_spin.valueChanged.connect(self._emit_style)
         form.addRow("Cỡ chữ", self._size_spin)
 
-        # Text color
         self._text_color_btn = ColorButton("#ffffff")
         self._text_color_btn.colorChanged.connect(self._emit_style)
         form.addRow("Màu chữ", self._text_color_btn)
 
-        # Highlight color
         self._hl_color_btn = ColorButton("#ffd900")
         self._hl_color_btn.colorChanged.connect(self._emit_style)
         form.addRow("Highlight", self._hl_color_btn)
 
-        # 82 means subtitle's baseline is at 82% of the video height — the
-        # requested lower-middle position (bottom: 18%).
         self._position_y_spin = QSpinBox()
         self._position_y_spin.setRange(50, 95)
         self._position_y_spin.setValue(82)
@@ -242,7 +298,6 @@ class Sidebar(QWidget):
         self._stroke_spin.valueChanged.connect(self._emit_style)
         form.addRow("Viền chữ", self._stroke_spin)
 
-        # Position
         self._pos_combo = QComboBox()
         for label, _ in POSITIONS:
             self._pos_combo.addItem(label)
@@ -260,17 +315,20 @@ class Sidebar(QWidget):
         return line
 
     # ──────────────────────────────────────────────────────────────────────
-    # Slots
+    # Private slots
     # ──────────────────────────────────────────────────────────────────────
 
-    def _on_import_srt(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Chọn file SRT", "",
-            "Subtitle Files (*.srt);;All Files (*)"
+    def _on_text_changed(self) -> None:
+        if self._block_text_signal or not self._selected_clip_id:
+            return
+        self.clip_text_changed.emit(
+            self._selected_clip_id,
+            self._text_edit.toPlainText(),
         )
-        if path:
-            self.srt_loaded.emit(path)
+
+    def _on_delete(self) -> None:
+        if self._selected_clip_id:
+            self.clip_delete_requested.emit(self._selected_clip_id)
 
     def _emit_style(self, *_) -> None:
-        self.style_changed.emit(self.get_style_settings())
-
+        self.style_changed.emit(self.get_style())

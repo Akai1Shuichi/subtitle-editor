@@ -1,8 +1,8 @@
 """
 src/ui/video_panel.py
 ──────────────────────
-Panel trái: vùng kéo-thả / chọn video + hiển thị preview placeholder
-và thông tin video (tên file, resolution, duration).
+Panel trái: vùng kéo-thả / chọn video + hiển thị placeholder preview.
+Trong bước 3, vdừa drop zone sẽ được thay thế bằng QVideoWidget.
 """
 from __future__ import annotations
 
@@ -52,11 +52,21 @@ class VideoPanel(QWidget):
     # Public API
     # ──────────────────────────────────────────────────────────────────────
 
-    def set_video_info(self, name: str, resolution: str, duration_str: str) -> None:
+    def set_video_info(
+        self,
+        name: str,
+        resolution: str,
+        duration_str: str,
+        clip_count: int = 0,
+    ) -> None:
         """Gọi sau khi probe_video() thành công."""
-        self._drop_zone.set_loaded(name)
+        self._drop_zone.set_loaded(name, resolution, duration_str, clip_count)
         self._meta_bar.set_info(name, resolution, duration_str)
         self._meta_bar.show()
+
+    def update_clip_count(self, count: int) -> None:
+        """Cập nhật số lượng clip hiển thị trên panel (gọi sau import SRT)."""
+        self._drop_zone.set_clip_count(count)
 
     def clear(self) -> None:
         self._drop_zone.clear()
@@ -136,13 +146,36 @@ class _DropZone(QWidget):
         self._sub.setObjectName("DropSub")
         layout.addWidget(self._sub)
 
-    def set_loaded(self, name: str) -> None:
+    def set_loaded(
+        self,
+        name: str,
+        resolution: str = "",
+        duration_str: str = "",
+        clip_count: int = 0,
+    ) -> None:
         self._loaded = True
-        self._icon.setText("✅")
+        self._icon.setText("🎬")
         self._title.setText(name)
-        self._sub.setText("Click để đổi video")
-        self.setObjectName("DropZoneLoaded")
-        self.setStyleSheet(self.styleSheet())  # trigger repaint
+        meta_parts = [p for p in [resolution, duration_str] if p]
+        meta_text = "  ·  ".join(meta_parts) if meta_parts else "Click để đổi video"
+        clip_info = f"  ·  {clip_count} subtitles" if clip_count > 0 else ""
+        self._sub.setText(meta_text + clip_info)
+
+    def set_clip_count(self, count: int) -> None:
+        if not self._loaded:
+            return
+        # Re-read current sub text and append clip info
+        # Simplest: just update sub
+        text = self._sub.text()
+        # Remove previous subtitle count if present
+        if " · " in text:
+            base = text.rsplit("  ·  ", 1)[0]
+        else:
+            base = text
+        if count > 0:
+            self._sub.setText(f"{base}  ·  {count} subtitles")
+        else:
+            self._sub.setText(base)
 
     def clear(self) -> None:
         self._loaded = False

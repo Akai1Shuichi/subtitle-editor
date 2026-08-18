@@ -77,8 +77,7 @@ class SubtitleStyle:
     """
     Style toàn cục của project.
 
-    Thay thế dict trả về từ sidebar.get_style_settings() bằng kiểu rõ ràng.
-    Có thể chuyển thẳng sang SubtitleSettings dùng style_to_subtitle_settings().
+    Dùng style_to_subtitle_settings() để chuyển sang SubtitleSettings (ass_builder).
     """
 
     mode: StyleMode = "normal"

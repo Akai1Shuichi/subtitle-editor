@@ -1,350 +1,199 @@
-# Giải thích lõi tạo và animate subtitle
+# Giải thích kiến trúc — Subtitle Video Editor
 
-## Tổng quan luồng dữ liệu
+## 1. ASS Renderer core
+
+*(nội dung cũ giữ nguyên ở dưới, phần này được thêm vào từ giải thích khi code)*
+
+---
+
+## 2. 4 UI States — Editor State Machine
+
+Editor chỉ có **một màn hình duy nhất** nhưng thích ứng theo 4 trạng thái,
+được suy ra từ 3 biến boolean: `has_video`, `has_clips`, `selected_clip`.
 
 ```
-File .srt
-   │
-   ▼  subtitle_parser.py
-pysubs2.SSAFile (danh sách SRT events)
-   │
-   ├── (nếu có)  word_timing.py → TimingFile  (timing từng từ)
-   │
-   ▼  ass_builder.py  ←── SubtitleSettings (font, màu, vị trí)
-pysubs2.SSAFile (ASS events đã render)
-   │
-   ▼  exporter.py
-FFmpeg burn subtitle → MP4 output
+State 1: has_video=F  has_clips=F  selected=F  → drop zone
+State 2: has_video=T  has_clips=F  selected=F  → video info + style
+State 3: has_video=T  has_clips=T  selected=F  → clip chips + style
+State 4: has_video=T  has_clips=T  selected=T  → text editor + style + Delete
 ```
 
 ---
 
-## 1. Đọc SRT — `subtitle_parser.py`
+### Trung tâm điều phối: `_update_ui_state()`
 
-### `load_srt(path)`
+**File:** `src/ui/main_window.py` — `MainWindow._update_ui_state()`
 
-Đọc file `.srt` bằng `pysubs2`, trả về `SSAFile` — danh sách các **SRT event**, mỗi event gồm:
-- `start` / `end` (milliseconds)
-- `text` (nội dung câu)
-
-```python
-subs = pysubs2.SSAFile.from_string(text, format_="srt")
-```
-
-File đọc theo encoding `utf-8-sig` (tự bỏ BOM nếu có). Ném lỗi rõ ràng nếu không phải UTF-8 hoặc SRT rỗng.
-
----
-
-## 2. Timing từng từ — `word_timing.py`
-
-### Cấu trúc dữ liệu
-
-| Class | Ý nghĩa |
-|---|---|
-| `WordTiming` | Timing của **một từ**: `word`, `start_ms`, `end_ms` |
-| `LineTiming` | Timing của **một dòng subtitle** + danh sách `WordTiming` |
-| `TimingFile` | Toàn bộ timing, tương ứng 1-1 với một file SRT |
-
-### File sidecar `.words.json`
-
-Lưu cạnh file `.srt`, ví dụ `video.words.json`:
-
-```json
-{
-  "version": 1,
-  "source_srt": "video.srt",
-  "lines": [
-    {
-      "index": 0,
-      "start_ms": 1000,
-      "end_ms": 3000,
-      "words": [
-        {"word": "AI",   "start_ms": 1000, "end_ms": 1300},
-        {"word": "đang", "start_ms": 1320, "end_ms": 1600}
-      ]
-    }
-  ]
-}
-```
-
-Nếu **không có** file này, `ass_builder.py` tự chia đều thời gian cho từng từ (xem phần 3).
-
----
-
-## 3. Lõi tạo và animate subtitle — `ass_builder.py`
-
-Đây là **file trung tâm** của toàn bộ hệ thống.
-
-### 3.1 Quyết định thiết kế quan trọng: KHÔNG dùng ASS karaoke `\kf`
-
-> ASS karaoke (`\kf`) vẽ một dải màu từ trái sang phải qua từng từ.  
-> Module này **không dùng** kỹ thuật đó vì lý do:
-> - `\kf` gây ra **layout shift** (chữ bị dịch chuyển khi scale)
-> - Thay vào đó: **chuyển màu toàn bộ từ** (trắng → vàng) và giữ vị trí caption ổn định tuyệt đối
-
-### 3.2 `SubtitleSettings` — cấu hình giao diện
+Đây là hàm **duy nhất** cập nhật toàn bộ UI. Mọi thay đổi state đều kết thúc
+bằng việc gọi hàm này:
 
 ```python
-@dataclass(frozen=True)
-class SubtitleSettings:
-    fontname: str = "Arial Black"
-    fontsize: int = 54
-    text_color: tuple = (255, 255, 255)       # trắng
-    highlight_color: tuple = (255, 217, 0)    # vàng
-    stroke_color: tuple = (0, 0, 0)           # viền đen
-    stroke_width: float = 4.0
-    shadow: float = 2.0
-    position_y: int = 82    # % từ trên xuống (= bottom 18%)
-    max_words_per_group: int = 5
-    alignment: Alignment = Alignment.BOTTOM_CENTER
-```
+def _update_ui_state(self) -> None:
+    has_video = self._project.has_video        # VideoInfo != None
+    has_clips = self._project.has_clips        # len(clips) > 0
+    selected_clip = self._project.clip_by_id(self._selected_clip_id)
 
-### 3.3 `_style_for()` — tạo ASS Style
+    self._header_bar.set_has_video(has_video)
+    self._header_bar.set_export_enabled(has_video and has_clips)
 
-Chuyển `SubtitleSettings` → `pysubs2.SSAStyle`, chuẩn hóa các giá trị pixel theo `video_height`:
+    if has_video:
+        self._video_panel.set_video_info(...)  # chuyển drop zone → video info
 
-```python
-marginv = round((100 - settings.position_y) * video_height / 100)
-```
+    self._inspector.set_has_video(has_video)   # bật/tắt style section
+    self._inspector.select_clip(selected_clip) # bật/tắt text editor
 
-Ví dụ: `position_y=82`, `video_height=1280` → `marginv = 230px` từ đáy.
-
----
-
-### 3.4 `SubtitleRenderer.build()` — điểm vào chính
-
-```python
-def build(self, subs, *, word_timings=None, video_width=0, video_height=0) -> SSAFile
-```
-
-Duyệt từng SRT event:
-- **Nếu mode = `"normal"`**: copy thẳng event sang ASS, không có highlight.
-- **Nếu mode = `"highlight"`**: qua pipeline phân đoạn + render theo từng từ.
-
----
-
-### 3.5 `_segments()` — chia câu thành nhóm từ nhỏ
-
-Mỗi SRT event (một câu dài) được chia thành các **segment** 2–5 từ. Lý do: tránh caption tràn quá nhiều dòng.
-
-**Bước 1 — Gán timing cho từng từ:**
-
-```python
-# Nếu có word timing chính xác:
-timed = [SubtitleWord(w, t.start_ms, t.end_ms) for w, t in zip(words, timing.words)]
-
-# Nếu KHÔNG có → chia đều thời gian:
-timed = [
-    SubtitleWord(word,
-        start = event.start + round(i * duration / len(words)),
-        end   = event.start + round((i+1) * duration / len(words))
+    self._timeline.set_clips(
+        self._project.sorted_clips() if has_clips else [],
+        selected_clip_id=self._selected_clip_id,
     )
-    for i, word in enumerate(words)
-]
-```
-
-**Bước 2 — Nhóm thành chunk:**
-
-```python
-size = max(2, min(5, settings.max_words_per_group))
-chunks = [timed[i:i+size] for i in range(0, len(timed), size)]
-```
-
-Mỗi chunk là một `SubtitleSegment(start_ms, end_ms, words)`.
-
----
-
-### 3.6 `_segment_events()` — tạo ASS events từ một segment
-
-```
-Segment: ["AI", "đang", "thay", "đổi", "cách"]
-          ├──── window khi "AI" active ────┤
-                ├──── window khi "đang" active ────┤
-                       ...
-```
-
-Với mỗi từ `active` trong segment:
-- `start` = `active.start_ms`
-- `end` = `next_word.start_ms` (hoặc `segment.end_ms` nếu là từ cuối)
-
-→ Tạo **một ASS event** cho mỗi "window" thời gian đó.
-
-```python
-end = (segment.words[active_index + 1].start_ms
-       if active_index + 1 < len(segment.words)
-       else segment.end_ms)
 ```
 
 ---
 
-### 3.7 `_render_words()` — đây là nơi "animate" xảy ra ✨
+### State 1 — Chưa có video
 
-Đây là hàm tạo ra **hiệu ứng highlight từng từ** (TikTok-style).
+**Điều kiện:** `has_video = False`
 
+**VideoPanel** → drop zone mặc định, không gọi `set_video_info()`:
 ```python
-def _render_words(self, words, active_index) -> str:
+# main_window.py
+if has_video:               # ← FALSE → bỏ qua
+    self._video_panel.set_video_info(...)
 ```
+`_DropZone` hiển thị icon 🎬 + "Kéo video vào đây" (`video_panel.py`).
 
-**Nguyên tắc quan trọng:**  
-> **Luôn hiển thị đầy đủ tất cả các từ trong segment**, không build up từng từ một.  
-> Lý do: nếu caption mọc dần từng từ → chiều rộng caption thay đổi → text bị "nhảy" trên màn hình.
-
-**Logic render:**
-
-```
-words = ["AI", "đang", "thay", "đổi"]
-active_index = 1  (từ "đang" đang được highlight)
-
-Kết quả text ASS:
-  "AI {\1c&H00D9FF&}đang{\r} thay\Nđổi"
-         ↑ đổi màu vàng  ↑ reset về màu mặc định
-```
-
-Cụ thể:
+**Inspector** → `set_has_video(False)` ẩn toàn bộ style controls:
 ```python
-for index, word in enumerate(words):
-    if index == active_index:
-        rendered.append(r"{\1c&H00D9FF&}%s{\r}" % word.text)  # highlight vàng
+# inspector.py
+def set_has_video(self, has_video: bool) -> None:
+    self._add_btn.setEnabled(has_video)       # disabled
+    self._style_section.setVisible(has_video) # HIDDEN
+    self._style_divider.setVisible(has_video) # HIDDEN
+```
+
+---
+
+### State 2 — Có video, chưa có subtitle
+
+**Điều kiện:** `has_video = True`, `has_clips = False`
+
+**VideoPanel** → `set_video_info()` → `_DropZone.set_loaded()` chuyển sang hiển thị
+tên file + resolution + duration:
+```python
+# video_panel.py — _DropZone.set_loaded()
+self._icon.setText("🎬")
+self._title.setText(name)               # e.g. "video.mp4"
+self._sub.setText("1920×1080  ·  00:40")
+```
+
+**Inspector** → style section hiện, text editor ẩn vì `select_clip(None)`:
+```python
+# inspector.py
+self._add_btn.setEnabled(True)          # Add Subtitle bật
+self._style_section.setVisible(True)    # style hiện
+
+# select_clip(None):
+self._clip_section.hide()               # text editor ẩn
+self._delete_btn.hide()                 # Delete ẩn
+```
+
+**Timeline** → `set_clips([])` → hiển thị hint:
+```python
+# timeline_placeholder.py
+if not sorted_clips:
+    self._scroll.hide()
+    self._hint.show()   # "Import SRT hoặc nhấn ＋ Add Subtitle"
+    return
+```
+
+---
+
+### State 3 — Có subtitle (chưa chọn clip)
+
+**Điều kiện:** `has_video = True`, `has_clips = True`, `selected_clip = None`
+
+**Timeline** → render các chip, không chip nào selected:
+```python
+# timeline_placeholder.py
+self._hint.hide()
+self._scroll.show()
+for clip in sorted_clips:
+    chip = _ClipChip(clip, selected=False)   # chip bình thường
+    chip.clicked_id.connect(self._on_chip_clicked)
+    self._chips_layout.insertWidget(...)
+```
+
+**Inspector** → style controls hiện, text editor vẫn ẩn vì `select_clip(None)`:
+```python
+# inspector.py
+def select_clip(self, clip):
+    if clip:
+        ...           # State 4
     else:
-        rendered.append(word.text)                              # giữ màu trắng
-    if index + 1 == split_at:
-        rendered.append(r"\N")   # xuống dòng tại điểm giữa để cân bằng 2 dòng
+        self._clip_section.hide()   # ← State 3: ẩn text editor
+        self._delete_btn.hide()
 ```
-
-**Màu vàng trong ASS:** `\1c&H00D9FF&` là màu `(255, 217, 0)` viết dưới dạng BGR hex của ASS.
-
-**Line-break tự động:**  
-Khi segment có nhiều hơn 1 từ, tự xuống dòng tại điểm giữa:
-```python
-split_at = max(1, (len(words) + 1) // 2)
-```
-
-Ví dụ: 4 từ → xuống dòng sau từ thứ 2. Kết quả: 2 dòng đều nhau.
 
 ---
 
-### 3.8 Kết quả cuối: từng ASS event trong output
+### State 4 — Clip đang được chọn
 
-Giả sử SRT event: `"AI đang thay đổi cách"` từ 1000ms đến 3000ms, 5 từ:
-
-| Event | Thời gian | Nội dung ASS text (tóm tắt) |
-|---|---|---|
-| 1 | 1000 → 1400ms | **`AI`** đang\Nthay đổi cách |
-| 2 | 1400 → 1800ms | AI **`đang`**\Nthay đổi cách |
-| 3 | 1800 → 2200ms | AI đang\N**`thay`** đổi cách |
-| 4 | 2200 → 2600ms | AI đang\Nthay **`đổi`** cách |
-| 5 | 2600 → 3000ms | AI đang\Nthay đổi **`cách`** |
-
-Mỗi event có text đầy đủ, chỉ khác nhau từ nào được bọc tag màu vàng → **caption không nhảy, chỉ màu thay đổi**.
-
----
-
-## 4. Burn subtitle vào video — `exporter.py`
-
-### `export_video()`
-
-Gọi FFmpeg với filter `ass=`:
+**Trigger:** User click chip → `_ClipChip.mousePressEvent`
+→ emit `clicked_id(clip_id)`
+→ `TimelinePlaceholder._on_chip_clicked()`
+→ emit `clip_selected(clip_id)`
+→ `MainWindow._on_clip_selected()`:
 
 ```python
-cmd = [
-    ffmpeg, "-y",
-    "-i", str(video_info.path),
-    "-vf", f"ass='{ass_escaped}'",   # ← burn subtitle vào frame
-    "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-    "-c:a", "aac", "-b:a", "192k",
-    "-movflags", "+faststart",
-    str(output_path),
-]
+# main_window.py
+def _on_clip_selected(self, clip_id: str) -> None:
+    self._selected_clip_id = clip_id
+    self._update_ui_state()   # ← trigger lại toàn bộ
 ```
 
-### Tracking tiến trình
-
-FFmpeg in ra stderr các dòng như:
-```
-frame=  120 fps=30 time=00:00:04.00 bitrate=...
-```
-
-Module parse `time=HH:MM:SS.xx` → tính phần trăm:
+**Inspector** → `select_clip(clip)` hiển thị đầy đủ:
 ```python
-pct = min(secs / duration * 100, 99.9)
-on_progress(pct)
+# inspector.py
+def select_clip(self, clip):
+    self._text_edit.setPlainText(clip.text)  # load text
+    self._clip_section.show()               # text editor hiện
+    self._delete_btn.show()                 # Delete hiện
 ```
 
-### Hủy export
+**Chip** được highlight qua CSS property:
+```python
+# timeline_placeholder.py
+chip = _ClipChip(clip, selected=(clip.id == selected_clip_id))
+# → chip[selected="true"] → CSS border sáng hơn
+```
 
-Nếu `cancel_event.is_set()` → `proc.kill()` + xóa file output dở dang.
-
-### `generate_preview_clip()`
-
-Giống `export_video` nhưng:
-- Chỉ render `duration=5` giây đầu
-- Dùng `-preset ultrafast` để nhanh nhất
-- Lưu vào `temp/preview.mp4`
+**Bỏ chọn:** Click lại chip đang chọn → `clip_deselected()` → `_selected_clip_id = None`
+→ `_update_ui_state()` → quay về State 3.
 
 ---
 
-## 5. Thông tin video — `video_info.py`
-
-### `probe_video(path)`
-
-Chạy `ffprobe -print_format json -show_streams -show_format` → parse JSON → lấy:
-- `width`, `height` từ video stream
-- `fps` từ `r_frame_rate` (dạng `"30000/1001"` → tính thành float)
-- `duration` từ `format.duration` (ưu tiên hơn stream.duration vì chính xác hơn)
-
----
-
-## 6. Sơ đồ luồng xử lý chi tiết
+### Sơ đồ luồng tổng
 
 ```
-load_srt("video.srt")
-     │
-     │  SSAFile [event0, event1, ...]
-     ▼
-SubtitleRenderer.build(subs, word_timings=..., video_width=..., video_height=...)
-     │
-     │  Với mỗi event:
-     │
-     ├── mode="normal"  → copy thẳng event → out.events
-     │
-     └── mode="highlight"
-              │
-              ▼ _segments(event, text, timing)
-              │
-              │  Gán timing từng từ (exact hoặc linear interpolation)
-              │  Nhóm thành chunks 2–5 từ
-              │
-              ▼ _segment_events(segment)
-              │
-              │  Với mỗi từ active trong segment:
-              │    tính [start, end] window
-              │
-              ▼ _word_events(segment, active_index, start, end)
-              │
-              ▼ _render_words(words, active_index)
-              │
-              │  Build ASS text:
-              │    từ highlight → bọc {\1c&H00D9FF&}...{\r}
-              │    các từ còn lại → text thường
-              │    điểm giữa → chèn \N (xuống dòng)
-              │
-              └── SSAEvent(start, end, text=rendered_text)
-                       ↓
-              out.events.append(event)
-
-out (SSAFile ASS) → save_ass() → video.ass
-                              → export_video() → FFmpeg → video_out.mp4
+User action
+    │
+    ├── import video   → _on_video_selected()  → project.video_info = info
+    ├── import SRT     → _on_srt_loaded()      → project.clips = [...]
+    ├── click chip     → _on_clip_selected()   → _selected_clip_id = id
+    ├── click deselect → _on_clip_deselected() → _selected_clip_id = None
+    └── add subtitle   → _on_add_subtitle()    → project.clips.append(new)
+                                ↓
+                    _update_ui_state()   ← MỌI thứ đều qua đây
+                            │
+                ┌───────────┼────────────────┐
+                ↓           ↓                ↓
+          has_video?    has_clips?       selected?
+               │             │               │
+        header + panel   timeline chips  inspector
+        set_video_info   set_clips([])   select_clip(clip|None)
+        set_has_video    set_has_video   set_has_video
 ```
 
----
-
-## 7. Tóm tắt kỹ thuật cốt lõi
-
-| Vấn đề | Giải pháp |
-|---|---|
-| Highlight từng từ | Tạo **N ASS event riêng biệt** cho mỗi từ, mỗi event có tag màu cho 1 từ |
-| Tránh caption nhảy | Luôn render **đủ tất cả từ** trong segment, chỉ đổi màu |
-| Tránh layout shift | **Không dùng `\kf` karaoke** (vốn có side effect scale glyph) |
-| Không có word timing | Chia đều `(end - start) / N` cho N từ |
-| Xuống dòng cân đối | Tự chèn `\N` tại điểm giữa segment |
-| Vị trí Y linh hoạt | `marginv = (100 - position_y%) × video_height` |
+> **Nguyên tắc quan trọng:** Không có `if state == 1 / 2 / 3 / 4` nào cả.
+> State được **suy ra** từ 3 biến `has_video`, `has_clips`, `selected_clip`
+> và mỗi widget tự quyết định hiển thị gì dựa trên input nhận được.
