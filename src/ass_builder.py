@@ -165,6 +165,11 @@ class SubtitleRenderer:
             text=self._render_words(segment.words, active_index),
         )]
 
+    def _highlight_ass_color(self) -> str:
+        """Convert settings.highlight_color (R, G, B) to ASS inline colour tag format &HBBGGRR&."""
+        r, g, b = self.settings.highlight_color
+        return "&H%02X%02X%02X&" % (b, g, r)
+
     def _render_words(
         self, words: tuple[SubtitleWord, ...], active_index: int
     ) -> str:
@@ -173,10 +178,11 @@ class SubtitleRenderer:
         # All tokens are present from the beginning of the segment. Never
         # build up a sentence word-by-word: that causes width changes, reflow,
         # and a visibly jumping caption.
+        highlight = self._highlight_ass_color()
         for index, word in enumerate(words):
             if index == active_index:
                 rendered.append(
-                    r"{\1c&H00D9FF&}%s{\r}" % word.text
+                    r"{\1c%s}%s{\r}" % (highlight, word.text)
                 )
             else:
                 rendered.append(word.text)
