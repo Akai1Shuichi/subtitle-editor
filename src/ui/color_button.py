@@ -31,6 +31,12 @@ class ColorButton(QPushButton):
         self._color = QColor(color)
         self._update_style()
 
+    def set_color_rgb(self, rgb: tuple[int, int, int]) -> None:
+        """Set màu từ tuple (R, G, B), không emit signal."""
+        r, g, b = rgb
+        self._color = QColor(r, g, b)
+        self._update_style()
+
     def rgb_tuple(self) -> tuple[int, int, int]:
         c = self._color
         return (c.red(), c.green(), c.blue())

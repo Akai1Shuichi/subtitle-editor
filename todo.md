@@ -1,95 +1,69 @@
-# Subtitle Video Editor — TODO MVP
+# TODO — MVP2: Subtitle Timeline Editor
 
-## Mục tiêu MVP
+## 1. Khảo sát nền tảng và chuẩn bị kiến trúc
 
-- App Windows chạy hoàn toàn local.
-- Nhập một video và một file phụ đề `.srt`.
-- Chọn 2 kiểu subtitle: **Normal** và **Word Highlight**.
-- Export ra `.mp4` có subtitle đã được render trực tiếp vào video.
+- [ ] Rà soát các chức năng MVP1 đang có: import video/SRT, preview, style và export MP4.
+- [ ] Chuẩn hoá model `SubtitleClip`, `SubtitleStyle` và `EditorProject`.
+- [ ] Thiết kế state trung tâm để `SubtitleClip[]` là single source of truth cho timeline, inspector, preview và export.
+- [ ] Bảo đảm SRT chỉ được parse khi import, sau đó editor làm việc hoàn toàn trên `SubtitleClip[]`.
 
-> Stack: Python 3.11+, PySide6, FFmpeg, `pysubs2` (đọc/ghi subtitle ASS), PyInstaller.
+## 2. Xây dựng màn hình Editor và các trạng thái cơ bản
 
-## 0. Chuẩn bị dự án
+- [ ] Tạo layout editor chính: video preview, inspector và timeline.
+- [ ] Hoàn thiện các trạng thái: chưa có video; có video/chưa có subtitle; có subtitle; đang chọn subtitle.
+- [ ] Kết nối import video và import SRT vào màn hình editor.
+- [ ] Parse SRT thành danh sách `SubtitleClip` với `id`, `text`, `startMs`, `endMs`.
 
-- [ ] Tạo virtual environment Python.
-- [ ] Cài dependencies: `PySide6`, `pysubs2`.
-- [ ] Tải FFmpeg Windows và kiểm tra lệnh `ffmpeg -version` chạy được.
-- [ ] Tạo cấu trúc thư mục:
+## 3. Video playback và realtime preview
 
-```text
-src/          # mã Python
-assets/       # icon, font mẫu (nếu cần)
-binaries/     # ffmpeg.exe, ffprobe.exe khi đóng gói
-temp/         # file ASS tạm
-output/       # video export mặc định
-tests/        # test parser/generator
-```
+- [ ] Dùng thẻ HTML `<video>` cho phát video realtime.
+- [ ] Đồng bộ `currentTimeMs` và trạng thái play/pause với video.
+- [ ] Tìm subtitle active theo thời điểm hiện tại và render overlay trên video.
+- [ ] Áp dụng style subtitle realtime trong preview (normal/word highlight, font, màu, stroke, vị trí).
+- [ ] Hỗ trợ sửa text trực tiếp trên preview khi khả thi (double-click, Enter/click-outside để lưu).
 
-- [ ] Viết `README.md`: cách cài, chạy dev, export `.exe`.
+## 4. Triển khai timeline subtitle
 
-## 1. Xử lý subtitle và render (làm trước UI đẹp)
+- [ ] Render thước thời gian, video track, subtitle track và playhead.
+- [ ] Click timeline để seek video.
+- [ ] Đồng bộ playhead khi video đang phát hoặc khi người dùng seek.
+- [ ] Cho phép chọn subtitle clip từ timeline và hiển thị trạng thái selected.
+- [ ] Thêm zoom timeline và quy đổi nhất quán giữa pixel với milliseconds.
 
-- [ ] Đọc `.srt`, kiểm tra encoding UTF-8 và hiển thị lỗi dễ hiểu nếu file không hợp lệ.
-- [ ] Chuyển các dòng subtitle sang `.ass`.
-- [ ] Tạo style **Normal**: text trắng, viền tối, shadow nhẹ, vị trí bottom.
-- [ ] Tạo lệnh FFmpeg burn file `.ass` vào video và xuất `.mp4`.
-- [ ] Kiểm tra export với video dọc và video ngang.
-- [ ] Lấy duration/resolution video bằng `ffprobe`.
-- [ ] Parse tiến trình FFmpeg để trả về phần trăm export.
-- [ ] Xử lý lỗi: thiếu FFmpeg, video không đọc được, hết dung lượng, người dùng hủy export.
+## 5. Chỉnh timing trực tiếp trên timeline
 
-## 2. Word Highlight / Karaoke
+- [ ] Kéo toàn bộ clip để cập nhật đồng thời `startMs` và `endMs`.
+- [ ] Kéo mép trái để resize và cập nhật `startMs`.
+- [ ] Kéo mép phải để resize và cập nhật `endMs`.
+- [ ] Thêm các ràng buộc hợp lệ: không âm, không vượt video duration và luôn có `endMs > startMs`.
+- [ ] Kiểm tra preview, inspector và export cùng phản ánh timing mới ngay lập tức.
 
-- [ ] Quy định format dữ liệu timing cho từng từ.
-- [ ] Làm bản đơn giản từ SRT: cả câu trắng, khi câu active thì đổi màu hoặc fill theo thời lượng câu.
-- [ ] Sinh hiệu ứng bằng ASS karaoke tags (`\\k` / `\\kf`) khi có timing từng từ.
-- [ ] Thêm dữ liệu timing từng từ thủ công trong editor (giai đoạn sau MVP cơ bản).
+## 6. Inspector và thao tác subtitle
 
-> Lưu ý: SRT chỉ có thời gian của **cả câu**, không có thời gian từng từ. Vì vậy highlight chạy chính xác theo từng từ cần người dùng chỉnh timing hoặc một bước AI/transcription về sau.
+- [ ] Hiển thị style chung khi chưa chọn subtitle.
+- [ ] Hiển thị textarea text và nút Delete khi đã chọn subtitle.
+- [ ] Cập nhật text subtitle từ inspector và phản ánh realtime trên timeline/preview.
+- [ ] Thêm subtitle tại playhead với thời lượng mặc định 2 giây, tự chọn clip mới để người dùng sửa nội dung.
+- [ ] Xoá subtitle đang chọn và dọn trạng thái selection an toàn.
 
-## 3. UI PySide6
+## 7. Hoàn thiện style subtitle
 
-- [ ] Tạo cửa sổ chính theo layout trong `ui.md`.
-- [ ] Nút chọn video; hiển thị tên file, resolution và thời lượng.
-- [ ] Nút chọn/import SRT; hiển thị số dòng subtitle.
-- [ ] Radio chọn `Normal` / `Word Highlight`.
-- [ ] Form style: font, cỡ chữ, text color, highlight color, vị trí.
-- [ ] Nút chọn thư mục/tên file output.
-- [ ] Nút Export: disable khi thiếu video hoặc subtitle.
-- [ ] Progress bar, thời gian đã chạy, nút Cancel.
-- [ ] Thông báo Export thành công và nút mở thư mục output.
+- [ ] Hỗ trợ Normal và Word Highlight; word timing được suy ra từ duration subtitle.
+- [ ] Hoàn thiện các control: font family, font size, text color, highlight color, stroke width và position.
+- [ ] Xác định rõ cách kế thừa/ghi đè style giữa style chung và `clip.style` (nếu có).
+- [ ] Kiểm tra style hiển thị đồng nhất trên preview và khi export.
 
-## 4. Cấu hình project local
+## 8. Cập nhật export MP4
 
-- [ ] Lưu cấu hình thành `.json`: paths, style, mode, output path.
-- [ ] Mở lại project và khôi phục form.
-- [ ] Không copy video vào app; chỉ lưu đường dẫn local để tránh project nặng.
+- [ ] Dùng chính `SubtitleClip[]` đã chỉnh sửa để tạo ASS.
+- [ ] Chuyển Normal và Word Highlight sang ASS/FFmpeg tương ứng.
+- [ ] Giữ timing, text và style của export khớp với realtime preview.
+- [ ] Hiển thị lỗi/trạng thái export rõ ràng và kiểm tra file MP4 đầu ra.
 
-## 5. Kiểm thử MVP
+## 9. Kiểm thử và hoàn thiện MVP
 
-- [ ] Test SRT tiếng Việt có dấu, emoji và ký tự đặc biệt.
-- [ ] Test video ngang 16:9, dọc 9:16 và 1:1.
-- [ ] Test video 1–5 phút; kiểm tra progress và file output.
-- [ ] Test font không tồn tại: fallback font rõ ràng.
-- [ ] Test đường dẫn Windows có khoảng trắng và tiếng Việt.
-- [ ] Test hủy export, rồi export lại không bị file tạm lỗi.
-
-## 6. Đóng gói Windows
-
-- [ ] Bundle `ffmpeg.exe` + `ffprobe.exe` vào app.
-- [ ] Đóng gói với PyInstaller thành `.exe` / installer.
-- [ ] Chạy thử trên một máy Windows chưa cài Python/FFmpeg.
-- [ ] Ghi version, icon app và hướng dẫn cài đặt.
-
-## Không làm trong MVP đầu tiên
-
-- [ ] AI tự tạo phụ đề / Whisper.
-- [ ] Timeline video đầy đủ, kéo thả subtitle theo từng frame.
-- [ ] Nhiều track subtitle, template marketplace, cloud sync.
-- [ ] macOS installer và code signing.
-
-## Tiêu chí hoàn thành MVP
-
-- [ ] Người dùng chọn video + SRT, chọn một trong hai style, bấm Export.
-- [ ] App xuất MP4 thành công trên Windows mà không cần cài thêm FFmpeg/Python.
-- [ ] Video output hiển thị đúng tiếng Việt và style đã chọn.
+- [ ] Test flow đầy đủ: import video → import SRT → chỉnh timeline/text/style → preview → export.
+- [ ] Test các tình huống biên: clip đầu/cuối video, resize cực ngắn, clip chồng nhau, SRT rỗng/lỗi và video chưa sẵn sàng.
+- [ ] Kiểm tra zoom, seek, play/pause và drag/resize không bị lệch thời gian.
+- [ ] Rà soát UI responsive, thông báo lỗi và khả năng thao tác bằng chuột cơ bản.
+- [ ] Không triển khai các mục ngoài scope: waveform, word-timing editor, speech-to-text, nhiều track, B-roll, transitions, music hoặc keyframes.

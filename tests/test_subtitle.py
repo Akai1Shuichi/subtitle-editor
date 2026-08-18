@@ -130,7 +130,7 @@ class TestBuildAss:
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles
         style = ass.styles["Default"]
-        assert style.fontname == "Montserrat"
+        assert style.fontname == "Arial Black"
         assert style.fontsize == 54
 
     def test_custom_style_params(self):

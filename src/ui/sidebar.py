@@ -28,6 +28,8 @@ from PySide6.QtWidgets import (
 )
 
 from .color_button import ColorButton
+from ..models import SubtitleStyle
+
 
 
 FONTS = [
@@ -46,8 +48,8 @@ POSITIONS = [
 
 class Sidebar(QWidget):
     # ── Signals ──────────────────────────────────────────────────────────
-    srt_loaded = Signal(str)          # path tới file .srt
-    style_changed = Signal(dict)      # dict chứa tất cả setting
+    srt_loaded = Signal(str)              # path tới file .srt
+    style_changed = Signal(object)        # SubtitleStyle object
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -83,18 +85,35 @@ class Sidebar(QWidget):
     # Public API
     # ──────────────────────────────────────────────────────────────────────
 
-    def get_style_settings(self) -> dict:
-        """Trả về dict tất cả style setting hiện tại."""
-        return {
-            "mode": "highlight" if self._radio_highlight.isChecked() else "normal",
-            "fontname": self._font_combo.currentText(),
-            "fontsize": self._size_spin.value(),
-            "text_color": self._text_color_btn.rgb_tuple(),
-            "highlight_color": self._hl_color_btn.rgb_tuple(),
-            "alignment": POSITIONS[self._pos_combo.currentIndex()][1],
-            "position_y": self._position_y_spin.value(),
-            "stroke_width": self._stroke_spin.value(),
-        }
+    def get_style_settings(self) -> SubtitleStyle:
+        """Trả về SubtitleStyle hiện tại từ các control."""
+        return SubtitleStyle(
+            mode="highlight" if self._radio_highlight.isChecked() else "normal",
+            fontname=self._font_combo.currentText(),
+            fontsize=self._size_spin.value(),
+            text_color=self._text_color_btn.rgb_tuple(),
+            highlight_color=self._hl_color_btn.rgb_tuple(),
+            alignment=POSITIONS[self._pos_combo.currentIndex()][1],
+            position_y=self._position_y_spin.value(),
+            stroke_width=float(self._stroke_spin.value()),
+        )
+
+    def apply_style(self, style: SubtitleStyle) -> None:
+        """Áp dụng SubtitleStyle lên các control (dùng khi load project)."""
+        self._radio_highlight.setChecked(style.mode == "highlight")
+        self._radio_normal.setChecked(style.mode == "normal")
+        idx = next(
+            (i for i, (_, v) in enumerate(POSITIONS) if v == style.alignment), 0
+        )
+        self._pos_combo.setCurrentIndex(idx)
+        font_idx = self._font_combo.findText(style.fontname)
+        if font_idx >= 0:
+            self._font_combo.setCurrentIndex(font_idx)
+        self._size_spin.setValue(style.fontsize)
+        self._position_y_spin.setValue(style.position_y)
+        self._stroke_spin.setValue(int(style.stroke_width))
+        self._text_color_btn.set_color_rgb(style.text_color)
+        self._hl_color_btn.set_color_rgb(style.highlight_color)
 
     def set_srt_info(self, path: str, line_count: int) -> None:
         """Cập nhật label sau khi load SRT thành công."""
@@ -254,3 +273,4 @@ class Sidebar(QWidget):
 
     def _emit_style(self, *_) -> None:
         self.style_changed.emit(self.get_style_settings())
+

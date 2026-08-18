@@ -25,10 +25,11 @@ from .video_panel import VideoPanel
 from .sidebar import Sidebar
 from .export_bar import ExportBar
 
-from ..subtitle_parser import load_srt, count_lines, SubtitleError
-from ..ass_builder import build_ass, save_ass
-from ..word_timing import load_timing, TimingFile
-from ..video_info import probe_video, VideoInfo, FFmpegNotFoundError, VideoReadError
+from ..models import EditorProject, clips_from_srt, clips_to_ssa, SubtitleStyle
+from ..ass_builder import save_ass
+from ..subtitle_parser import SubtitleError
+from ..word_timing import load_timing
+from ..video_info import probe_video, FFmpegNotFoundError, VideoReadError
 from ..exporter import (
     export_video, generate_preview_clip, open_with_system_player,
     ExportCancelledError, DiskSpaceError, ExportError,
@@ -103,10 +104,8 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1000, 650)
         self.resize(1200, 720)
 
-        # State
-        self._video_info: VideoInfo | None = None
-        self._srt_path: str | None = None
-        self._word_timings: TimingFile | None = None
+        # State – EditorProject là single source of truth
+        self._project: EditorProject = EditorProject()
         self._cancel_event: threading.Event | None = None
         self._export_thread: QThread | None = None
         self._temp_ass: str | None = None
@@ -180,7 +179,7 @@ class MainWindow(QMainWindow):
             self._show_error("File không tồn tại", str(exc))
             return
 
-        self._video_info = info
+        self._project.video_info = info
         self._video_panel.set_video_info(
             name=info.path.name,
             resolution=info.resolution,
@@ -201,8 +200,9 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_srt_loaded(self, path: str) -> None:
         try:
-            subs = load_srt(path)
-            n = count_lines(subs)
+            # Parse SRT → SubtitleClip[] — chỉ làm MỘT LẦN duy nhất khi import.
+            # Sau đó editor làm việc hoàn toàn trên project.clips.
+            clips = clips_from_srt(path)
         except FileNotFoundError as exc:
             self._show_error("File không tồn tại", str(exc))
             return
@@ -210,49 +210,41 @@ class MainWindow(QMainWindow):
             self._show_error("Lỗi subtitle", str(exc))
             return
 
-        self._srt_path = path
-        # Word timing is optional.  When present next to the SRT it enables
-        # frame-accurate word highlighting; otherwise timings are divided
-        # evenly as a safe preview/export fallback.
+        self._project.clips = clips
+
+        # Word timing tùy chọn — dùng để highlight từng từ khi export.
         timing_path = Path(path).with_suffix(".words.json")
         try:
-            self._word_timings = load_timing(timing_path)
+            self._project.word_timings = load_timing(timing_path)
         except (FileNotFoundError, ValueError):
-            self._word_timings = None
-        self._sidebar.set_srt_info(path, n)
+            self._project.word_timings = None
+
+        self._sidebar.set_srt_info(path, len(clips))
         self._update_export_btn()
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Style changed
     # ──────────────────────────────────────────────────────────────────────
 
-    @Slot(dict)
-    def _on_style_changed(self, settings: dict) -> None:
-        # Có thể dùng sau để cập nhật preview
-        pass
+    @Slot(object)
+    def _on_style_changed(self, style: SubtitleStyle) -> None:
+        """Lưu style mới vào project khi người dùng thay đổi control."""
+        self._project.style = style
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Export
     # ──────────────────────────────────────────────────────────────────────
 
     def _build_ass_to_temp(self) -> bool:
-        """Xây dựng file ASS tạm. Return True nếu thành công."""
+        """Xây dựng file ASS tạm từ project.clips. Return True nếu thành công."""
         try:
-            subs = load_srt(self._srt_path)
-            settings = self._sidebar.get_style_settings()
-            ass = build_ass(
-                subs,
-                mode=settings["mode"],
-                fontname=settings["fontname"],
-                fontsize=settings["fontsize"],
-                text_color=settings["text_color"],
-                highlight_color=settings["highlight_color"],
-                alignment=settings["alignment"],
-                position_y=settings["position_y"],
-                stroke_width=settings["stroke_width"],
-                word_timings=self._word_timings,
-                video_width=self._video_info.width if self._video_info else 0,
-                video_height=self._video_info.height if self._video_info else 0,
+            vi = self._project.video_info
+            ass = clips_to_ssa(
+                self._project.clips,
+                self._project.style,
+                video_width=vi.width if vi else 0,
+                video_height=vi.height if vi else 0,
+                word_timings=self._project.word_timings,
             )
             temp_dir = Path("temp")
             temp_dir.mkdir(exist_ok=True)
@@ -270,7 +262,7 @@ class MainWindow(QMainWindow):
         self._cancel_event = threading.Event()
         self._export_thread = QThread()
         self._worker = ExportWorker(
-            self._video_info,
+            self._project.video_info,
             self._temp_ass,
             output_path,
             self._cancel_event,
@@ -289,7 +281,7 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def _on_export_requested(self, output_path: str) -> None:
-        if not self._video_info or not self._srt_path:
+        if not self._project.has_video or not self._project.has_clips:
             return
         if not self._build_ass_to_temp():
             return
@@ -297,7 +289,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_preview_requested(self) -> None:
-        if not self._video_info or not self._srt_path:
+        if not self._project.has_video or not self._project.has_clips:
             return
         if not self._build_ass_to_temp():
             return
@@ -327,7 +319,7 @@ class MainWindow(QMainWindow):
     # ──────────────────────────────────────────────────────────────────────
 
     def _update_export_btn(self) -> None:
-        ready = bool(self._video_info and self._srt_path)
+        ready = self._project.has_video and self._project.has_clips
         self._export_bar.set_export_enabled(ready)
 
     def _show_error(self, title: str, msg: str) -> None:
