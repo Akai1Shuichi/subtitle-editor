@@ -1,199 +1,132 @@
-# Giải thích kiến trúc — Subtitle Video Editor
+# Giải thích flow — Bước 3: Video playback và realtime preview
 
-## 1. ASS Renderer core
+Mục tiêu của bước 3 là để video đang phát, timeline và subtitle overlay luôn
+đọc cùng một thời điểm. Ứng dụng desktop PySide nên dùng `QMediaPlayer` thay
+cho thẻ HTML `<video>`; vai trò playback và các event thời gian là tương đương.
 
-*(nội dung cũ giữ nguyên ở dưới, phần này được thêm vào từ giải thích khi code)*
+## Nguồn dữ liệu chung
 
----
+`EditorProject` là state trung tâm:
 
-## 2. 4 UI States — Editor State Machine
-
-Editor chỉ có **một màn hình duy nhất** nhưng thích ứng theo 4 trạng thái,
-được suy ra từ 3 biến boolean: `has_video`, `has_clips`, `selected_clip`.
-
-```
-State 1: has_video=F  has_clips=F  selected=F  → drop zone
-State 2: has_video=T  has_clips=F  selected=F  → video info + style
-State 3: has_video=T  has_clips=T  selected=F  → clip chips + style
-State 4: has_video=T  has_clips=T  selected=T  → text editor + style + Delete
+```text
+EditorProject
+├── video_info       thông tin video đã import
+├── clips[]          SubtitleClip(id, text, start_ms, end_ms)
+├── style            SubtitleStyle chung
+└── word_timings     timing từng từ (nếu có sidecar .words.json)
 ```
 
----
+Timeline, Inspector, realtime preview và export đều đọc từ `clips[]`; không
+parse lại SRT sau khi import.
 
-### Trung tâm điều phối: `_update_ui_state()`
+## 1. Import video
 
-**File:** `src/ui/main_window.py` — `MainWindow._update_ui_state()`
-
-Đây là hàm **duy nhất** cập nhật toàn bộ UI. Mọi thay đổi state đều kết thúc
-bằng việc gọi hàm này:
-
-```python
-def _update_ui_state(self) -> None:
-    has_video = self._project.has_video        # VideoInfo != None
-    has_clips = self._project.has_clips        # len(clips) > 0
-    selected_clip = self._project.clip_by_id(self._selected_clip_id)
-
-    self._header_bar.set_has_video(has_video)
-    self._header_bar.set_export_enabled(has_video and has_clips)
-
-    if has_video:
-        self._video_panel.set_video_info(...)  # chuyển drop zone → video info
-
-    self._inspector.set_has_video(has_video)   # bật/tắt style section
-    self._inspector.select_clip(selected_clip) # bật/tắt text editor
-
-    self._timeline.set_clips(
-        self._project.sorted_clips() if has_clips else [],
-        selected_clip_id=self._selected_clip_id,
-    )
+```text
+Chọn/kéo video
+  → MainWindow._on_video_selected(path)
+  → probe_video(path) lấy resolution + duration
+  → project.video_info = info
+  → VideoPanel.load_video(path)
+  → QMediaPlayer.setSource(...)
+  → QVideoSink gửi từng QVideoFrame cho VideoCanvas
 ```
 
----
+`VideoCanvas` tự vẽ frame vào vùng letterbox. Cách dùng `QVideoSink` thay vì
+`QVideoWidget` cho phép subtitle được vẽ trong cùng một `paintEvent`, nên overlay
+không bị video GPU che trên Linux/Wayland.
 
-### State 1 — Chưa có video
+Khi media backend biết duration thật, `durationChanged(ms)` cập nhật lại thời
+lượng hiển thị ở timeline. Nếu media/codec không phát được, `playback_error`
+được chuyển lên `MainWindow` để báo lỗi.
 
-**Điều kiện:** `has_video = False`
+## 2. Play, pause và seek
 
-**VideoPanel** → drop zone mặc định, không gọi `set_video_info()`:
-```python
-# main_window.py
-if has_video:               # ← FALSE → bỏ qua
-    self._video_panel.set_video_info(...)
-```
-`_DropZone` hiển thị icon 🎬 + "Kéo video vào đây" (`video_panel.py`).
+```text
+Nút ▶ / ⏸ timeline
+  → TimelinePlaceholder.play_pause_requested
+  → VideoPanel.toggle_play_pause()
+  → QMediaPlayer.play() hoặc pause()
+  → playbackStateChanged
+  → MainWindow._on_playback_state_changed()
+  → đổi icon nút timeline
 
-**Inspector** → `set_has_video(False)` ẩn toàn bộ style controls:
-```python
-# inspector.py
-def set_has_video(self, has_video: bool) -> None:
-    self._add_btn.setEnabled(has_video)       # disabled
-    self._style_section.setVisible(has_video) # HIDDEN
-    self._style_divider.setVisible(has_video) # HIDDEN
-```
-
----
-
-### State 2 — Có video, chưa có subtitle
-
-**Điều kiện:** `has_video = True`, `has_clips = False`
-
-**VideoPanel** → `set_video_info()` → `_DropZone.set_loaded()` chuyển sang hiển thị
-tên file + resolution + duration:
-```python
-# video_panel.py — _DropZone.set_loaded()
-self._icon.setText("🎬")
-self._title.setText(name)               # e.g. "video.mp4"
-self._sub.setText("1920×1080  ·  00:40")
+Click một clip timeline
+  → clip_selected(id) + seek_requested(clip.start_ms)
+  → VideoPanel.seek(ms)
+  → QMediaPlayer.setPosition(ms)
 ```
 
-**Inspector** → style section hiện, text editor ẩn vì `select_clip(None)`:
-```python
-# inspector.py
-self._add_btn.setEnabled(True)          # Add Subtitle bật
-self._style_section.setVisible(True)    # style hiện
+Timeline hiện chỉ là placeholder dạng chip; click chip seek đến đầu clip. Thước
+thời gian, playhead kéo được và drag/resize clip thuộc bước 4–5.
 
-# select_clip(None):
-self._clip_section.hide()               # text editor ẩn
-self._delete_btn.hide()                 # Delete ẩn
+## 3. Đồng bộ thời gian và active subtitle
+
+Khi player đổi vị trí, nó emit `positionChanged(ms)`:
+
+```text
+QMediaPlayer.positionChanged(ms)
+  → VideoPanel.time_changed(ms)
+  → MainWindow._on_time_changed(ms)
+  → current_time_ms = ms
+  → project.active_clip_at(ms)
+  → VideoPanel.set_active_clip(active_clip, style, ms, ...)
+  → VideoCanvas.update()
+  → TimelinePlaceholder.set_current_time(ms, duration_ms)
 ```
 
-**Timeline** → `set_clips([])` → hiển thị hint:
-```python
-# timeline_placeholder.py
-if not sorted_clips:
-    self._scroll.hide()
-    self._hint.show()   # "Import SRT hoặc nhấn ＋ Add Subtitle"
-    return
+`active_clip_at(ms)` chọn clip thỏa `start_ms <= ms < end_ms`. Nếu không có
+clip active, canvas chỉ vẽ video frame.
+
+## 4. Realtime subtitle overlay
+
+`VideoCanvas._draw_subtitle()` dùng active clip, style và kích thước video gốc
+để vẽ text lên đúng vùng letterbox. Preview hỗ trợ:
+
+- Normal và Word Highlight.
+- Font, màu chữ, màu highlight, viền, shadow, căn trái/giữa/phải và vị trí.
+- Word timing từ `.words.json` nếu timing hợp lệ; nếu không có thì suy ra đều
+  từ duration của subtitle.
+
+Với Normal, ASS được đặt `WrapStyle=1` để quy tắc xuống dòng theo thứ tự từ
+giống preview. Font realtime quy đổi 72 DPI (ASS/libass) sang 96 DPI (Qt), và
+stroke/shadow scale theo kích thước hiển thị. Vì vậy preview và FFmpeg export
+dùng cùng đơn vị style; anti-alias có thể vẫn khác khoảng 1–2 px do Qt và
+libass là hai renderer khác nhau.
+
+## 5. Khi người dùng sửa nội dung hoặc style
+
+```text
+Sửa text trong Inspector
+  → clip_text_changed(id, text)
+  → sửa trực tiếp project.clips[]
+  → render lại chip timeline + refresh overlay
+
+Đổi style trong Inspector
+  → style_changed(style)
+  → project.style = style
+  → refresh overlay
 ```
 
----
+Không có inline edit trên video preview: text chỉ sửa trong Inspector để giữ
+interaction đơn giản và tránh hai nơi cùng chỉnh một dữ liệu.
 
-### State 3 — Có subtitle (chưa chọn clip)
+## 6. Quan hệ với export
 
-**Điều kiện:** `has_video = True`, `has_clips = True`, `selected_clip = None`
+Nút `Export MP4` ở header gọi `clips_to_ssa(project.clips, project.style, ...)`
+để tạo file ASS tạm, sau đó FFmpeg burn ASS vào video. Vì export dùng chính
+`SubtitleClip[]`, `SubtitleStyle` và word timing như realtime preview, text,
+timing và style đã chỉnh là dữ liệu được xuất ra.
 
-**Timeline** → render các chip, không chip nào selected:
-```python
-# timeline_placeholder.py
-self._hint.hide()
-self._scroll.show()
-for clip in sorted_clips:
-    chip = _ClipChip(clip, selected=False)   # chip bình thường
-    chip.clicked_id.connect(self._on_chip_clicked)
-    self._chips_layout.insertWidget(...)
+```text
+project.clips[] + project.style
+        ├── realtime: VideoCanvas
+        └── export: clips_to_ssa → ASS → FFmpeg → MP4
 ```
 
-**Inspector** → style controls hiện, text editor vẫn ẩn vì `select_clip(None)`:
-```python
-# inspector.py
-def select_clip(self, clip):
-    if clip:
-        ...           # State 4
-    else:
-        self._clip_section.hide()   # ← State 3: ẩn text editor
-        self._delete_btn.hide()
-```
+## Giới hạn hiện tại của bước 3
 
----
-
-### State 4 — Clip đang được chọn
-
-**Trigger:** User click chip → `_ClipChip.mousePressEvent`
-→ emit `clicked_id(clip_id)`
-→ `TimelinePlaceholder._on_chip_clicked()`
-→ emit `clip_selected(clip_id)`
-→ `MainWindow._on_clip_selected()`:
-
-```python
-# main_window.py
-def _on_clip_selected(self, clip_id: str) -> None:
-    self._selected_clip_id = clip_id
-    self._update_ui_state()   # ← trigger lại toàn bộ
-```
-
-**Inspector** → `select_clip(clip)` hiển thị đầy đủ:
-```python
-# inspector.py
-def select_clip(self, clip):
-    self._text_edit.setPlainText(clip.text)  # load text
-    self._clip_section.show()               # text editor hiện
-    self._delete_btn.show()                 # Delete hiện
-```
-
-**Chip** được highlight qua CSS property:
-```python
-# timeline_placeholder.py
-chip = _ClipChip(clip, selected=(clip.id == selected_clip_id))
-# → chip[selected="true"] → CSS border sáng hơn
-```
-
-**Bỏ chọn:** Click lại chip đang chọn → `clip_deselected()` → `_selected_clip_id = None`
-→ `_update_ui_state()` → quay về State 3.
-
----
-
-### Sơ đồ luồng tổng
-
-```
-User action
-    │
-    ├── import video   → _on_video_selected()  → project.video_info = info
-    ├── import SRT     → _on_srt_loaded()      → project.clips = [...]
-    ├── click chip     → _on_clip_selected()   → _selected_clip_id = id
-    ├── click deselect → _on_clip_deselected() → _selected_clip_id = None
-    └── add subtitle   → _on_add_subtitle()    → project.clips.append(new)
-                                ↓
-                    _update_ui_state()   ← MỌI thứ đều qua đây
-                            │
-                ┌───────────┼────────────────┐
-                ↓           ↓                ↓
-          has_video?    has_clips?       selected?
-               │             │               │
-        header + panel   timeline chips  inspector
-        set_video_info   set_clips([])   select_clip(clip|None)
-        set_has_video    set_has_video   set_has_video
-```
-
-> **Nguyên tắc quan trọng:** Không có `if state == 1 / 2 / 3 / 4` nào cả.
-> State được **suy ra** từ 3 biến `has_video`, `has_clips`, `selected_clip`
-> và mỗi widget tự quyết định hiển thị gì dựa trên input nhận được.
+- Có play/pause, seek khi click clip và time display.
+- Chưa có thước thời gian thật, click seek theo vị trí chuột, zoom, drag hay
+  resize timing; các phần đó nằm ở bước 4–5.
+- `＋ Add Subtitle` chỉ có một nút ở thanh Timeline; clip mới dài mặc định 2
+  giây tại playhead và được chọn để sửa trong Inspector.

@@ -1,0 +1,923 @@
+{
+    "027874d5-0513-4b42-a917-be08efc0bd99": {
+        "words": [
+            {
+                "value": "viên",
+                "from": 4.519,
+                "to": 4.699
+            },
+            {
+                "value": "sẽ",
+                "from": 4.759,
+                "to": 4.839
+            },
+            {
+                "value": "biến",
+                "from": 4.92,
+                "to": 5.019
+            },
+            {
+                "value": "mất.",
+                "from": 5.099,
+                "to": 5.219
+            }
+        ],
+        "from": 4.519,
+        "to": 5.219,
+        "styles": [],
+        "itemStyles": null
+    },
+    "057b2cb7-6380-4139-96d5-b9feae136e79": {
+        "words": [
+            {
+                "value": "đang",
+                "from": 27.639,
+                "to": 27.799
+            },
+            {
+                "value": "ở",
+                "from": 27.879,
+                "to": 27.899
+            },
+            {
+                "value": "phía",
+                "from": 27.979,
+                "to": 28.139
+            },
+            {
+                "value": "nào?",
+                "from": 28.18,
+                "to": 28.34
+            }
+        ],
+        "from": 27.639,
+        "to": 28.34,
+        "styles": [
+            {
+                "from": 12,
+                "to": 15,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "06b444e0-9363-4ba7-b452-912d62d0be84": {
+        "words": [
+            {
+                "value": "chuyển",
+                "from": 7.859,
+                "to": 8
+            },
+            {
+                "value": "sang",
+                "from": 8.119,
+                "to": 8.3
+            },
+            {
+                "value": "thiết",
+                "from": 8.319,
+                "to": 8.48
+            },
+            {
+                "value": "kế",
+                "from": 8.519,
+                "to": 8.699
+            },
+            {
+                "value": "và",
+                "from": 8.779,
+                "to": 8.819
+            }
+        ],
+        "from": 7.859,
+        "to": 8.939,
+        "styles": [
+            {
+                "from": 0,
+                "to": 6,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "29e65ce2-27b4-4966-8657-e25156e85cfd": {
+        "words": [
+            {
+                "value": "Có",
+                "from": 19.319,
+                "to": 19.399
+            },
+            {
+                "value": "lẽ",
+                "from": 19.459,
+                "to": 19.559
+            },
+            {
+                "value": "tương",
+                "from": 19.68,
+                "to": 19.78
+            },
+            {
+                "value": "lai",
+                "from": 19.84,
+                "to": 20.079
+            },
+            {
+                "value": "không",
+                "from": 20.139,
+                "to": 20.319
+            }
+        ],
+        "from": 19.319,
+        "to": 20.34,
+        "styles": [
+            {
+                "from": 6,
+                "to": 11,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "2b3e1fcb-805d-483e-b4df-6761e1b037a9": {
+        "words": [
+            {
+                "value": "lập",
+                "from": 21.459,
+                "to": 21.6
+            },
+            {
+                "value": "trình",
+                "from": 21.619,
+                "to": 21.819
+            },
+            {
+                "value": "viên,",
+                "from": 21.879,
+                "to": 22.039
+            },
+            {
+                "value": "mà",
+                "from": 22.68,
+                "to": 22.739
+            },
+            {
+                "value": "là",
+                "from": 22.819,
+                "to": 22.859
+            }
+        ],
+        "from": 21.459,
+        "to": 22.92,
+        "styles": [
+            {
+                "from": 4,
+                "to": 9,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "38ce4ee3-1463-4a3f-bf43-e1c76bc78c7d": {
+        "words": [
+            {
+                "value": "làm",
+                "from": 1.639,
+                "to": 1.759
+            },
+            {
+                "value": "việc",
+                "from": 1.819,
+                "to": 1.939
+            },
+            {
+                "value": "mỗi",
+                "from": 2.019,
+                "to": 2.119
+            },
+            {
+                "value": "ngày.",
+                "from": 2.18,
+                "to": 2.379
+            }
+        ],
+        "from": 1.639,
+        "to": 2.379,
+        "styles": [],
+        "itemStyles": null
+    },
+    "4d4deed8-068f-4e57-843c-476398c48232": {
+        "words": [
+            {
+                "value": "có",
+                "from": 3.659,
+                "to": 3.74
+            },
+            {
+                "value": "nghĩa",
+                "from": 3.799,
+                "to": 3.919
+            },
+            {
+                "value": "là",
+                "from": 4,
+                "to": 4.059
+            },
+            {
+                "value": "lập",
+                "from": 4.139,
+                "to": 4.219
+            },
+            {
+                "value": "trình",
+                "from": 4.279,
+                "to": 4.44
+            }
+        ],
+        "from": 3.659,
+        "to": 4.519,
+        "styles": [
+            {
+                "from": 16,
+                "to": 21,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "55edb61f-f619-43ff-80f4-b4662e323d7a": {
+        "words": [
+            {
+                "value": "cần",
+                "from": 12.819,
+                "to": 12.979
+            },
+            {
+                "value": "con",
+                "from": 13.039,
+                "to": 13.139
+            },
+            {
+                "value": "người",
+                "from": 13.219,
+                "to": 13.36
+            },
+            {
+                "value": "đưa",
+                "from": 13.439,
+                "to": 13.539
+            },
+            {
+                "value": "ra",
+                "from": 13.639,
+                "to": 13.699
+            }
+        ],
+        "from": 12.819,
+        "to": 13.819,
+        "styles": [
+            {
+                "from": 8,
+                "to": 13,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "6a49e094-c9a7-481a-a60b-eab7c1b462ce": {
+        "words": [
+            {
+                "value": "AI",
+                "from": 0.159,
+                "to": 0.459
+            },
+            {
+                "value": "đang",
+                "from": 0.539,
+                "to": 0.68
+            },
+            {
+                "value": "thay",
+                "from": 0.719,
+                "to": 0.819
+            },
+            {
+                "value": "đổi",
+                "from": 0.879,
+                "to": 1
+            }
+        ],
+        "from": 0.159,
+        "to": 1.079,
+        "styles": [],
+        "itemStyles": null
+    },
+    "737d38f1-e287-4978-a7aa-8ef778933100": {
+        "words": [
+            {
+                "value": "Thay",
+                "from": 5.779,
+                "to": 5.879
+            },
+            {
+                "value": "vì",
+                "from": 5.96,
+                "to": 6.039
+            },
+            {
+                "value": "viết",
+                "from": 6.139,
+                "to": 6.279
+            },
+            {
+                "value": "từng",
+                "from": 6.339,
+                "to": 6.48
+            }
+        ],
+        "from": 5.779,
+        "to": 6.599,
+        "styles": [],
+        "itemStyles": null
+    },
+    "750f9e5c-2d3c-4057-bab5-9a43b49dcb64": {
+        "words": [
+            {
+                "value": "nó.",
+                "from": 25.899,
+                "to": 26.439
+            }
+        ],
+        "from": 25.899,
+        "to": 26.639,
+        "styles": [],
+        "itemStyles": null
+    },
+    "7aa95ffd-f3f3-40a1-a44a-0a19fb59c84e": {
+        "words": [
+            {
+                "value": "AI",
+                "from": 10.38,
+                "to": 10.639
+            },
+            {
+                "value": "có",
+                "from": 10.739,
+                "to": 10.819
+            },
+            {
+                "value": "thể",
+                "from": 10.859,
+                "to": 11
+            },
+            {
+                "value": "viết",
+                "from": 11.079,
+                "to": 11.219
+            },
+            {
+                "value": "code",
+                "from": 11.259,
+                "to": 11.42
+            }
+        ],
+        "from": 10.38,
+        "to": 11.479,
+        "styles": [],
+        "itemStyles": null
+    },
+    "7c7f73af-cbde-4b70-a72e-b978bba23995": {
+        "words": [
+            {
+                "value": "cực",
+                "from": 18.079,
+                "to": 18.219
+            },
+            {
+                "value": "kỳ",
+                "from": 18.26,
+                "to": 18.399
+            },
+            {
+                "value": "quan",
+                "from": 18.459,
+                "to": 18.6
+            },
+            {
+                "value": "trọng.",
+                "from": 18.68,
+                "to": 18.84
+            }
+        ],
+        "from": 18.079,
+        "to": 19.319,
+        "styles": [
+            {
+                "from": 12,
+                "to": 18,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "7fe0107b-f20d-411e-a01e-b87f33b19951": {
+        "words": [
+            {
+                "value": "rất",
+                "from": 11.479,
+                "to": 11.639
+            },
+            {
+                "value": "nhanh,",
+                "from": 11.659,
+                "to": 11.88
+            },
+            {
+                "value": "nhưng",
+                "from": 12.199,
+                "to": 12.36
+            },
+            {
+                "value": "nó",
+                "from": 12.399,
+                "to": 12.5
+            },
+            {
+                "value": "vẫn",
+                "from": 12.599,
+                "to": 12.759
+            }
+        ],
+        "from": 11.479,
+        "to": 12.819,
+        "styles": [
+            {
+                "from": 4,
+                "to": 10,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "88042ad6-fcdb-400a-ac0c-8e41aaebfe06": {
+        "words": [
+            {
+                "value": "dòng",
+                "from": 6.599,
+                "to": 6.719
+            },
+            {
+                "value": "code,",
+                "from": 6.819,
+                "to": 7
+            },
+            {
+                "value": "chúng",
+                "from": 7.279,
+                "to": 7.46
+            },
+            {
+                "value": "ta",
+                "from": 7.48,
+                "to": 7.599
+            },
+            {
+                "value": "đang",
+                "from": 7.659,
+                "to": 7.779
+            }
+        ],
+        "from": 6.599,
+        "to": 7.859,
+        "styles": [
+            {
+                "from": 5,
+                "to": 10,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "9046d917-46d0-4d30-9f3f-558453a421f3": {
+        "words": [
+            {
+                "value": "lập",
+                "from": 22.92,
+                "to": 23.039
+            },
+            {
+                "value": "trình",
+                "from": 23.079,
+                "to": 23.26
+            },
+            {
+                "value": "viên",
+                "from": 23.319,
+                "to": 23.439
+            },
+            {
+                "value": "biết",
+                "from": 23.539,
+                "to": 23.699
+            },
+            {
+                "value": "sử",
+                "from": 23.76,
+                "to": 23.879
+            }
+        ],
+        "from": 22.92,
+        "to": 23.92,
+        "styles": [],
+        "itemStyles": null
+    },
+    "a060ff46-554e-4f9e-be35-27fb8c19438c": {
+        "words": [
+            {
+                "value": "quyết",
+                "from": 13.819,
+                "to": 13.92
+            },
+            {
+                "value": "định",
+                "from": 13.96,
+                "to": 14.099
+            },
+            {
+                "value": "đúng.",
+                "from": 14.159,
+                "to": 14.319
+            }
+        ],
+        "from": 13.819,
+        "to": 14.319,
+        "styles": [],
+        "itemStyles": null
+    },
+    "b0adb155-7562-4b8b-a3f4-f96e941dbae1": {
+        "words": [
+            {
+                "value": "kiểm",
+                "from": 8.939,
+                "to": 9.119
+            },
+            {
+                "value": "soát",
+                "from": 9.159,
+                "to": 9.3
+            },
+            {
+                "value": "hệ",
+                "from": 9.359,
+                "to": 9.479
+            },
+            {
+                "value": "thống.",
+                "from": 9.519,
+                "to": 9.719
+            }
+        ],
+        "from": 8.939,
+        "to": 9.719,
+        "styles": [],
+        "itemStyles": null
+    },
+    "b2ed33dd-9be0-43e6-93db-ab81b2b4878e": {
+        "words": [
+            {
+                "value": "phải",
+                "from": 20.34,
+                "to": 20.5
+            },
+            {
+                "value": "là",
+                "from": 20.559,
+                "to": 20.659
+            },
+            {
+                "value": "AI",
+                "from": 20.799,
+                "to": 21
+            },
+            {
+                "value": "thay",
+                "from": 21.1,
+                "to": 21.2
+            },
+            {
+                "value": "thế",
+                "from": 21.279,
+                "to": 21.379
+            }
+        ],
+        "from": 20.34,
+        "to": 21.459,
+        "styles": [],
+        "itemStyles": null
+    },
+    "c2647f21-480b-40b1-897f-8e41839f0cf8": {
+        "words": [
+            {
+                "value": "Nhưng",
+                "from": 2.899,
+                "to": 3.019
+            },
+            {
+                "value": "điều",
+                "from": 3.079,
+                "to": 3.22
+            },
+            {
+                "value": "đó",
+                "from": 3.259,
+                "to": 3.419
+            },
+            {
+                "value": "không",
+                "from": 3.48,
+                "to": 3.599
+            }
+        ],
+        "from": 2.899,
+        "to": 3.659,
+        "styles": [
+            {
+                "from": 0,
+                "to": 5,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "c8d1ce0d-d755-47c0-99a1-492914ccaa05": {
+        "words": [
+            {
+                "value": "Hiểu",
+                "from": 14.899,
+                "to": 15.039
+            },
+            {
+                "value": "bài",
+                "from": 15.099,
+                "to": 15.259
+            },
+            {
+                "value": "toán,",
+                "from": 15.299,
+                "to": 15.519
+            },
+            {
+                "value": "kiến",
+                "from": 15.839,
+                "to": 16
+            }
+        ],
+        "from": 14.899,
+        "to": 16.039,
+        "styles": [
+            {
+                "from": 9,
+                "to": 14,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "caa75d83-d7bf-4f22-a2fd-0aee733a46e9": {
+        "words": [
+            {
+                "value": "trúc",
+                "from": 16.039,
+                "to": 16.42
+            },
+            {
+                "value": "và",
+                "from": 16.52,
+                "to": 16.579
+            },
+            {
+                "value": "biết",
+                "from": 16.68,
+                "to": 16.819
+            },
+            {
+                "value": "cách",
+                "from": 16.879,
+                "to": 17
+            },
+            {
+                "value": "kiểm",
+                "from": 17.059,
+                "to": 17.18
+            }
+        ],
+        "from": 16.039,
+        "to": 17.26,
+        "styles": [],
+        "itemStyles": null
+    },
+    "cc579fda-28ad-4d9f-ae8d-f68a5ac3d4f2": {
+        "words": [
+            {
+                "value": "người",
+                "from": 25.059,
+                "to": 25.18
+            },
+            {
+                "value": "không",
+                "from": 25.279,
+                "to": 25.399
+            },
+            {
+                "value": "biết",
+                "from": 25.459,
+                "to": 25.619
+            },
+            {
+                "value": "dùng",
+                "from": 25.68,
+                "to": 25.839
+            }
+        ],
+        "from": 25.059,
+        "to": 25.899,
+        "styles": [],
+        "itemStyles": null
+    },
+    "e626be91-1924-467d-9cc9-b6894465b509": {
+        "words": [
+            {
+                "value": "Vấn",
+                "from": 26.639,
+                "to": 26.76
+            },
+            {
+                "value": "đề",
+                "from": 26.799,
+                "to": 26.939
+            },
+            {
+                "value": "là",
+                "from": 27,
+                "to": 27.139
+            },
+            {
+                "value": "bạn",
+                "from": 27.459,
+                "to": 27.619
+            }
+        ],
+        "from": 26.639,
+        "to": 27.639,
+        "styles": [],
+        "itemStyles": null
+    },
+    "f59b6fe8-45df-4dd1-86f7-6cd2d369d7d9": {
+        "words": [
+            {
+                "value": "cách",
+                "from": 1.079,
+                "to": 1.199
+            },
+            {
+                "value": "chúng",
+                "from": 1.259,
+                "to": 1.419
+            },
+            {
+                "value": "ta",
+                "from": 1.459,
+                "to": 1.539
+            }
+        ],
+        "from": 1.079,
+        "to": 1.639,
+        "styles": [
+            {
+                "from": 5,
+                "to": 10,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "f78cf9e0-ce7f-48d4-bcdc-0b0ffe3da1d0": {
+        "words": [
+            {
+                "value": "dụng",
+                "from": 23.92,
+                "to": 24.059
+            },
+            {
+                "value": "AI",
+                "from": 24.199,
+                "to": 24.459
+            },
+            {
+                "value": "thay",
+                "from": 24.5,
+                "to": 24.639
+            },
+            {
+                "value": "thế",
+                "from": 24.68,
+                "to": 24.84
+            },
+            {
+                "value": "những",
+                "from": 24.92,
+                "to": 25
+            }
+        ],
+        "from": 23.92,
+        "to": 25.059,
+        "styles": [
+            {
+                "from": 17,
+                "to": 22,
+                "style": {
+                    "bold": true,
+                    "color": "#FEFC54"
+                },
+                "id": "auto-highlight"
+            }
+        ],
+        "itemStyles": null
+    },
+    "f925d829-6049-47ce-b834-bff495a1f194": {
+        "words": [
+            {
+                "value": "tra",
+                "from": 17.26,
+                "to": 17.379
+            },
+            {
+                "value": "kết",
+                "from": 17.459,
+                "to": 17.6
+            },
+            {
+                "value": "quả",
+                "from": 17.639,
+                "to": 17.78
+            },
+            {
+                "value": "vẫn",
+                "from": 17.879,
+                "to": 17.979
+            }
+        ],
+        "from": 17.26,
+        "to": 18.079,
+        "styles": [],
+        "itemStyles": null
+    }
+}

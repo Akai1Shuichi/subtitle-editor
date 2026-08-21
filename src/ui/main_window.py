@@ -48,7 +48,7 @@ from ..subtitle_parser import SubtitleError
 from ..word_timing    import load_timing
 from ..video_info     import probe_video, FFmpegNotFoundError, VideoReadError
 from ..exporter import (
-    export_video, generate_preview_clip, open_with_system_player,
+    export_video,
     ExportCancelledError, DiskSpaceError, ExportError,
 )
 
@@ -70,31 +70,21 @@ class ExportWorker(QObject):
         ass_path: str,
         output_path: str,
         cancel_event: threading.Event,
-        preview: bool = False,
     ):
         super().__init__()
         self._video_info   = video_info
         self._ass_path     = ass_path
         self._output_path  = output_path
         self._cancel_event = cancel_event
-        self._preview      = preview
 
     @Slot()
     def run(self) -> None:
         try:
-            if self._preview:
-                result = generate_preview_clip(
-                    self._video_info, self._ass_path,
-                    duration=6.0,
-                    cancel_event=self._cancel_event,
-                    on_progress=lambda pct: self.progress.emit(pct),
-                )
-            else:
-                result = export_video(
-                    self._video_info, self._ass_path, self._output_path,
-                    cancel_event=self._cancel_event,
-                    on_progress=lambda pct: self.progress.emit(pct),
-                )
+            result = export_video(
+                self._video_info, self._ass_path, self._output_path,
+                cancel_event=self._cancel_event,
+                on_progress=lambda pct: self.progress.emit(pct),
+            )
             self.finished.emit(str(result))
         except ExportCancelledError:
             self.error.emit("__cancelled__")
@@ -120,13 +110,13 @@ class MainWindow(QMainWindow):
         # ── Application state ──────────────────────────────────────────
         self._project: EditorProject     = EditorProject()
         self._selected_clip_id: str | None = None
-        self._current_time_ms: int        = 0   # playhead (step 3 sẽ wire QMediaPlayer)
+        self._current_time_ms: int        = 0   # playhead — wire từ QMediaPlayer (bước 3)
+        self._video_duration_ms: int      = 0   # duration từ QMediaPlayer
 
         # ── Export state ───────────────────────────────────────────────
         self._cancel_event: threading.Event | None = None
         self._export_thread: QThread | None        = None
         self._temp_ass: str | None                 = None
-        self._is_preview: bool                     = False
 
         self._build_ui()
         self._apply_stylesheet()
@@ -161,6 +151,11 @@ class MainWindow(QMainWindow):
 
         self._video_panel = VideoPanel()
         self._video_panel.video_selected.connect(self._on_video_selected)
+        # ── Bước 3: wire playback signals ─────────────────────────────
+        self._video_panel.time_changed.connect(self._on_time_changed)
+        self._video_panel.duration_changed.connect(self._on_duration_changed)
+        self._video_panel.playback_state_changed.connect(self._on_playback_state_changed)
+        self._video_panel.playback_error.connect(self._on_playback_error)
         content.addWidget(self._video_panel, stretch=1)
 
         content.addWidget(self._make_vsep())
@@ -169,7 +164,6 @@ class MainWindow(QMainWindow):
         self._inspector.style_changed.connect(self._on_style_changed)
         self._inspector.clip_text_changed.connect(self._on_clip_text_changed)
         self._inspector.clip_delete_requested.connect(self._on_clip_delete_requested)
-        self._inspector.add_subtitle_requested.connect(self._on_add_subtitle_requested)
         content.addWidget(self._inspector)
 
         root.addLayout(content, stretch=1)
@@ -182,16 +176,18 @@ class MainWindow(QMainWindow):
         self._timeline.clip_selected.connect(self._on_clip_selected)
         self._timeline.clip_deselected.connect(self._on_clip_deselected)
         self._timeline.add_subtitle_requested.connect(self._on_add_subtitle_requested)
+        # ── Bước 3: playback controls ──────────────────────────────────
+        self._timeline.play_pause_requested.connect(self._video_panel.toggle_play_pause)
+        self._timeline.seek_requested.connect(self._video_panel.seek)
         root.addWidget(self._timeline)
+
 
         # Separator
         root.addWidget(self._make_hsep())
 
         # ── Export Bar ──────────────────────────────────────────────────
         self._export_bar = ExportBar()
-        self._export_bar.export_requested.connect(self._on_export_requested)
         self._export_bar.cancel_requested.connect(self._on_cancel_requested)
-        self._export_bar.preview_requested.connect(self._on_preview_requested)
         root.addWidget(self._export_bar)
 
     @staticmethod
@@ -248,9 +244,10 @@ class MainWindow(QMainWindow):
             self._project.sorted_clips() if has_clips else [],
             selected_clip_id=self._selected_clip_id,
         )
+        self._timeline.set_current_time(self._current_time_ms, self._video_duration_ms)
+        self._refresh_overlay()
 
         # Export bar
-        self._export_bar.set_export_enabled(can_export)
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Video
@@ -271,6 +268,11 @@ class MainWindow(QMainWindow):
             return
 
         self._project.video_info = info
+
+        # ── Bước 3: load video vào player ─────────────────────────────
+        self._current_time_ms = 0
+        self._video_duration_ms = int(info.duration * 1000)
+        self._video_panel.load_video(path)
 
         # Gợi ý output path
         default_out = str(Path("output") / (info.path.stem + "_subtitled.mp4"))
@@ -312,6 +314,24 @@ class MainWindow(QMainWindow):
     @Slot(object)
     def _on_style_changed(self, style: SubtitleStyle) -> None:
         self._project.style = style
+        self._refresh_overlay()
+
+    def _refresh_overlay(self) -> None:
+        """Cập nhật subtitle overlay dựa theo current_time_ms và style hiện tại."""
+        active = self._project.active_clip_at(self._current_time_ms)
+        vi     = self._project.video_info
+        word_timing = None
+        if active and self._project.word_timings:
+            # Export tạo SSA events từ sorted_clips(), nên dùng cùng index để
+            # preview highlight đúng các mốc timing custom của export.
+            clip_index = self._project.sorted_clips().index(active)
+            word_timing = self._project.word_timings.get_line(clip_index)
+        self._video_panel.set_active_clip(
+            active, self._project.style, self._current_time_ms,
+            video_width  = vi.width  if vi else 1920,
+            video_height = vi.height if vi else 1080,
+            word_timing=word_timing,
+        )
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Clip operations
@@ -328,6 +348,8 @@ class MainWindow(QMainWindow):
                 self._project.sorted_clips(),
                 selected_clip_id=self._selected_clip_id,
             )
+            self._refresh_overlay()
+
 
     @Slot(str)
     def _on_clip_delete_requested(self, clip_id: str) -> None:
@@ -340,12 +362,13 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_add_subtitle_requested(self) -> None:
-        """Thêm clip mới tại vị trí playhead (mặc định 2 giây)."""
+        """Thêm clip 2 giây tại playhead và chọn ngay để sửa trong Inspector."""
+        start_ms = self._current_time_ms
         new_clip = SubtitleClip(
             id=str(uuid.uuid4()),
             text="New subtitle",
-            start_ms=self._current_time_ms,
-            end_ms=self._current_time_ms + 2000,
+            start_ms=start_ms,
+            end_ms=start_ms + 2000,
         )
         self._project.clips.append(new_clip)
         self._selected_clip_id = new_clip.id
@@ -360,6 +383,39 @@ class MainWindow(QMainWindow):
     def _on_clip_deselected(self) -> None:
         self._selected_clip_id = None
         self._update_ui_state()
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Slots – Bước 3: Playback
+    # ──────────────────────────────────────────────────────────────────────
+
+    @Slot(int)
+    def _on_time_changed(self, ms: int) -> None:
+        """
+        Gọi mỗi khi QMediaPlayer.positionChanged phát ra.
+        • Cập nhật current_time_ms.
+        • Tìm subtitle active và refresh overlay (với video dims đúng).
+        • Cập nhật time display trên timeline.
+        """
+        self._current_time_ms = ms
+        self._refresh_overlay()
+        self._timeline.set_current_time(ms, self._video_duration_ms)
+
+
+    @Slot(bool)
+    def _on_playback_state_changed(self, playing: bool) -> None:
+        """Đồng bộ icon nút play/pause trên timeline."""
+        self._timeline.set_playing(playing)
+
+    @Slot(int)
+    def _on_duration_changed(self, duration_ms: int) -> None:
+        """Ưu tiên duration thực tế từ media backend khi nó đã sẵn sàng."""
+        if duration_ms > 0:
+            self._video_duration_ms = duration_ms
+        self._timeline.set_current_time(self._current_time_ms, self._video_duration_ms)
+
+    @Slot(str)
+    def _on_playback_error(self, message: str) -> None:
+        self._show_error("Không phát được video", message)
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Export (header button)
@@ -395,8 +451,7 @@ class MainWindow(QMainWindow):
             self._show_error("Không tạo được subtitle", str(exc))
             return False
 
-    def _start_worker(self, output_path: str, preview: bool = False) -> None:
-        self._is_preview    = preview
+    def _start_worker(self, output_path: str) -> None:
         self._cancel_event  = threading.Event()
         self._export_thread = QThread()
         self._worker = ExportWorker(
@@ -404,7 +459,6 @@ class MainWindow(QMainWindow):
             self._temp_ass,
             output_path,
             self._cancel_event,
-            preview=preview,
         )
         self._worker.moveToThread(self._export_thread)
         self._export_thread.started.connect(self._worker.run)
@@ -414,9 +468,14 @@ class MainWindow(QMainWindow):
         self._worker.finished.connect(self._export_thread.quit)
         self._worker.error.connect(self._export_thread.quit)
 
-        self._export_bar.start_export_ui(is_preview=preview)
+        self._export_bar.start_export_ui()
         self._header_bar.set_exporting(True)
         self._export_thread.start()
+
+    @Slot()
+    def _on_cancel_requested(self) -> None:
+        if self._cancel_event:
+            self._cancel_event.set()
 
     @Slot(str)
     def _on_export_requested(self, output_path: str) -> None:
@@ -424,20 +483,7 @@ class MainWindow(QMainWindow):
             return
         if not self._build_ass_to_temp():
             return
-        self._start_worker(output_path, preview=False)
-
-    @Slot()
-    def _on_preview_requested(self) -> None:
-        if not self._project.has_video or not self._project.has_clips:
-            return
-        if not self._build_ass_to_temp():
-            return
-        self._start_worker("", preview=True)
-
-    @Slot()
-    def _on_cancel_requested(self) -> None:
-        if self._cancel_event:
-            self._cancel_event.set()
+        self._start_worker(output_path or "output/output.mp4")
 
     @Slot(str)
     def _on_export_finished(self, output_path: str) -> None:
@@ -446,10 +492,7 @@ class MainWindow(QMainWindow):
         self._header_bar.set_export_enabled(
             self._project.has_video and self._project.has_clips
         )
-        if self._is_preview:
-            open_with_system_player(output_path)
-        else:
-            self._show_success(output_path)
+        self._show_success(output_path)
 
     @Slot(str)
     def _on_export_error(self, msg: str) -> None:
@@ -691,6 +734,33 @@ QMainWindow, QWidget {
     font-size: 12px;
 }
 
+#PlayPauseBtn {
+    background-color: rgba(79, 138, 255, 0.12);
+    color: #4f8aff;
+    border: 1px solid rgba(79, 138, 255, 0.3);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+#PlayPauseBtn:hover:enabled {
+    background-color: rgba(79, 138, 255, 0.22);
+    border-color: rgba(79, 138, 255, 0.6);
+    color: #7bb3ff;
+}
+#PlayPauseBtn:pressed { background-color: rgba(79, 138, 255, 0.1); }
+#PlayPauseBtn:disabled {
+    background-color: transparent;
+    color: rgba(79, 138, 255, 0.25);
+    border-color: rgba(79, 138, 255, 0.1);
+}
+
+#TimeDisplay {
+    color: #5b6278;
+    font-size: 11px;
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    font-weight: 500;
+}
+
 /* Clip Chip */
 #ClipChip {
     background-color: rgba(79, 138, 255, 0.08);
@@ -821,32 +891,6 @@ QFormLayout QLabel {
     font-size: 14px;
 }
 #BrowseBtn:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
-
-#ExportBtn {
-    background-color: #4f8aff;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 7px 18px;
-    font-size: 13px;
-    font-weight: 600;
-}
-#ExportBtn:hover:enabled { background-color: #6b9fff; }
-#ExportBtn:pressed       { background-color: #3d74e8; }
-#ExportBtn:disabled      { background-color: rgba(79,138,255,0.25); color: rgba(255,255,255,0.3); }
-
-#PreviewBtn {
-    background-color: rgba(79, 138, 255, 0.1);
-    color: #4f8aff;
-    border: 1px solid rgba(79, 138, 255, 0.35);
-    border-radius: 8px;
-    padding: 7px 14px;
-    font-size: 13px;
-    font-weight: 500;
-}
-#PreviewBtn:hover:enabled  { background-color: rgba(79,138,255,0.2); border-color: rgba(79,138,255,0.6); color: #7bb3ff; }
-#PreviewBtn:pressed        { background-color: rgba(79,138,255,0.12); }
-#PreviewBtn:disabled       { background-color: transparent; color: rgba(79,138,255,0.3); border-color: rgba(79,138,255,0.15); }
 
 #CancelBtn {
     background-color: rgba(255, 80, 80, 0.12);

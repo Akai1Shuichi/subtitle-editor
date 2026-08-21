@@ -149,8 +149,17 @@ class EditorProject:
 import re as _re
 
 def _strip_tags(text: str) -> str:
-    """Xóa SRT/ASS inline tags khỏi text."""
-    return _re.sub(r"<[^>]+>", "", text).strip()
+    """Xóa SRT/ASS inline tags khỏi text và chuẩn hoá newline.
+
+    pysubs2 chuyển newline SRT thành '\\N' (ASS soft newline) khi parse.
+    Phải đổi '\\N' → '\\n' để hiển thị đúng ở mode normal.
+    """
+    # Xóa HTML/ASS inline tags như <b>, <i>, {\\an8}, v.v.
+    text = _re.sub(r"<[^>]+>", "", text)
+    text = _re.sub(r"\{[^}]*\}", "", text)
+    # Chuẩn hoá ASS soft newline '\N' và hard newline '\n' → newline thực
+    text = text.replace("\\N", "\n").replace("\\n", "\n")
+    return text.strip()
 
 
 def clips_from_srt(path: str | Path) -> list[SubtitleClip]:

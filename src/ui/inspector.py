@@ -58,13 +58,11 @@ class Inspector(QWidget):
     style_changed(SubtitleStyle)         – người dùng thay đổi style controls
     clip_text_changed(clip_id, new_text) – người dùng sửa text clip
     clip_delete_requested(clip_id)       – người dùng nhấn Delete
-    add_subtitle_requested()             – người dùng nhấn + Add Subtitle
     """
 
     style_changed          = Signal(object)      # SubtitleStyle
     clip_text_changed      = Signal(str, str)    # (clip_id, new_text)
     clip_delete_requested  = Signal(str)         # clip_id
-    add_subtitle_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -92,10 +90,8 @@ class Inspector(QWidget):
         self._inner_layout.setContentsMargins(20, 20, 20, 20)
         self._inner_layout.setSpacing(0)
 
-        # Section: SUBTITLE header + Add button
+        # Section: SUBTITLE header
         self._inner_layout.addWidget(self._build_subtitle_header())
-        self._inner_layout.addSpacing(12)
-        self._inner_layout.addWidget(self._build_add_btn())
         self._inner_layout.addSpacing(14)
 
         # Section: Clip text (shown when clip selected)
@@ -133,8 +129,7 @@ class Inspector(QWidget):
     # ──────────────────────────────────────────────────────────────────────
 
     def set_has_video(self, has_video: bool) -> None:
-        """Bật/tắt phần style và nút Add Subtitle."""
-        self._add_btn.setEnabled(has_video)
+        """Bật/tắt phần style."""
         self._style_section.setVisible(has_video)
         self._style_divider.setVisible(has_video)
 
@@ -193,14 +188,6 @@ class Inspector(QWidget):
         lbl = QLabel("SUBTITLE")
         lbl.setObjectName("SectionHeader")
         return lbl
-
-    def _build_add_btn(self) -> QPushButton:
-        self._add_btn = QPushButton("＋ Add Subtitle")
-        self._add_btn.setObjectName("AddSubtitleBtn")
-        self._add_btn.setCursor(Qt.PointingHandCursor)
-        self._add_btn.setEnabled(False)
-        self._add_btn.clicked.connect(self.add_subtitle_requested)
-        return self._add_btn
 
     def _build_clip_section(self) -> QWidget:
         w = QWidget()

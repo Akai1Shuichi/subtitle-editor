@@ -57,6 +57,16 @@ class SubtitleSegment:
 def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAStyle:
     # ASS uses the video's PlayRes.  Do not downscale a configured 54px font
     # merely because the source is 720×1280: 54px must remain 54px there.
+    alignment = settings.alignment
+    if alignment in (Alignment.BOTTOM_LEFT, Alignment.BOTTOM_CENTER, Alignment.BOTTOM_RIGHT):
+        margin_v = max(0, round((100 - settings.position_y) * video_height / 100))
+    elif alignment in (Alignment.TOP_LEFT, Alignment.TOP_CENTER, Alignment.TOP_RIGHT):
+        margin_v = max(0, round(settings.position_y * video_height / 100))
+    else:
+        # ASS không áp dụng MarginV cho middle alignment; realtime preview
+        # cũng luôn căn chính giữa trong trường hợp này.
+        margin_v = 0
+
     return pysubs2.SSAStyle(
         fontname=settings.fontname,
         fontsize=max(10, settings.fontsize),
@@ -72,11 +82,10 @@ def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAS
         borderstyle=1,
         outline=max(1, settings.stroke_width),
         shadow=max(0, settings.shadow),
-        alignment=settings.alignment,
+        alignment=alignment,
         marginl=60,
         marginr=60,
-        marginv=max(0, round((100 - settings.position_y) * video_height / 100))
-        if video_height else 30,
+        marginv=margin_v if video_height else 30,
         encoding=1,
     )
 
@@ -101,6 +110,11 @@ class SubtitleRenderer:
             out.info["PlayResX"] = str(video_width)
             out.info["PlayResY"] = str(video_height)
         out.info["ScaledBorderAndShadow"] = "yes"
+        # Preview canvas wraps words greedily from left to right.  ASS's
+        # default smart wrapping rebalances lines, making Normal mode use
+        # different line breaks from realtime preview.  WrapStyle 1 keeps
+        # the same greedy behaviour; highlight mode already has explicit \N.
+        out.info["WrapStyle"] = "1"
         out.styles["Default"] = _style_for(self.settings, video_height=video_height)
 
         for index, event in enumerate(subs.events):

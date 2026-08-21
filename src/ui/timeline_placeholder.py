@@ -1,19 +1,21 @@
 """
 src/ui/timeline_placeholder.py
 ────────────────────────────────
-Placeholder cho timeline (sẽ được thay thế ở bước 4).
+Bước 3 update: Thêm playback controls + time display.
 
-Bước 2 cần một vùng phía dưới editor để:
-- Hiển thị danh sách clips dưới dạng chip có thể click để select.
-- Nút [+ Add Subtitle].
-- Cho phép deselect khi click vào clip đang chọn.
+Bước 4 sẽ thay thế bằng timeline thật có drag/resize.
 
-Đây là scaffold để test các state 3/4 của editor trước khi timeline
-thực sự được xây dựng.
+Signals
+-------
+clip_selected(clip_id)       – clip chip được click (chưa chọn)
+clip_deselected()            – click lại clip đang chọn → bỏ chọn
+add_subtitle_requested()     – nút + Add Subtitle gần timeline
+play_pause_requested()       – nút play/pause (bước 3)
+seek_requested(ms: int)      – click chip → seek video đến start_ms (bước 3)
 """
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -33,14 +35,18 @@ class TimelinePlaceholder(QWidget):
 
     Signals
     -------
-    clip_selected(clip_id: str)  – clip được click (và chưa được chọn)
-    clip_deselected()            – click vào clip đang chọn → bỏ chọn
-    add_subtitle_requested()     – nút + Add Subtitle được nhấn
+    clip_selected(clip_id: str)   – clip được click (và chưa được chọn)
+    clip_deselected()             – click vào clip đang chọn → bỏ chọn
+    add_subtitle_requested()      – nút + Add Subtitle được nhấn
+    play_pause_requested()        – nút ▶/⏸ được nhấn
+    seek_requested(ms: int)       – người dùng click chip muốn seek
     """
 
-    clip_selected         = Signal(str)
-    clip_deselected       = Signal()
+    clip_selected          = Signal(str)
+    clip_deselected        = Signal()
     add_subtitle_requested = Signal()
+    play_pause_requested   = Signal()
+    seek_requested         = Signal(int)    # ms
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -48,6 +54,7 @@ class TimelinePlaceholder(QWidget):
         self.setFixedHeight(148)
 
         self._selected_clip_id: str | None = None
+        self._is_playing: bool = False
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -59,8 +66,24 @@ class TimelinePlaceholder(QWidget):
         ctrl_bar.setFixedHeight(40)
 
         ctrl = QHBoxLayout(ctrl_bar)
-        ctrl.setContentsMargins(16, 0, 16, 0)
-        ctrl.setSpacing(12)
+        ctrl.setContentsMargins(12, 0, 16, 0)
+        ctrl.setSpacing(10)
+
+        # Play/Pause button
+        self._play_btn = QPushButton("▶")
+        self._play_btn.setObjectName("PlayPauseBtn")
+        self._play_btn.setFixedSize(32, 28)
+        self._play_btn.setCursor(Qt.PointingHandCursor)
+        self._play_btn.setEnabled(False)
+        self._play_btn.clicked.connect(self._on_play_pause_clicked)
+        ctrl.addWidget(self._play_btn)
+
+        # Time display
+        self._time_label = QLabel("00:00.0 / 00:00.0")
+        self._time_label.setObjectName("TimeDisplay")
+        ctrl.addWidget(self._time_label)
+
+        ctrl.addSpacing(8)
 
         timeline_label = QLabel("TIMELINE")
         timeline_label.setObjectName("TimelineLabel")
@@ -68,13 +91,12 @@ class TimelinePlaceholder(QWidget):
 
         ctrl.addStretch()
 
-        add_btn = QPushButton("＋ Add Subtitle")
-        add_btn.setObjectName("AddSubtitleBtn")
-        add_btn.setCursor(Qt.PointingHandCursor)
-        add_btn.setEnabled(False)
-        add_btn.clicked.connect(self.add_subtitle_requested)
-        self._add_btn = add_btn
-        ctrl.addWidget(add_btn)
+        self._add_btn = QPushButton("＋ Add Subtitle")
+        self._add_btn.setObjectName("AddSubtitleBtn")
+        self._add_btn.setCursor(Qt.PointingHandCursor)
+        self._add_btn.setEnabled(False)
+        self._add_btn.clicked.connect(self.add_subtitle_requested)
+        ctrl.addWidget(self._add_btn)
 
         outer.addWidget(ctrl_bar)
 
@@ -96,7 +118,7 @@ class TimelinePlaceholder(QWidget):
         outer.addWidget(self._scroll, stretch=1)
 
         # ── Empty hint ─────────────────────────────────────────────────
-        self._hint = QLabel("Import SRT hoặc nhấn ＋ Add Subtitle")
+        self._hint = QLabel("Import file SRT để hiển thị subtitle")
         self._hint.setObjectName("TimelineHint")
         self._hint.setAlignment(Qt.AlignCenter)
         outer.addWidget(self._hint)
@@ -107,7 +129,8 @@ class TimelinePlaceholder(QWidget):
     # ──────────────────────────────────────────────────────────────────────
 
     def set_has_video(self, has_video: bool) -> None:
-        """Bật/tắt nút Add Subtitle."""
+        """Bật/tắt các thao tác cần video."""
+        self._play_btn.setEnabled(has_video)
         self._add_btn.setEnabled(has_video)
 
     def set_clips(
@@ -137,6 +160,7 @@ class TimelinePlaceholder(QWidget):
         for clip in sorted_clips:
             chip = _ClipChip(clip, selected=(clip.id == selected_clip_id))
             chip.clicked_id.connect(self._on_chip_clicked)
+            chip.seek_requested.connect(self.seek_requested)
             self._chips_layout.insertWidget(
                 self._chips_layout.count() - 1, chip
             )
@@ -149,18 +173,37 @@ class TimelinePlaceholder(QWidget):
             if item and isinstance(item.widget(), _ClipChip):
                 item.widget().set_selected(False)
 
+    @Slot(int, int)
+    def set_current_time(self, current_ms: int, duration_ms: int) -> None:
+        """Cập nhật time display label."""
+        def fmt(ms: int) -> str:
+            s  = ms // 1000
+            ds = (ms % 1000) // 100
+            m, s = divmod(s, 60)
+            return f"{m:02d}:{s:02d}.{ds}"
+
+        self._time_label.setText(f"{fmt(current_ms)} / {fmt(duration_ms)}")
+
+    @Slot(bool)
+    def set_playing(self, playing: bool) -> None:
+        """Cập nhật icon nút play/pause."""
+        self._is_playing = playing
+        self._play_btn.setText("⏸" if playing else "▶")
+
     # ──────────────────────────────────────────────────────────────────────
     # Private slots
     # ──────────────────────────────────────────────────────────────────────
 
     def _on_chip_clicked(self, clip_id: str) -> None:
         if clip_id == self._selected_clip_id:
-            # Bỏ chọn nếu click lại clip đang chọn
             self._selected_clip_id = None
             self.clip_deselected.emit()
         else:
             self._selected_clip_id = clip_id
             self.clip_selected.emit(clip_id)
+
+    def _on_play_pause_clicked(self) -> None:
+        self.play_pause_requested.emit()
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -170,11 +213,13 @@ class TimelinePlaceholder(QWidget):
 class _ClipChip(QWidget):
     """Chip nhỏ đại diện một subtitle clip trên timeline placeholder."""
 
-    clicked_id = Signal(str)  # clip_id
+    clicked_id    = Signal(str)   # clip_id
+    seek_requested = Signal(int)  # start_ms
 
     def __init__(self, clip: SubtitleClip, selected: bool = False, parent=None):
         super().__init__(parent)
-        self._clip_id = clip.id
+        self._clip_id  = clip.id
+        self._start_ms = clip.start_ms
         self._selected = selected
 
         self.setObjectName("ClipChip")
@@ -191,8 +236,8 @@ class _ClipChip(QWidget):
         # Time label
         start_s = clip.start_ms / 1000
         m, s = divmod(int(start_s), 60)
-        ms = clip.start_ms % 1000
-        time_str = f"{m:02d}:{s:02d}.{ms // 100}"
+        ms_frac = clip.start_ms % 1000
+        time_str = f"{m:02d}:{s:02d}.{ms_frac // 100}"
 
         self._time_lbl = QLabel(time_str)
         self._time_lbl.setObjectName("ChipTime")
@@ -218,4 +263,6 @@ class _ClipChip(QWidget):
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.LeftButton:
+            # Single click: select + seek
             self.clicked_id.emit(self._clip_id)
+            self.seek_requested.emit(self._start_ms)

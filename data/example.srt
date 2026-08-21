@@ -1,0 +1,36 @@
+1
+00:00:00,000 --> 00:00:03,500
+AI đang thay đổi cách chúng ta làm việc mỗi ngày.
+
+2
+00:00:03,500 --> 00:00:07,000
+Nhưng điều đó không có nghĩa là lập trình viên sẽ biến mất.
+
+3
+00:00:07,000 --> 00:00:11,000
+Thay vì viết từng dòng code,
+chúng ta đang chuyển sang thiết kế và kiểm soát hệ thống.
+
+4
+00:00:11,000 --> 00:00:15,000
+AI có thể viết code rất nhanh,
+nhưng nó vẫn cần con người đưa ra quyết định đúng.
+
+5
+00:00:15,000 --> 00:00:19,500
+Hiểu bài toán, kiến trúc,
+và biết cách kiểm tra kết quả vẫn cực kỳ quan trọng.
+
+6
+00:00:19,500 --> 00:00:24,000
+Có lẽ tương lai không phải là
+AI thay thế lập trình viên.
+
+7
+00:00:24,000 --> 00:00:27,500
+Mà là lập trình viên biết sử dụng AI
+thay thế những người không biết dùng nó.
+
+8
+00:00:27,500 --> 00:00:30,000
+Vấn đề là: bạn đang ở phía nào?
