@@ -1,7 +1,8 @@
 """
 src/ui/header_bar.py
 ─────────────────────
-Thanh header cố định trên cùng: title, Import Video, Import SRT, Export MP4.
+Thanh header cố định trên cùng: title, Import Video, Import SRT,
+Import JSON (word timing — chỉ enable ở mode Word Highlight), Export MP4.
 """
 from __future__ import annotations
 
@@ -23,17 +24,23 @@ class HeaderBar(QWidget):
     -------
     import_video_requested(path: str)  – người dùng chọn file video
     import_srt_requested(path: str)    – người dùng chọn file SRT
+    import_json_requested(path: str)   – người dùng chọn file JSON (word timing)
     export_requested()                 – người dùng bấm Export MP4
     """
 
     import_video_requested = Signal(str)
     import_srt_requested   = Signal(str)
+    import_json_requested  = Signal(str)
     export_requested       = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("HeaderBar")
         self.setFixedHeight(52)
+
+        # Internal state
+        self._has_video: bool      = False
+        self._highlight_mode: bool = False
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(20, 0, 20, 0)
@@ -62,6 +69,18 @@ class HeaderBar(QWidget):
         self._import_srt_btn.clicked.connect(self._on_import_srt)
         layout.addWidget(self._import_srt_btn)
 
+        # ── Import JSON (word timing) — chỉ enable ở Word Highlight mode ──
+        self._import_json_btn = QPushButton("🎯 Import JSON")
+        self._import_json_btn.setObjectName("HeaderSecBtn")
+        self._import_json_btn.setCursor(Qt.PointingHandCursor)
+        self._import_json_btn.setToolTip(
+            "Import word timing từ file JSON (Word Highlight mode)\n"
+            "Chuẩn xác hơn SRT — dùng timestamp thực từng từ theo giọng nói."
+        )
+        self._import_json_btn.setEnabled(False)
+        self._import_json_btn.clicked.connect(self._on_import_json)
+        layout.addWidget(self._import_json_btn)
+
         # ── Export ─────────────────────────────────────────────────────────
         self._export_btn = QPushButton("Export MP4")
         self._export_btn.setObjectName("HeaderExportBtn")
@@ -76,7 +95,18 @@ class HeaderBar(QWidget):
 
     def set_has_video(self, has_video: bool) -> None:
         """Bật/tắt nút Import SRT dựa theo có video hay chưa."""
+        self._has_video = has_video
         self._import_srt_btn.setEnabled(has_video)
+        # JSON button: chỉ enable khi có video VÀ đang ở highlight mode
+        self._import_json_btn.setEnabled(has_video and self._highlight_mode)
+
+    def set_highlight_mode(self, is_highlight: bool) -> None:
+        """
+        Cập nhật trạng thái nút Import JSON theo mode.
+        Gọi khi người dùng chuyển giữa Normal ↔ Word Highlight.
+        """
+        self._highlight_mode = is_highlight
+        self._import_json_btn.setEnabled(self._has_video and is_highlight)
 
     def set_export_enabled(self, enabled: bool) -> None:
         """Bật/tắt nút Export MP4."""
@@ -107,3 +137,11 @@ class HeaderBar(QWidget):
         )
         if path:
             self.import_srt_requested.emit(path)
+
+    def _on_import_json(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Chọn file JSON (word timing)", "",
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if path:
+            self.import_json_requested.emit(path)

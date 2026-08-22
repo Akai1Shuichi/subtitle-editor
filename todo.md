@@ -2,25 +2,27 @@
 
 ## 1. Khảo sát nền tảng và chuẩn bị kiến trúc
 
-- [ ] Rà soát các chức năng MVP1 đang có: import video/SRT, preview, style và export MP4.
-- [ ] Chuẩn hoá model `SubtitleClip`, `SubtitleStyle` và `EditorProject`.
-- [ ] Thiết kế state trung tâm để `SubtitleClip[]` là single source of truth cho timeline, inspector, preview và export.
-- [ ] Bảo đảm SRT chỉ được parse khi import, sau đó editor làm việc hoàn toàn trên `SubtitleClip[]`.
+- [x] Rà soát các chức năng MVP1 đang có: import video/SRT, preview, style và export MP4.
+- [x] Chuẩn hoá model `SubtitleClip`, `SubtitleStyle` và `EditorProject`.
+- [x] Thiết kế state trung tâm để `SubtitleClip[]` là single source of truth cho timeline, inspector, preview và export.
+- [x] Bảo đảm SRT chỉ được parse khi import, sau đó editor làm việc hoàn toàn trên `SubtitleClip[]`.
 
 ## 2. Xây dựng màn hình Editor và các trạng thái cơ bản
 
-- [ ] Tạo layout editor chính: video preview, inspector và timeline.
-- [ ] Hoàn thiện các trạng thái: chưa có video; có video/chưa có subtitle; có subtitle; đang chọn subtitle.
-- [ ] Kết nối import video và import SRT vào màn hình editor.
-- [ ] Parse SRT thành danh sách `SubtitleClip` với `id`, `text`, `startMs`, `endMs`.
+- [x] Tạo layout editor chính: video preview, inspector và timeline.
+- [x] Hoàn thiện các trạng thái: chưa có video; có video/chưa có subtitle; có subtitle; đang chọn subtitle.
+- [x] Kết nối import video và import SRT vào màn hình editor.
+- [x] Parse SRT thành danh sách `SubtitleClip` với `id`, `text`, `startMs`, `endMs`.
 
 ## 3. Video playback và realtime preview
 
-- [ ] Dùng thẻ HTML `<video>` cho phát video realtime.
-- [ ] Đồng bộ `currentTimeMs` và trạng thái play/pause với video.
-- [ ] Tìm subtitle active theo thời điểm hiện tại và render overlay trên video.
-- [ ] Áp dụng style subtitle realtime trong preview (normal/word highlight, font, màu, stroke, vị trí).
-- [ ] Hỗ trợ sửa text trực tiếp trên preview khi khả thi (double-click, Enter/click-outside để lưu).
+- [x] Dùng thẻ HTML `<video>` cho phát video realtime.
+- [x] Đồng bộ `currentTimeMs` và trạng thái play/pause với video.
+- [x] Tìm subtitle active theo thời điểm hiện tại và render overlay trên video.
+- [x] Áp dụng style subtitle realtime trong preview (normal/word highlight, font, màu, stroke, vị trí).
+- [x] Hỗ trợ sửa text trực tiếp trên preview khi khả thi (double-click, Enter/click-outside để lưu).
+
+
 
 ## 4. Triển khai timeline subtitle
 

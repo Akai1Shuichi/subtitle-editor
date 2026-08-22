@@ -138,6 +138,7 @@ class MainWindow(QMainWindow):
         self._header_bar = HeaderBar()
         self._header_bar.import_video_requested.connect(self._on_video_selected)
         self._header_bar.import_srt_requested.connect(self._on_srt_loaded)
+        self._header_bar.import_json_requested.connect(self._on_json_loaded)
         self._header_bar.export_requested.connect(self._on_header_export)
         root.addWidget(self._header_bar)
 
@@ -307,13 +308,33 @@ class MainWindow(QMainWindow):
 
         self._update_ui_state()
 
-    # ──────────────────────────────────────────────────────────────────────
+    # ──────────────────────────────────────────────────────────────────
+    # Slots – JSON
+    # ──────────────────────────────────────────────────────────────────
+
+    @Slot(str)
+    def _on_json_loaded(self, path: str) -> None:
+        """
+        Placeholder — sẽ implement ở bước 2 (json_subtitle_parser).
+        Hiện tại chỉ thông báo file đã chọn để xác nhận UI hoạt động đúng.
+        """
+        from pathlib import Path as _Path
+        self._show_error(
+            "Coming soon 🔧",
+            f"JSON parser chưa được triển khai.\n"
+            f"File đã chọn: {_Path(path).name}\n\n"
+            f"Sẽ implement ở bước 2 (todophu.md).",
+        )
+
+    # ──────────────────────────────────────────────────────────────────
     # Slots – Style
     # ──────────────────────────────────────────────────────────────────────
 
     @Slot(object)
     def _on_style_changed(self, style: SubtitleStyle) -> None:
         self._project.style = style
+        # Cập nhật trạng thái nút Import JSON theo mode
+        self._header_bar.set_highlight_mode(style.mode == "highlight")
         self._refresh_overlay()
 
     def _refresh_overlay(self) -> None:
