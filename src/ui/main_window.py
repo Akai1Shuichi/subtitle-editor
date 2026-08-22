@@ -47,6 +47,7 @@ from ..ass_builder    import save_ass
 from ..subtitle_parser import SubtitleError
 from ..word_timing    import load_timing
 from ..video_info     import probe_video, FFmpegNotFoundError, VideoReadError
+from ..json_subtitle_parser import load_from_json, JsonSubtitleError
 from ..exporter import (
     export_video,
     ExportCancelledError, DiskSpaceError, ExportError,
@@ -315,16 +316,26 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_json_loaded(self, path: str) -> None:
         """
-        Placeholder — sẽ implement ở bước 2 (json_subtitle_parser).
-        Hiện tại chỉ thông báo file đã chọn để xác nhận UI hoạt động đúng.
+        Import subtitle từ file JSON (word-level timing từ speech recognition).
+        Gọi load_from_json() — trả về cả clips lẫn TimingFile trong một lần.
         """
-        from pathlib import Path as _Path
-        self._show_error(
-            "Coming soon 🔧",
-            f"JSON parser chưa được triển khai.\n"
-            f"File đã chọn: {_Path(path).name}\n\n"
-            f"Sẽ implement ở bước 2 (todophu.md).",
-        )
+        try:
+            clips, timing = load_from_json(path)
+        except FileNotFoundError as exc:
+            self._show_error("File không tồn tại", str(exc))
+            return
+        except JsonSubtitleError as exc:
+            self._show_error("Lỗi đọc JSON", str(exc))
+            return
+        except Exception as exc:
+            self._show_error("Lỗi không xác định", f"Không parse được file JSON:\n{exc}")
+            return
+
+        self._project.clips        = clips
+        self._project.word_timings = timing
+        self._selected_clip_id     = None   # bỏ selection cũ
+
+        self._update_ui_state()
 
     # ──────────────────────────────────────────────────────────────────
     # Slots – Style

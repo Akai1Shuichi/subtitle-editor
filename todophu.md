@@ -60,41 +60,38 @@ Tính năng mới cho phép người dùng chọn **1 trong 2 nguồn**:
 
 File: `src/json_subtitle_parser.py`
 
-- [ ] Viết hàm `load_subtitle_json(path) -> list[SubtitleClip]`:
+- [x] Viết hàm `load_subtitle_json(path) -> list[SubtitleClip]`:
   - Đọc và parse file JSON
   - Mỗi entry: `from`/`to` (giây) × 1000 → `start_ms`/`end_ms`
   - Ghép `words[].value` thành `text` (join dấu cách)
   - Tạo `SubtitleClip` với `id = uuid4()`
   - Sort theo `start_ms`
-- [ ] Viết hàm `load_word_timing_from_json(path, clips) -> TimingFile`:
+- [x] Viết hàm `load_word_timing_from_json(path, clips) -> TimingFile`:
   - Map từng entry JSON → clip tương ứng bằng timing overlap
   - Với mỗi entry: tạo `LineTiming` từ `words[]` (từng từ có `start_ms`, `end_ms`)
   - Trả về `TimingFile` (dict `clip.id` → `LineTiming`)
-- [ ] Xử lý lỗi: file không tồn tại, JSON sai format, `words` rỗng
-
----
+- [x] Xử lý lỗi: file không tồn tại, JSON sai format, `words` rỗng
+- [x] API gộp thành `load_from_json(path) -> (clips, TimingFile)` — một lần gọi trả về cả hai
 
 ### 3. Xử lý map JSON entries → SubtitleClip (vấn đề cốt lõi)
 
 > JSON dùng UUID riêng, không khớp với clip id. Cần chiến lược map theo timing.
 
-- [ ] **Chiến lược**: sau khi `load_subtitle_json()` tạo clips với id mới,
-  `load_word_timing_from_json()` nhận danh sách clips đó và map entry JSON → clip
-  bằng cách so `from`/`to` với `start_ms`/`end_ms` (overlap hoặc nearest).
-- [ ] Không cần file SRT kèm theo — JSON đủ thông tin để tạo clips độc lập.
-- [ ] Gán `TimingFile` vào `EditorProject.word_timings` ngay sau import.
+- [x] **Chiến lược**: sau khi parse JSON thành danh sách clips sort theo `from`,
+  `LineTiming.index` = vị trí 0-based trong danh sách đó — khớp với `get_line(i)`
+  khi `i = project.sorted_clips().index(active_clip)`.
+- [x] Không cần file SRT kèm theo — JSON đủ thông tin tạo clips độc lập.
+- [x] Gán `TimingFile` vào `EditorProject.word_timings` ngay sau import.
 
 ---
 
 ### 4. Cập nhật `main_window.py` — xử lý luồng import JSON
 
-- [ ] Thêm slot `_on_import_json()`:
-  - Mở `QFileDialog` lọc `*.json`
-  - Gọi `load_subtitle_json()` → nhận `clips`
-  - Gọi `load_word_timing_from_json(clips)` → nhận `TimingFile`
+- [x] Thêm slot `_on_json_loaded()`:
+  - Gọi `load_from_json()` → nhận `clips` + `timing`
   - Gán vào `self._project.clips` và `self._project.word_timings`
   - Cập nhật UI: timeline, inspector, preview
-- [ ] Hiển thị thông báo lỗi nếu parse thất bại
+- [x] Hiển thị thông báo lỗi nếu parse thất bại
 
 ---
 
