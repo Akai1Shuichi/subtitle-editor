@@ -161,6 +161,7 @@ class Inspector(QWidget):
             alignment=POSITIONS[self._pos_combo.currentIndex()][1],
             position_y=self._position_y_spin.value(),
             stroke_width=float(self._stroke_spin.value()),
+            subtitle_width=self._width_spin.value(),
         )
 
     def apply_style(self, style: SubtitleStyle) -> None:
@@ -179,6 +180,7 @@ class Inspector(QWidget):
         self._stroke_spin.setValue(int(style.stroke_width))
         self._text_color_btn.set_color_rgb(style.text_color)
         self._hl_color_btn.set_color_rgb(style.highlight_color)
+        self._width_spin.setValue(style.subtitle_width)
 
     # ──────────────────────────────────────────────────────────────────────
     # Build sections
@@ -284,6 +286,17 @@ class Inspector(QWidget):
         self._stroke_spin.setSuffix(" px")
         self._stroke_spin.valueChanged.connect(self._emit_style)
         form.addRow("Viền chữ", self._stroke_spin)
+
+        self._width_spin = QSpinBox()
+        self._width_spin.setRange(30, 100)
+        self._width_spin.setValue(80)
+        self._width_spin.setSuffix(" %")
+        self._width_spin.setToolTip(
+            "Chiều rộng vùng subtitle tính theo % chiều rộng video.\n"
+            "Hẹp hơn → tự động xuống dòng sớm hơn."
+        )
+        self._width_spin.valueChanged.connect(self._emit_style)
+        form.addRow("Chiều rộng", self._width_spin)
 
         self._pos_combo = QComboBox()
         for label, _ in POSITIONS:

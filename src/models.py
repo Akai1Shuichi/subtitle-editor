@@ -90,6 +90,7 @@ class SubtitleStyle:
     shadow: float = 2.0
     position_y: int = 82       # % từ trên, tương đương bottom: 18%
     alignment: int = 2         # pysubs2.Alignment value (2 = BOTTOM_CENTER)
+    subtitle_width: int = 80   # % chiều rộng video, 30-100
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -208,6 +209,7 @@ def style_to_subtitle_settings(style: SubtitleStyle) -> SubtitleSettings:
         shadow=style.shadow,
         position_y=style.position_y,
         alignment=Alignment(style.alignment),
+        subtitle_width=style.subtitle_width,
     )
 
 

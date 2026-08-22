@@ -36,6 +36,7 @@ class SubtitleSettings:
     position_y: int = 82  # top-origin percentage; equivalent to bottom: 18%
     max_words_per_group: int = 5
     alignment: Alignment = Alignment.BOTTOM_CENTER
+    subtitle_width: int = 80  # % chiều rộng video mà subtitle chiếm (30–100)
 
 
 @dataclass(frozen=True)
@@ -54,7 +55,7 @@ class SubtitleSegment:
     words: tuple[SubtitleWord, ...]
 
 
-def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAStyle:
+def _style_for(settings: SubtitleSettings, *, video_height: int, video_width: int = 1920) -> pysubs2.SSAStyle:
     # ASS uses the video's PlayRes.  Do not downscale a configured 54px font
     # merely because the source is 720×1280: 54px must remain 54px there.
     alignment = settings.alignment
@@ -66,6 +67,11 @@ def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAS
         # ASS không áp dụng MarginV cho middle alignment; realtime preview
         # cũng luôn căn chính giữa trong trường hợp này.
         margin_v = 0
+
+    # Tính margin ngang từ subtitle_width (%)
+    # margin_x = phần thừa mỗi bên = (100 - width_pct) / 2 % của video_width
+    width_pct = max(10, min(100, settings.subtitle_width))
+    margin_x = max(4, round((100 - width_pct) / 200 * video_width))
 
     return pysubs2.SSAStyle(
         fontname=settings.fontname,
@@ -83,8 +89,8 @@ def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAS
         outline=max(1, settings.stroke_width),
         shadow=max(0, settings.shadow),
         alignment=alignment,
-        marginl=60,
-        marginr=60,
+        marginl=margin_x,
+        marginr=margin_x,
         marginv=margin_v if video_height else 30,
         encoding=1,
     )
@@ -115,7 +121,11 @@ class SubtitleRenderer:
         # different line breaks from realtime preview.  WrapStyle 1 keeps
         # the same greedy behaviour; highlight mode already has explicit \N.
         out.info["WrapStyle"] = "1"
-        out.styles["Default"] = _style_for(self.settings, video_height=video_height)
+        out.styles["Default"] = _style_for(
+            self.settings,
+            video_height=video_height,
+            video_width=video_width if video_width else 1920,
+        )
 
         for index, event in enumerate(subs.events):
             if not event.text.strip():
@@ -188,10 +198,12 @@ class SubtitleRenderer:
         self, words: tuple[SubtitleWord, ...], active_index: int
     ) -> str:
         rendered: list[str] = []
-        split_at = max(1, (len(words) + 1) // 2)  # at most two balanced lines
         # All tokens are present from the beginning of the segment. Never
         # build up a sentence word-by-word: that causes width changes, reflow,
         # and a visibly jumping caption.
+        # WrapStyle 1 (greedy) đã được set trong build() — libass tự wrap
+        # theo margin (subtitle_width). Không dùng \N cứng để tránh chia
+        # segment 2-3 từ ngắn thành 2 dòng không cần thiết.
         highlight = self._highlight_ass_color()
         for index, word in enumerate(words):
             if index == active_index:
@@ -200,10 +212,8 @@ class SubtitleRenderer:
                 )
             else:
                 rendered.append(word.text)
-            if index + 1 == split_at and index + 1 < len(words):
-                rendered.append(r"\N")
-        text = " ".join(rendered).replace(" \\N ", r"\N")
-        return text
+        return " ".join(rendered)
+
 
 
 def build_ass(

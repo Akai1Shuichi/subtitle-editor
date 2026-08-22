@@ -398,9 +398,12 @@ class VideoCanvas(QWidget):
         painter.setFont(font)
         fm = QFontMetrics(font)
 
-        # ── Margin ngang: scale từ ASS marginl=60, marginr=60 ──────────────
-        margin_x = max(8, int(60 * vw / src_w))
-        safe_w   = max(100, vw - margin_x * 2)
+        # ── Margin ngang: tính từ subtitle_width (%) ────────────────────────────
+        # subtitle_width = % chiều rộng video mà subtitle chiếm.
+        # margin_x = phần thừa hai bên chia đôi.
+        width_pct = getattr(style, "subtitle_width", 80)
+        margin_x  = max(4, int((100 - width_pct) / 200 * vw))
+        safe_w    = max(100, vw - margin_x * 2)
 
         # ── Vị trí Y: cùng semantics với ASS MarginV ──────────────────────
         if style.alignment in (2, 3, 1):   # bottom
@@ -519,13 +522,29 @@ class VideoCanvas(QWidget):
             else:
                 return
 
-        # Chia segment thành 2 dòng (giống ass_builder._render_words)
-        words = list(active_seg.words)
-        n     = len(words)
-        split = max(1, (n + 1) // 2)    # split_at = (len(words)+1)//2
-        line1 = [w.text for w in words[:split]]
-        line2 = [w.text for w in words[split:]]
-        lines_words = [line1] + ([line2] if line2 else [])
+        # Word-wrap segment words theo pixel width (giống normal mode)
+        # Thay vì split cứng (n+1)//2, đo chiều rộng từng từ để xuống dòng đúng lúc
+        words     = list(active_seg.words)
+        word_texts = [w.text for w in words]
+
+        lines_words: list[list[str]] = []
+        current_line: list[str] = []
+        current_w = 0
+        space_w   = fm.horizontalAdvance(" ")
+
+        for word_text in word_texts:
+            ww = fm.horizontalAdvance(word_text)
+            needed = ww if not current_line else current_w + space_w + ww
+            if current_line and needed > safe_w:
+                lines_words.append(current_line)
+                current_line = [word_text]
+                current_w    = ww
+            else:
+                current_line.append(word_text)
+                current_w = needed
+
+        if current_line:
+            lines_words.append(current_line)
 
         # Paint
         line_h = fm.lineSpacing()
