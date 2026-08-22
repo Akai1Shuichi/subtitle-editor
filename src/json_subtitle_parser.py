@@ -32,10 +32,9 @@ from __future__ import annotations
 import json
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from .models import SubtitleClip
-from .word_timing import TimingFile, LineTiming, WordTiming
+from .word_timing import TimingFile, LineTiming
 
 
 # ---------------------------------------------------------------------------
@@ -91,27 +90,6 @@ def _parse_entry(
     if not text:
         text = "(no text)"
 
-    # Build WordTiming[]
-    word_timings: list[WordTiming] = []
-    for w in raw_words:
-        value = w.get("value", "").strip()
-        if not value:
-            continue
-        w_start = _sec_to_ms(w.get("from", 0.0))
-        w_end   = _sec_to_ms(w.get("to",   0.0))
-        if w_end <= w_start:
-            w_end = w_start + 50   # fallback 50ms
-
-        # Clamp trong phạm vi của line
-        w_start = max(start_ms, min(w_start, end_ms))
-        w_end   = max(w_start + 1, min(w_end, end_ms))
-
-        word_timings.append(WordTiming(
-            word=value,
-            start_ms=w_start,
-            end_ms=w_end,
-        ))
-
     clip = SubtitleClip(
         id=clip_id,
         text=text,
@@ -119,11 +97,12 @@ def _parse_entry(
         end_ms=end_ms,
     )
 
-    line = LineTiming(
+    # Dùng factory method của LineTiming — logic parse words tập trung ở word_timing.py
+    line = LineTiming.from_json_words(
         index=index,
         start_ms=start_ms,
         end_ms=end_ms,
-        words=word_timings,
+        json_words=raw_words,
     )
 
     return clip, line

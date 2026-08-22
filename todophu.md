@@ -97,9 +97,10 @@ File: `src/json_subtitle_parser.py`
 
 ### 5. Cập nhật `word_timing.py` — đảm bảo tương thích
 
-- [ ] Kiểm tra `TimingFile` và `LineTiming` đủ để chứa timing từ JSON.
-- [ ] Nếu cần: thêm factory `LineTiming.from_json_words(words: list[dict])` để tạo
-  `LineTiming` trực tiếp từ mảng `words` của JSON.
+- [x] Kiểm tra `TimingFile` và `LineTiming` đủ để chứa timing từ JSON — tương thích hoàn toàn, không cần thay đổi cấu trúc.
+- [x] Thêm factory `LineTiming.from_json_words(index, start_ms, end_ms, json_words)` để tạo
+  `LineTiming` trực tiếp từ mảng `words` của JSON. Logic parse words tập trung tại đây.
+- [x] Refactor `json_subtitle_parser._parse_entry()` dùng factory thay vì tự parse — loại bỏ code trùng lặp.
 
 ---
 
