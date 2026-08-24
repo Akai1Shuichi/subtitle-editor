@@ -624,7 +624,8 @@ class PillSubtitleRenderer:
             "-map", "[v]",
             "-map", "0:a?",
             "-c:v", "libx264",
-            "-preset", "fast",
+            "-preset", "veryfast",
+            "-threads", "0",
             "-crf", "23",
             "-c:a", "aac",
             "-b:a", "192k",
@@ -643,6 +644,7 @@ class PillSubtitleRenderer:
             raise FFmpegNotFoundError("ffmpeg binary not found.") from exc
 
         sorted_clips = sorted(clips, key=lambda c: c.start_ms)
+        blank_bytes = b"\x00" * (vw * vh * 4)
 
         try:
             for frame_idx in range(total_frames):
@@ -663,19 +665,22 @@ class PillSubtitleRenderer:
                         clip_idx = idx
                         break
 
-                line_t = word_timings.get_line(clip_idx) if (word_timings and clip_idx is not None) else None
+                if active_clip is None:
+                    proc.stdin.write(blank_bytes)
+                else:
+                    line_t = word_timings.get_line(clip_idx) if (word_timings and clip_idx is not None) else None
 
-                frame_img = self.render_frame(
-                    clip=active_clip,
-                    time_ms=time_ms,
-                    style=style,
-                    config=config,
-                    line_timing=line_t,
-                    video_width=vw,
-                    video_height=vh,
-                )
+                    frame_img = self.render_frame(
+                        clip=active_clip,
+                        time_ms=time_ms,
+                        style=style,
+                        config=config,
+                        line_timing=line_t,
+                        video_width=vw,
+                        video_height=vh,
+                    )
 
-                proc.stdin.write(frame_img.tobytes())
+                    proc.stdin.write(frame_img.tobytes())
 
                 if on_progress and frame_idx % 10 == 0:
                     pct = min((frame_idx / total_frames) * 100.0, 99.9)
