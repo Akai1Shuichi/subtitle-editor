@@ -134,6 +134,12 @@ class TestBuildAss:
             assert r"\fad(180,0)" in e.text
             assert r"\t(0,100" in e.text
 
+    def test_punch_mode_includes_word_scale_tags(self):
+        ass = build_ass(self.subs, "punch")
+        assert len(ass.events) > len(self.subs.events)
+        assert any(r"\fscx112" in e.text for e in ass.events)
+        assert any(r"\1c&H00D9FF&" in e.text for e in ass.events)
+
     def test_default_style_applied(self):
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles

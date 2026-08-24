@@ -18,7 +18,7 @@ from pysubs2 import Alignment
 
 from .word_timing import LineTiming, TimingFile, WordTiming
 
-StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch"]
 
 
 @dataclass(frozen=True)
@@ -186,15 +186,11 @@ class SubtitleRenderer:
     def _word_events(
         self, segment: SubtitleSegment, active_index: int, start: int, end: int
     ) -> list[pysubs2.SSAEvent]:
-        # ASS applies inline scale to glyph advance width, unlike CSS
-        # transform. That makes neighbouring words shift. Keep the full group
-        # geometrically identical and switch colour only, so highlighting can
-        # never move or shake the caption.
         return [pysubs2.SSAEvent(
             start=start,
             end=end,
             style="Default",
-            text=self._render_words(segment.words, active_index),
+            text=self._render_words(segment.words, active_index, active_dur=end - start),
         )]
 
     def _highlight_ass_color(self) -> str:
@@ -203,21 +199,23 @@ class SubtitleRenderer:
         return "&H%02X%02X%02X&" % (b, g, r)
 
     def _render_words(
-        self, words: tuple[SubtitleWord, ...], active_index: int
+        self, words: tuple[SubtitleWord, ...], active_index: int, active_dur: int = 200
     ) -> str:
         rendered: list[str] = []
-        # All tokens are present from the beginning of the segment. Never
-        # build up a sentence word-by-word: that causes width changes, reflow,
-        # and a visibly jumping caption.
-        # WrapStyle 1 (greedy) đã được set trong build() — libass tự wrap
-        # theo margin (subtitle_width). Không dùng \N cứng để tránh chia
-        # segment 2-3 từ ngắn thành 2 dòng không cần thiết.
         highlight = self._highlight_ass_color()
         for index, word in enumerate(words):
             if index == active_index:
-                rendered.append(
-                    r"{\1c%s}%s{\r}" % (highlight, word.text)
-                )
+                if self.mode == "punch":
+                    peak = min(80, max(1, active_dur // 2))
+                    dur_anim = min(160, max(2, active_dur))
+                    rendered.append(
+                        r"{\1c%s\t(0,%d,\fscx112\fscy112)\t(%d,%d,\fscx100\fscy100)}%s{\r}"
+                        % (highlight, peak, peak, dur_anim, word.text)
+                    )
+                else:
+                    rendered.append(
+                        r"{\1c%s}%s{\r}" % (highlight, word.text)
+                    )
             else:
                 rendered.append(word.text)
         return " ".join(rendered)

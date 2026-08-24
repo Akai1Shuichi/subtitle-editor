@@ -421,10 +421,11 @@ class VideoCanvas(QWidget):
         stroke_w     = style.stroke_width * scale_y
         shadow_offset = style.shadow * scale_y
 
-        if style.mode == "highlight":
+        if style.mode in ("highlight", "punch"):
             self._paint_highlight_segment(
                 painter, fm, safe_w, margin_x, vx, vy, vw, vh, base_y,
                 text_color, hl_color, stroke_color, stroke_w, shadow_offset,
+                is_punch=(style.mode == "punch"),
             )
         elif style.mode in ("soft_pop", "soft-pop"):
             wrapped = self._wrap_text(fm, self._clip.text, safe_w)
@@ -518,15 +519,15 @@ class VideoCanvas(QWidget):
         vx: int, vy: int, vw: int, vh: int, base_y: int,
         text_color: QColor, hl_color: QColor,
         stroke_color: QColor, stroke_w: float, shadow_offset: float,
+        *,
+        is_punch: bool = False,
     ) -> None:
         """
-        Highlight mode: dùng đúng logic của ass_builder.SubtitleRenderer._segments().
+        Highlight mode & Punch mode: dùng đúng logic của ass_builder.SubtitleRenderer._segments().
 
         ass_builder chia SRT event thành các segment 2-5 từ.
         Tại current_ms, chỉ segment đang active được hiển thị, và chỉ từ
-        đang active trong segment đó được tô màu highlight.
-
-        Segment chia đôi thành 2 dòng (giống _render_words() của ass_builder).
+        đang active trong segment đó được tô màu highlight (và scale punch nếu ở Punch mode).
         """
         if not self._clip:
             return
@@ -569,7 +570,6 @@ class VideoCanvas(QWidget):
                 return
 
         # Word-wrap segment words theo pixel width (giống normal mode)
-        # Thay vì split cứng (n+1)//2, đo chiều rộng từng từ để xuống dòng đúng lúc
         words     = list(active_seg.words)
         word_texts = [w.text for w in words]
 
@@ -615,10 +615,45 @@ class VideoCanvas(QWidget):
             for wi, word in enumerate(line_ws):
                 global_wi = word_offset + wi
                 color     = hl_color if global_wi == active_word_idx else text_color
-                _draw_text_with_stroke(
-                    painter, cx, y, word, color, stroke_color, stroke_w, shadow_offset,
-                )
-                # Cộng khoảng cách giữa các từ (thêm space trừ từ cuối dòng)
+
+                if is_punch and global_wi == active_word_idx:
+                    active_word_obj = words[global_wi]
+                    word_elapsed = self._current_ms - active_word_obj.start_ms
+                    if 0 <= word_elapsed <= 80:
+                        t = word_elapsed / 80.0
+                        ease_t = 1.0 - (1.0 - t) ** 2
+                        word_scale = 1.00 + (1.12 - 1.00) * ease_t
+                    elif 80 < word_elapsed <= 160:
+                        t = (word_elapsed - 80.0) / 80.0
+                        ease_t = t * t
+                        word_scale = 1.12 + (1.00 - 1.12) * ease_t
+                    else:
+                        word_scale = 1.00
+
+                    if word_scale != 1.00:
+                        ww = fm.horizontalAdvance(word)
+                        wh = fm.height()
+                        wcx = cx + ww / 2.0
+                        wcy = y - fm.ascent() + wh / 2.0
+
+                        painter.save()
+                        painter.translate(wcx, wcy)
+                        painter.scale(word_scale, word_scale)
+                        painter.translate(-wcx, -wcy)
+                        _draw_text_with_stroke(
+                            painter, cx, y, word, color, stroke_color, stroke_w, shadow_offset,
+                        )
+                        painter.restore()
+                    else:
+                        _draw_text_with_stroke(
+                            painter, cx, y, word, color, stroke_color, stroke_w, shadow_offset,
+                        )
+                else:
+                    _draw_text_with_stroke(
+                        painter, cx, y, word, color, stroke_color, stroke_w, shadow_offset,
+                    )
+
+                # Advance cx at normal scale — layout stays completely fixed!
                 advance_str = word + (" " if wi < len(line_ws) - 1 else "")
                 cx += fm.horizontalAdvance(advance_str)
 

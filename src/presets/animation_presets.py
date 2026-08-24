@@ -32,3 +32,17 @@ class SoftPopPreset:
 
 
 SOFT_POP_PRESET = SoftPopPreset()
+
+
+@dataclass(frozen=True)
+class PunchPreset:
+    """Preset 3: Punch word-level scale highlight animation configuration."""
+
+    start_scale: float = 1.00
+    peak_scale: float = 1.12
+    end_scale: float = 1.00
+    peak_ms: int = 80
+    duration_ms: int = 160
+
+
+PUNCH_PRESET = PunchPreset()
