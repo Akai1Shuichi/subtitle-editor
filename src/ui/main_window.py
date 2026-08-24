@@ -50,7 +50,7 @@ from ..video_info     import probe_video, FFmpegNotFoundError, VideoReadError
 from ..json_subtitle_parser import load_from_json, JsonSubtitleError
 from ..capcut_json_parser import load_from_capcut_json, CapCutJsonSubtitleError
 from ..exporter import (
-    export_video,
+    export_video, export_video_pill,
     ExportCancelledError, DiskSpaceError, ExportError,
 )
 
@@ -72,21 +72,39 @@ class ExportWorker(QObject):
         ass_path: str,
         output_path: str,
         cancel_event: threading.Event,
+        *,
+        clips: list | None = None,
+        style: SubtitleStyle | None = None,
+        word_timings: TimingFile | None = None,
     ):
         super().__init__()
         self._video_info   = video_info
         self._ass_path     = ass_path
         self._output_path  = output_path
         self._cancel_event = cancel_event
+        self._clips        = clips or []
+        self._style        = style
+        self._word_timings = word_timings
 
     @Slot()
     def run(self) -> None:
         try:
-            result = export_video(
-                self._video_info, self._ass_path, self._output_path,
-                cancel_event=self._cancel_event,
-                on_progress=lambda pct: self.progress.emit(pct),
-            )
+            if self._style and self._style.mode == "pill":
+                result = export_video_pill(
+                    self._video_info,
+                    self._clips,
+                    self._style,
+                    self._output_path,
+                    word_timings=self._word_timings,
+                    cancel_event=self._cancel_event,
+                    on_progress=lambda pct: self.progress.emit(pct),
+                )
+            else:
+                result = export_video(
+                    self._video_info, self._ass_path, self._output_path,
+                    cancel_event=self._cancel_event,
+                    on_progress=lambda pct: self.progress.emit(pct),
+                )
             self.finished.emit(str(result))
         except ExportCancelledError:
             self.error.emit("__cancelled__")
@@ -554,6 +572,9 @@ class MainWindow(QMainWindow):
             self._temp_ass,
             output_path,
             self._cancel_event,
+            clips=self._project.clips,
+            style=self._project.style,
+            word_timings=self._project.word_timings,
         )
         self._worker.moveToThread(self._export_thread)
         self._export_thread.started.connect(self._worker.run)

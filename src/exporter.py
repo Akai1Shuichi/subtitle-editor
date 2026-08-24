@@ -20,6 +20,10 @@ from pathlib import Path
 from typing import Callable
 
 from .video_info import get_ffmpeg, VideoInfo, FFmpegNotFoundError, VideoReadError
+from .pill_renderer import PillSubtitleRenderer
+from .models import SubtitleClip, SubtitleStyle
+from .word_timing import TimingFile
+
 
 
 # ---------------------------------------------------------------------------
@@ -177,6 +181,32 @@ def export_video(
         on_progress(100.0)
 
     return output_path.resolve()
+
+
+def export_video_pill(
+    video_info: VideoInfo,
+    clips: list[SubtitleClip],
+    style: SubtitleStyle,
+    output_path: str | Path,
+    *,
+    word_timings: TimingFile | None = None,
+    cancel_event: threading.Event | None = None,
+    on_progress: Callable[[float], None] | None = None,
+) -> Path:
+    """
+    Export video với Pill Subtitle Animation thông qua raw RGBA stream đến FFmpeg.
+    """
+    renderer = PillSubtitleRenderer()
+    return renderer.export_video_with_pill(
+        video_info=video_info,
+        clips=clips,
+        style=style,
+        output_path=output_path,
+        word_timings=word_timings,
+        cancel_event=cancel_event,
+        on_progress=on_progress,
+    )
+
 
 
 # ---------------------------------------------------------------------------

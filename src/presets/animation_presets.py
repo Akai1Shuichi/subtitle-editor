@@ -57,3 +57,21 @@ class RisePreset:
 
 
 RISE_PRESET = RisePreset()
+
+
+@dataclass(frozen=True)
+class PillPreset:
+    """Preset: Pill word-level moving rounded background animation configuration."""
+
+    highlight_color: str = "#FFD84D"
+    active_text_color: str = "auto"
+    inactive_text_color: str = "#FFFFFF"
+    padding_x: int = 10
+    padding_y: int = 4
+    radius: int = 10
+    transition_ms: int = 260
+    easing: str = "ease_out_cubic"
+
+
+PILL_PRESET = PillPreset()
+

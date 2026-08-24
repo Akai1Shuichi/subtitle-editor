@@ -18,7 +18,7 @@ from pysubs2 import Alignment
 
 from .word_timing import LineTiming, TimingFile, WordTiming
 
-StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise", "pill"]
 
 
 @dataclass(frozen=True)

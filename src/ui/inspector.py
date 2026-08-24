@@ -152,7 +152,9 @@ class Inspector(QWidget):
 
     def get_style(self) -> SubtitleStyle:
         """Trả về SubtitleStyle hiện tại từ các control."""
-        if self._radio_soft_pop.isChecked():
+        if self._radio_pill.isChecked():
+            mode = "pill"
+        elif self._radio_soft_pop.isChecked():
             mode = "soft_pop"
         elif self._radio_punch.isChecked():
             mode = "punch"
@@ -177,11 +179,14 @@ class Inspector(QWidget):
 
     def apply_style(self, style: SubtitleStyle) -> None:
         """Áp dụng SubtitleStyle lên các control (dùng khi load project)."""
+        self._radio_pill.setChecked(style.mode == "pill")
         self._radio_soft_pop.setChecked(style.mode in ("soft_pop", "soft-pop"))
         self._radio_punch.setChecked(style.mode == "punch")
         self._radio_rise.setChecked(style.mode == "rise")
         self._radio_highlight.setChecked(style.mode == "highlight")
-        self._radio_normal.setChecked(style.mode == "normal")
+        if style.mode == "normal":
+            self._radio_normal.setChecked(True)
+
         idx = next(
             (i for i, (_, v) in enumerate(POSITIONS) if v == style.alignment), 0
         )
@@ -248,6 +253,7 @@ class Inspector(QWidget):
         self._radio_punch = QRadioButton("Punch")
         self._radio_rise = QRadioButton("Rise")
         self._radio_highlight = QRadioButton("Word Highlight")
+        self._radio_pill = QRadioButton("Pill Animation")
 
         self._mode_group = QButtonGroup(self)
         self._mode_group.addButton(self._radio_normal)
@@ -255,6 +261,7 @@ class Inspector(QWidget):
         self._mode_group.addButton(self._radio_punch)
         self._mode_group.addButton(self._radio_rise)
         self._mode_group.addButton(self._radio_highlight)
+        self._mode_group.addButton(self._radio_pill)
         self._mode_group.buttonClicked.connect(self._emit_style)
 
         mode_l.addWidget(self._radio_normal)
@@ -262,6 +269,7 @@ class Inspector(QWidget):
         mode_l.addWidget(self._radio_punch)
         mode_l.addWidget(self._radio_rise)
         mode_l.addWidget(self._radio_highlight)
+        mode_l.addWidget(self._radio_pill)
         layout.addWidget(mode_w)
 
         # Small divider
