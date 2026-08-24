@@ -473,6 +473,33 @@ class VideoCanvas(QWidget):
                               text_color, stroke_color, stroke_w, shadow_offset,
                               alignment=style.alignment)
             painter.restore()
+        elif style.mode == "rise":
+            wrapped = self._wrap_text(fm, self._clip.text, safe_w)
+            elapsed_ms = self._current_ms - self._clip.start_ms
+            if elapsed_ms < 0:
+                return
+
+            # Rise entrance animation:
+            # translateY: 16px -> 0px over 200ms
+            # opacity: 0 -> 1 over 200ms
+            if elapsed_ms <= 200:
+                t = elapsed_ms / 200.0
+                ease_t = 1.0 - (1.0 - t) ** 2
+                offset_y = 16.0 * (1.0 - ease_t)
+                alpha = t
+            else:
+                offset_y = 0.0
+                alpha = 1.0
+
+            dy = offset_y * (vh / src_h)
+
+            painter.save()
+            painter.setOpacity(alpha)
+            painter.translate(0, dy)
+            self._paint_lines(painter, fm, wrapped, vx + margin_x, safe_w, base_y,
+                              text_color, stroke_color, stroke_w, shadow_offset,
+                              alignment=style.alignment)
+            painter.restore()
         else:
             wrapped = self._wrap_text(fm, self._clip.text, safe_w)
             self._paint_lines(painter, fm, wrapped, vx + margin_x, safe_w, base_y,

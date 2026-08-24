@@ -140,6 +140,13 @@ class TestBuildAss:
         assert any(r"\fscx112" in e.text for e in ass.events)
         assert any(r"\1c&H00D9FF&" in e.text for e in ass.events)
 
+    def test_rise_mode_includes_move_tags(self):
+        ass = build_ass(self.subs, "rise")
+        assert len(ass.events) == len(self.subs.events)
+        for e in ass.events:
+            assert r"\move(" in e.text
+            assert r"\fad(200,0)" in e.text
+
     def test_default_style_applied(self):
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles

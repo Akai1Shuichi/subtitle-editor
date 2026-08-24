@@ -156,6 +156,8 @@ class Inspector(QWidget):
             mode = "soft_pop"
         elif self._radio_punch.isChecked():
             mode = "punch"
+        elif self._radio_rise.isChecked():
+            mode = "rise"
         elif self._radio_highlight.isChecked():
             mode = "highlight"
         else:
@@ -177,6 +179,7 @@ class Inspector(QWidget):
         """Áp dụng SubtitleStyle lên các control (dùng khi load project)."""
         self._radio_soft_pop.setChecked(style.mode in ("soft_pop", "soft-pop"))
         self._radio_punch.setChecked(style.mode == "punch")
+        self._radio_rise.setChecked(style.mode == "rise")
         self._radio_highlight.setChecked(style.mode == "highlight")
         self._radio_normal.setChecked(style.mode == "normal")
         idx = next(
@@ -243,18 +246,21 @@ class Inspector(QWidget):
         self._radio_normal.setChecked(True)
         self._radio_soft_pop = QRadioButton("Soft Pop")
         self._radio_punch = QRadioButton("Punch")
+        self._radio_rise = QRadioButton("Rise")
         self._radio_highlight = QRadioButton("Word Highlight")
 
         self._mode_group = QButtonGroup(self)
         self._mode_group.addButton(self._radio_normal)
         self._mode_group.addButton(self._radio_soft_pop)
         self._mode_group.addButton(self._radio_punch)
+        self._mode_group.addButton(self._radio_rise)
         self._mode_group.addButton(self._radio_highlight)
         self._mode_group.buttonClicked.connect(self._emit_style)
 
         mode_l.addWidget(self._radio_normal)
         mode_l.addWidget(self._radio_soft_pop)
         mode_l.addWidget(self._radio_punch)
+        mode_l.addWidget(self._radio_rise)
         mode_l.addWidget(self._radio_highlight)
         layout.addWidget(mode_w)
 

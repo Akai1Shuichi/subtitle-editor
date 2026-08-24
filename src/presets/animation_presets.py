@@ -46,3 +46,14 @@ class PunchPreset:
 
 
 PUNCH_PRESET = PunchPreset()
+
+
+@dataclass(frozen=True)
+class RisePreset:
+    """Preset 4: Rise phrase entrance animation configuration."""
+
+    translate_y_px: int = 16
+    duration_ms: int = 200
+
+
+RISE_PRESET = RisePreset()

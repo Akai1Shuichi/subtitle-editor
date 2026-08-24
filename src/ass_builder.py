@@ -18,7 +18,7 @@ from pysubs2 import Alignment
 
 from .word_timing import LineTiming, TimingFile, WordTiming
 
-StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise"]
 
 
 @dataclass(frozen=True)
@@ -127,6 +127,9 @@ class SubtitleRenderer:
             video_width=video_width if video_width else 1920,
         )
 
+        vh = video_height if video_height else 1080
+        vw = video_width if video_width else 1920
+
         for index, event in enumerate(subs.events):
             if not event.text.strip():
                 continue
@@ -142,6 +145,19 @@ class SubtitleRenderer:
                 clean.style = "Default"
                 # Soft Pop animation: start 0.92 -> overshoot 1.04 (100ms) -> end 1.00 (180ms) + fade in 180ms
                 anim_tag = r"{\fscx92\fscy92\fad(180,0)\t(0,100,\fscx104\fscy104)\t(100,180,\fscx100\fscy100)}"
+                clean.text = anim_tag + text
+                out.events.append(clean)
+                continue
+            elif self.mode == "rise":
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                # Rise animation: move upwards from 16px below over 200ms + fade in 200ms
+                margin_v = max(0, round((100 - self.settings.position_y) * vh / 100))
+                align_val = int(self.settings.alignment)
+                x = round(vw / 2)
+                y_end = round(vh - margin_v) if align_val in (1, 2, 3) else (round(vh / 2) if align_val in (4, 5, 6) else margin_v)
+                y_start = y_end + 16
+                anim_tag = r"{\an%d\move(%d,%d,%d,%d,0,200)\fad(200,0)}" % (align_val, x, y_start, x, y_end)
                 clean.text = anim_tag + text
                 out.events.append(clean)
                 continue
