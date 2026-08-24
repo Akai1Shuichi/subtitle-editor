@@ -18,7 +18,7 @@ from pysubs2 import Alignment
 
 from .word_timing import LineTiming, TimingFile, WordTiming
 
-StyleMode = Literal["normal", "highlight"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop"]
 
 
 @dataclass(frozen=True)
@@ -135,6 +135,14 @@ class SubtitleRenderer:
                 clean = copy.deepcopy(event)
                 clean.style = "Default"
                 clean.text = text
+                out.events.append(clean)
+                continue
+            elif self.mode in ("soft_pop", "soft-pop"):
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                # Soft Pop animation: start 0.92 -> overshoot 1.04 (100ms) -> end 1.00 (180ms) + fade in 180ms
+                anim_tag = r"{\fscx92\fscy92\fad(180,0)\t(0,100,\fscx104\fscy104)\t(100,180,\fscx100\fscy100)}"
+                clean.text = anim_tag + text
                 out.events.append(clean)
                 continue
 

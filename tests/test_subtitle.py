@@ -126,6 +126,14 @@ class TestBuildAss:
             assert r"\kf" not in e.text
         assert any(r"\1c&H00D9FF&" in e.text for e in ass.events)
 
+    def test_soft_pop_mode_includes_animation_tags(self):
+        ass = build_ass(self.subs, "soft_pop")
+        assert len(ass.events) == len(self.subs.events)
+        for e in ass.events:
+            assert r"\fscx92" in e.text
+            assert r"\fad(180,0)" in e.text
+            assert r"\t(0,100" in e.text
+
     def test_default_style_applied(self):
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles

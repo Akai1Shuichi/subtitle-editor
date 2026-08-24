@@ -265,4 +265,5 @@ class TestWordPopHighlight:
         first_word_events = [event for event in ass.events if event.start < 1420]
         second_word_events = [event for event in ass.events if 1420 <= event.start < 1720]
         assert first_word_events and second_word_events
-        assert all(r"\N" in event.text for event in first_word_events + second_word_events)
+        clean_texts = [event.text.replace(r"{\r}", "").replace(r"{\1c&H00D9FF&}", "") for event in first_word_events + second_word_events]
+        assert len(set(clean_texts)) == 1

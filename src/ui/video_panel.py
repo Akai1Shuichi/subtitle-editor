@@ -426,6 +426,52 @@ class VideoCanvas(QWidget):
                 painter, fm, safe_w, margin_x, vx, vy, vw, vh, base_y,
                 text_color, hl_color, stroke_color, stroke_w, shadow_offset,
             )
+        elif style.mode in ("soft_pop", "soft-pop"):
+            wrapped = self._wrap_text(fm, self._clip.text, safe_w)
+            elapsed_ms = self._current_ms - self._clip.start_ms
+            if elapsed_ms < 0:
+                return
+
+            # Soft Pop entrance animation:
+            # 0-100ms: scale 0.92 -> overshoot 1.04
+            # 100-180ms: scale 1.04 -> end 1.00
+            # > 180ms: scale 1.00
+            # opacity: 0 -> 1 over 180ms
+            if elapsed_ms <= 100:
+                t = elapsed_ms / 100.0
+                ease_t = 1.0 - (1.0 - t) ** 2
+                scale = 0.92 + (1.04 - 0.92) * ease_t
+            elif elapsed_ms <= 180:
+                t = (elapsed_ms - 100.0) / 80.0
+                ease_t = t * t
+                scale = 1.04 + (1.00 - 1.04) * ease_t
+            else:
+                scale = 1.00
+
+            alpha = max(0.0, min(1.0, elapsed_ms / 180.0)) if elapsed_ms < 180 else 1.0
+
+            line_h = fm.lineSpacing()
+            total_h = line_h * len(wrapped)
+            if style.alignment in (2, 3, 1):      # bottom
+                start_y = base_y - total_h
+            elif style.alignment in (5, 6, 4):    # center
+                start_y = base_y - total_h // 2
+            else:                                  # top
+                start_y = base_y
+
+            cx = (vx + margin_x) + safe_w / 2.0
+            cy = start_y + total_h / 2.0
+
+            painter.save()
+            painter.setOpacity(alpha)
+            painter.translate(cx, cy)
+            painter.scale(scale, scale)
+            painter.translate(-cx, -cy)
+
+            self._paint_lines(painter, fm, wrapped, vx + margin_x, safe_w, base_y,
+                              text_color, stroke_color, stroke_w, shadow_offset,
+                              alignment=style.alignment)
+            painter.restore()
         else:
             wrapped = self._wrap_text(fm, self._clip.text, safe_w)
             self._paint_lines(painter, fm, wrapped, vx + margin_x, safe_w, base_y,
