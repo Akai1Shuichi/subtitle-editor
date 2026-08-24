@@ -34,15 +34,11 @@ def main() -> None:
 
 
 def _load_fonts(app: QApplication) -> None:
-    """Đặt font mặc định cho toàn app."""
-    preferred = ["Inter", "Segoe UI", "Helvetica Neue", "Arial"]
-    families = QFontDatabase.families()
-    for name in preferred:
-        if name in families:
-            app.setFont(QFont(name, 13))
-            return
-    # Fallback
-    app.setFont(QFont("Arial", 13))
+    """Đặt font mặc định cho toàn app với danh sách ưu tiên tự động fallback."""
+    font = QFont()
+    font.setFamilies(["Inter", "Segoe UI", "Helvetica Neue", "Arial"])
+    font.setPointSize(10)
+    app.setFont(font)
 
 
 if __name__ == "__main__":

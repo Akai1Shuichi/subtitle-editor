@@ -48,6 +48,7 @@ from ..subtitle_parser import SubtitleError
 from ..word_timing    import load_timing
 from ..video_info     import probe_video, FFmpegNotFoundError, VideoReadError
 from ..json_subtitle_parser import load_from_json, JsonSubtitleError
+from ..capcut_json_parser import load_from_capcut_json, CapCutJsonSubtitleError
 from ..exporter import (
     export_video,
     ExportCancelledError, DiskSpaceError, ExportError,
@@ -139,6 +140,7 @@ class MainWindow(QMainWindow):
         self._header_bar = HeaderBar()
         self._header_bar.import_video_requested.connect(self._on_video_selected)
         self._header_bar.import_srt_requested.connect(self._on_srt_loaded)
+        self._header_bar.import_capcut_json_requested.connect(self._on_capcut_json_loaded)
         self._header_bar.import_json_requested.connect(self._on_json_loaded)
         self._header_bar.export_requested.connect(self._on_header_export)
         root.addWidget(self._header_bar)
@@ -329,6 +331,30 @@ class MainWindow(QMainWindow):
             return
         except Exception as exc:
             self._show_error("Lỗi không xác định", f"Không parse được file JSON:\n{exc}")
+            return
+
+        self._project.clips        = clips
+        self._project.word_timings = timing
+        self._selected_clip_id     = None   # bỏ selection cũ
+
+        self._update_ui_state()
+
+    @Slot(str)
+    def _on_capcut_json_loaded(self, path: str) -> None:
+        """
+        Import subtitle từ file JSON CapCut draft (draft_content.json).
+        Gọi load_from_capcut_json() — trả về cả clips lẫn TimingFile trong một lần.
+        """
+        try:
+            clips, timing = load_from_capcut_json(path)
+        except FileNotFoundError as exc:
+            self._show_error("File không tồn tại", str(exc))
+            return
+        except CapCutJsonSubtitleError as exc:
+            self._show_error("Lỗi đọc CapCut JSON", str(exc))
+            return
+        except Exception as exc:
+            self._show_error("Lỗi không xác định", f"Không parse được file CapCut JSON:\n{exc}")
             return
 
         self._project.clips        = clips

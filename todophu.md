@@ -1,113 +1,36 @@
-# TODO PHỤ — Tính năng chọn nguồn subtitle cho Word Highlight mode
+# Kế Hoạch Thực Hiện: Thêm Tính Năng Import JSON (CapCut)
 
-> Bổ sung sau **Bước 3** (Video playback & realtime preview) trong `todo.md`.
-> Khi người dùng chọn mode **Word Highlight**, sẽ có 2 nguồn để import subtitle thay vì chỉ 1.
-
----
-
-## Mô tả tính năng
-
-Hiện tại khi import SRT ở mode Word Highlight, hệ thống tự chia segment và tính word timing bằng cách chia đều duration theo số từ (không chính xác).
-
-Tính năng mới cho phép người dùng chọn **1 trong 2 nguồn**:
-
-| Nguồn | Cách hoạt động | Độ chính xác |
-|---|---|---|
-| **SRT** | Tự chia segment theo số từ, phân bổ timing đều theo duration | Trung bình |
-| **subtitle.json** | Dùng timestamp thực từng từ ghi âm bởi speech recognition | Cao — đúng theo tốc độ giọng nói |
+## 🎯 Mục Tiêu
+Thêm tính năng **Import CapCut JSON**, bố trí nút bấm trước (bên trái) nút **Import JSON (Veed)** hiện tại trên thanh công cụ HeaderBar, trích xuất phụ đề và timing từ khối `"materials" -> "texts"` kết hợp với dữ liệu `tracks` trong các file JSON draft của CapCut (như `draft_content.json` và `draft_content_animated.json`).
 
 ---
 
-## Cấu trúc file `subtitle.json`
+## 📌 Các Bước Chính Thực Hiện
 
-```json
-{
-  "<uuid>": {
-    "words": [
-      { "value": "AI",   "from": 0.159, "to": 0.459 },
-      { "value": "đang", "from": 0.539, "to": 0.680 }
-    ],
-    "from": 0.159,
-    "to":   1.079,
-    "styles": [],
-    "itemStyles": null
-  }
-}
-```
+### Bước 1: Xây dựng Module Parser CapCut JSON (`src/capcut_json_parser.py`) [x]
+- **Đọc & Validate**: Đọc file JSON từ CapCut, kiểm tra cấu trúc `materials` và `tracks`.
+- **Trích xuất Text**: Duyệt danh sách `"materials" -> "texts"`. Đọc nội dung phụ đề từ field `content` (nếu là JSON string `{"text": "..."}`) hoặc fallback sang field `recognize_text`.
+- **Ánh xạ Timing Timeline**:
+  - Duyệt danh sách `tracks` có `type: "text"`.
+  - Đọc `target_timerange` (đơn vị microsecond `us`), đổi sang millisecond `ms` (`us / 1000`).
+  - Hỗ trợ 2 kiểu ánh xạ `material_id`:
+    1. `material_id` trỏ trực tiếp đến `id` của text trong `materials.texts`.
+    2. `material_id` trỏ tới `materials.text_templates` -> tra cứu `text_material_id` để tìm ra text tương ứng trong `materials.texts`.
+- **Trích xuất Word-level Timing**: Đọc mảng `words` (`start_time`, `end_time`, `text`) từ từng đối tượng text trong `materials.texts` (chuyển sang thời gian tuyệt đối `start_ms + word_offset_ms`) để tạo `LineTiming` và `WordTiming`.
+- **Trả về dữ liệu**: Trả về `(clips: list[SubtitleClip], timing: TimingFile)` tương thích với hệ thống hiện tại.
 
-- Key: UUID (không liên quan đến SRT clip id — map theo timing)
-- `from` / `to`: giây (float), thời điểm bắt đầu/kết thúc cả đoạn
-- `words[].from` / `words[].to`: timing chính xác từng từ (giây)
-- `styles`: bỏ qua (editor dùng style riêng)
+### Bước 2: Cập Nhật Thanh Header Bar (`src/ui/header_bar.py`) [x]
+- Thêm nút mới `_import_capcut_json_btn` với nhãn `🎬 Import CapCut JSON`.
+- Sắp xếp vị trí nút: Đặt nút **Import CapCut JSON** phía trước nút **Import JSON (Veed)** (`_import_json_btn`).
+- Thêm Signal `import_capcut_json_requested = Signal()`.
+- Cập nhật trạng thái `set_has_video` và `set_mode` để bật/tắt nút hợp lý.
 
----
+### Bước 3: Tích Hợp Xử Lý Trong Main Window (`src/ui/main_window.py`) [x]
+- Thêm handler `_on_import_capcut_json()` trong `MainWindow`.
+- Mở `QFileDialog` để chọn file JSON CapCut.
+- Gọi parser `capcut_json_parser.load_from_capcut_json(file_path)`.
+- Cập nhật dữ liệu Project, load clips lên timeline và hiển thị notification/status bar.
 
-## Các bước triển khai
-
-### 1. Cập nhật UI — Thêm lựa chọn nguồn subtitle khi ở Word Highlight mode
-
-- [x] Trong `header_bar.py`: khi mode = `highlight`, hiển thị 2 nút/radio:
-  - `📄 Import từ SRT` (hành vi cũ)
-  - `🎯 Import từ JSON (word timing)` (hành vi mới)
-- [x] Khi mode = `normal`, nút JSON bị disable — không thay đổi luồng normal.
-- [x] Nút JSON chỉ active khi có video VÀ mode là `highlight`. Có tooltip giải thích.
-- [x] `main_window.py`: wire `import_json_requested` → `_on_json_loaded` (placeholder cho bước 2).
-- [x] `main_window.py`: `_on_style_changed` gọi `header_bar.set_highlight_mode()` mỗi khi mode thay đổi.
-
----
-
-### 2. Tạo parser mới — `json_subtitle_parser.py`
-
-File: `src/json_subtitle_parser.py`
-
-- [x] Viết hàm `load_subtitle_json(path) -> list[SubtitleClip]`:
-  - Đọc và parse file JSON
-  - Mỗi entry: `from`/`to` (giây) × 1000 → `start_ms`/`end_ms`
-  - Ghép `words[].value` thành `text` (join dấu cách)
-  - Tạo `SubtitleClip` với `id = uuid4()`
-  - Sort theo `start_ms`
-- [x] Viết hàm `load_word_timing_from_json(path, clips) -> TimingFile`:
-  - Map từng entry JSON → clip tương ứng bằng timing overlap
-  - Với mỗi entry: tạo `LineTiming` từ `words[]` (từng từ có `start_ms`, `end_ms`)
-  - Trả về `TimingFile` (dict `clip.id` → `LineTiming`)
-- [x] Xử lý lỗi: file không tồn tại, JSON sai format, `words` rỗng
-- [x] API gộp thành `load_from_json(path) -> (clips, TimingFile)` — một lần gọi trả về cả hai
-
-### 3. Xử lý map JSON entries → SubtitleClip (vấn đề cốt lõi)
-
-> JSON dùng UUID riêng, không khớp với clip id. Cần chiến lược map theo timing.
-
-- [x] **Chiến lược**: sau khi parse JSON thành danh sách clips sort theo `from`,
-  `LineTiming.index` = vị trí 0-based trong danh sách đó — khớp với `get_line(i)`
-  khi `i = project.sorted_clips().index(active_clip)`.
-- [x] Không cần file SRT kèm theo — JSON đủ thông tin tạo clips độc lập.
-- [x] Gán `TimingFile` vào `EditorProject.word_timings` ngay sau import.
-
----
-
-### 4. Cập nhật `main_window.py` — xử lý luồng import JSON
-
-- [x] Thêm slot `_on_json_loaded()`:
-  - Gọi `load_from_json()` → nhận `clips` + `timing`
-  - Gán vào `self._project.clips` và `self._project.word_timings`
-  - Cập nhật UI: timeline, inspector, preview
-- [x] Hiển thị thông báo lỗi nếu parse thất bại
-
----
-
-### 5. Cập nhật `word_timing.py` — đảm bảo tương thích
-
-- [x] Kiểm tra `TimingFile` và `LineTiming` đủ để chứa timing từ JSON — tương thích hoàn toàn, không cần thay đổi cấu trúc.
-- [x] Thêm factory `LineTiming.from_json_words(index, start_ms, end_ms, json_words)` để tạo
-  `LineTiming` trực tiếp từ mảng `words` của JSON. Logic parse words tập trung tại đây.
-- [x] Refactor `json_subtitle_parser._parse_entry()` dùng factory thay vì tự parse — loại bỏ code trùng lặp.
-
----
-
-### 6. Kiểm thử
-
-- [ ] Import `subtitle.json` → clips hiển thị đúng text và timing trên timeline.
-- [ ] Preview word highlight: từng từ highlight đúng tốc độ giọng nói.
-- [ ] So sánh export ASS nguồn SRT vs nguồn JSON — JSON phải chính xác hơn.
-- [ ] Edge case: entry `words` rỗng, `from` = `to`, JSON không hợp lệ.
-- [ ] Đảm bảo mode `normal` + import SRT vẫn hoạt động bình thường sau khi thêm tính năng.
+### Bước 4: Kiểm Thử và Xác Nhận (Verification)
+- Kiểm thử tự động với 2 file mẫu: `data/draft_content.json` và `data/draft_content_animated.json`.
+- Kiểm thử giao diện GUI: Đảm bảo vị trí nút bấm chính xác và thao tác import diễn ra mượt mà.
