@@ -26,19 +26,19 @@
 
 ## 4. Triển khai timeline subtitle
 
-- [x] Render thước thời gian, video track, subtitle track và playhead.
-- [x] Click timeline để seek video.
-- [x] Đồng bộ playhead khi video đang phát hoặc khi người dùng seek.
-- [x] Cho phép chọn subtitle clip từ timeline và hiển thị trạng thái selected.
-- [x] Thêm zoom timeline và quy đổi nhất quán giữa pixel với milliseconds.
+- [] Render thước thời gian, video track, subtitle track và playhead.
+- [] Click timeline để seek video.
+- [] Đồng bộ playhead khi video đang phát hoặc khi người dùng seek.
+- [] Cho phép chọn subtitle clip từ timeline và hiển thị trạng thái selected.
+- [] Thêm zoom timeline và quy đổi nhất quán giữa pixel với milliseconds.
 
 ## 5. Chỉnh timing trực tiếp trên timeline
 
-- [x] Kéo toàn bộ clip để cập nhật đồng thời `startMs` và `endMs`.
-- [x] Kéo mép trái để resize và cập nhật `startMs`.
-- [x] Kéo mép phải để resize và cập nhật `endMs`.
-- [x] Thêm các ràng buộc hợp lệ: không âm, không vượt video duration và luôn có `endMs > startMs`.
-- [x] Kiểm tra preview, inspector và export cùng phản ánh timing mới ngay lập tức.
+- [] Kéo toàn bộ clip để cập nhật đồng thời `startMs` và `endMs`.
+- [] Kéo mép trái để resize và cập nhật `startMs`.
+- [] Kéo mép phải để resize và cập nhật `endMs`.
+- [] Thêm các ràng buộc hợp lệ: không âm, không vượt video duration và luôn có `endMs > startMs`.
+- [] Kiểm tra preview, inspector và export cùng phản ánh timing mới ngay lập tức.
 
 ## 6. Inspector và thao tác subtitle
 

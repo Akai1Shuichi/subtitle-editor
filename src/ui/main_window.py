@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 from .header_bar          import HeaderBar
 from .video_panel         import VideoPanel
 from .inspector           import Inspector
-from .timeline_placeholder import TimelinePlaceholder
+from .timeline_widget     import TimelineWidget
 from .export_bar          import ExportBar
 
 from ..models import (
@@ -175,12 +175,13 @@ class MainWindow(QMainWindow):
         # Separator
         root.addWidget(self._make_hsep())
 
-        # ── Timeline Placeholder ────────────────────────────────────────
-        self._timeline = TimelinePlaceholder()
+        # ── Interactive Timeline ────────────────────────────────────────
+        self._timeline = TimelineWidget()
         self._timeline.clip_selected.connect(self._on_clip_selected)
         self._timeline.clip_deselected.connect(self._on_clip_deselected)
+        self._timeline.clip_timing_changed.connect(self._on_clip_timing_changed)
         self._timeline.add_subtitle_requested.connect(self._on_add_subtitle_requested)
-        # ── Bước 3: playback controls ──────────────────────────────────
+        # ── Playback & Seek controls ───────────────────────────────────
         self._timeline.play_pause_requested.connect(self._video_panel.toggle_play_pause)
         self._timeline.seek_requested.connect(self._video_panel.seek)
         root.addWidget(self._timeline)
@@ -394,6 +395,42 @@ class MainWindow(QMainWindow):
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Clip operations
     # ──────────────────────────────────────────────────────────────────────
+
+    @Slot(str, int, int)
+    def _on_clip_timing_changed(self, clip_id: str, new_start_ms: int, new_end_ms: int) -> None:
+        """
+        Gọi khi người dùng kéo (move) hoặc resize clip trực tiếp trên timeline.
+        Cập nhật start_ms, end_ms của SubtitleClip và đồng bộ word timing nếu có.
+        """
+        clip = self._project.clip_by_id(clip_id)
+        if not clip:
+            return
+
+        old_start = clip.start_ms
+        old_end = clip.end_ms
+        delta_start = new_start_ms - old_start
+        delta_end = new_end_ms - old_end
+
+        clip.start_ms = new_start_ms
+        clip.end_ms = new_end_ms
+
+        # Đồng bộ word timing nếu có
+        if self._project.word_timings:
+            try:
+                sorted_clips = self._project.sorted_clips()
+                idx = sorted_clips.index(clip)
+                line = self._project.word_timings.get_line(idx)
+                if line:
+                    line.start_ms = new_start_ms
+                    line.end_ms = new_end_ms
+                    if delta_start == delta_end and delta_start != 0:
+                        for w in line.words:
+                            w.start_ms += delta_start
+                            w.end_ms += delta_start
+            except (ValueError, AttributeError):
+                pass
+
+        self._update_ui_state()
 
     @Slot(str, str)
     def _on_clip_text_changed(self, clip_id: str, new_text: str) -> None:
