@@ -220,7 +220,7 @@ class PresetSelectorWidget(QWidget):
         ("normal",      "Normal",         None,            "T",  "#6C8AFF"),
         ("soft_pop",    "Soft Pop",       None,            "💫", "#A78BFA"),
         ("punch",       "Punch",          None,            "👊", "#F87171"),
-        ("rise",        "Rise",           None,            "⬆", "#34D399"),
+        ("rise",        "Rise",           "rise.gif",      "⬆", "#34D399"),
         ("pill",        "Pill",           None,            "💊", "#60A5FA"),
         ("rounded_box", "Rounded Box",    None,            "▣",  "#FB923C"),
     ]
