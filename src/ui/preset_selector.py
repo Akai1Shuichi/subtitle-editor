@@ -218,11 +218,11 @@ class PresetSelectorWidget(QWidget):
     MODES = [
         ("normal",      "Normal",         None,            "T",  "#6C8AFF"),
         ("highlight",   "Word Highlight", "highlight.gif", "✦",  "#FFD900"),
-        ("soft_pop",    "Soft Pop",       "soft_pop.gif",  "💫", "#A78BFA"),
         ("punch",       "Punch",          "punch.gif",     "👊", "#F87171"),
-        ("rise",        "Rise",           "rise.gif",      "⬆", "#34D399"),
         ("pill",        "Pill",           "pill.gif",      "💊", "#60A5FA"),
         ("rounded_box", "Rounded Box",    "rounded_box.gif", "▣", "#FB923C"),
+        ("rise",        "Rise",           "rise.gif",      "⬆", "#34D399"),
+        ("soft_pop",    "Soft Pop",       "soft_pop.gif",  "💫", "#A78BFA"),
     ]
 
     def __init__(self, parent: QWidget | None = None):
