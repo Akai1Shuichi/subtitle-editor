@@ -16,6 +16,8 @@ SubtitleAnimationType = Literal[
     "rise",
     "marker",
     "pill",
+    "rounded_box",
+    "rounded-box",
 ]
 
 
@@ -74,4 +76,20 @@ class PillPreset:
 
 
 PILL_PRESET = PillPreset()
+
+
+@dataclass(frozen=True)
+class RoundedBoxPreset:
+    """Preset 7: Rounded Box / Caption Card phrase-level display style (Animation: None)."""
+
+    animation_type: str = "none"
+    bg_color: tuple[int, int, int] = (255, 217, 0)
+    text_color: tuple[int, int, int] = (17, 17, 17)
+    radius: int = 16
+    padding_x: int = 16
+    padding_y: int = 10
+
+
+ROUNDED_BOX_PRESET = RoundedBoxPreset()
+
 

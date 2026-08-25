@@ -859,3 +859,144 @@ Pill
 Mục tiêu không phải có thật nhiều preset, mà là:
 
 > Mỗi preset phải có mục đích rõ ràng, motion mượt, dễ đọc và đủ đẹp để dùng thật trong TikTok / Reels / Shorts.
+
+
+7. Rounded Box / Caption Card
+
+Subtitle nằm trong một khối background bo góc:
+
+╭────────────────────────────────╮
+│  tương Lai không phải là AI   │
+│     thay thế lập trình viên    │
+╰────────────────────────────────╯
+
+Đặc điểm visual:
+
+Background: vàng sáng.
+Text: đen.
+Border radius lớn.
+Text căn giữa.
+Có padding quanh text.
+Cho phép xuống 2 dòng.
+Không cần stroke text.
+Box tự co giãn theo nội dung nhưng có max-width.
+
+Gợi ý:
+
+background: #FFD900;
+color: #111111;
+
+border-radius: 16px;
+padding: 10px 16px;
+
+font-weight: 500–600;
+text-align: center;
+line-height: 1.1;
+
+max-width: 85%;
+Cách hiển thị
+
+Style này không có entrance animation và exit animation.
+
+Subtitle chỉ xuất hiện đúng tại startMs:
+
+currentTime < startMs
+
+[ không hiển thị ]
+
+Đến thời gian subtitle:
+
+currentTime >= startMs
+&&
+currentTime < endMs
+
+╭────────────────────────────╮
+│     Nội dung subtitle      │
+╰────────────────────────────╯
+
+Khi hết thời gian:
+
+currentTime >= endMs
+
+[ biến mất ngay ]
+
+Tức là:
+
+Phrase 1
+10.0s ─────────── 12.5s
+
+          ↓
+
+10.0s
+╭──────────────────────╮
+│ Subtitle phrase 1    │
+╰──────────────────────╯
+
+12.5s
+[ disappear ]
+
+Phrase tiếp theo:
+
+12.5s
+
+╭──────────────────────╮
+│ Subtitle phrase 2    │
+╰──────────────────────╯
+
+Không có:
+
+❌ fade
+❌ scale
+❌ slide
+❌ bounce
+❌ transition giữa 2 phrase
+
+Chỉ:
+
+SHOW → HOLD → HIDE
+Khi chuyển giữa các subtitle
+
+Ví dụ:
+
+Subtitle A
+0s → 2s
+
+Subtitle B
+2s → 4s
+
+Tại 1.99s:
+
+╭──────────────────────╮
+│ Subtitle A           │
+╰──────────────────────╯
+
+Tại 2.00s:
+
+╭──────────────────────╮
+│ Subtitle B           │
+╰──────────────────────╯
+
+Box A được thay trực tiếp bằng Box B, không animate quá trình chuyển đổi.
+
+Animation level
+
+Thực tế style này nên coi là:
+
+Animation: None
+Display style: Rounded Box
+Level: Phrase-level
+
+Tức nó thiên về subtitle visual style hơn là animation.
+
+Nếu đưa vào model của editor thì nên tách:
+
+style: {
+  type: 'rounded-box',
+  backgroundColor: '#FFD900',
+  textColor: '#111111',
+  borderRadius: 16,
+}
+
+animation: {
+  type: 'none'
+}

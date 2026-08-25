@@ -18,7 +18,7 @@ from pysubs2 import Alignment
 
 from .word_timing import LineTiming, TimingFile, WordTiming
 
-StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise", "pill"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise", "pill", "rounded_box", "rounded-box"]
 
 
 @dataclass(frozen=True)
@@ -55,7 +55,13 @@ class SubtitleSegment:
     words: tuple[SubtitleWord, ...]
 
 
-def _style_for(settings: SubtitleSettings, *, video_height: int, video_width: int = 1920) -> pysubs2.SSAStyle:
+def _style_for(
+    settings: SubtitleSettings,
+    *,
+    video_height: int,
+    video_width: int = 1920,
+    mode: StyleMode = "normal",
+) -> pysubs2.SSAStyle:
     # ASS uses the video's PlayRes.  Do not downscale a configured 54px font
     # merely because the source is 720×1280: 54px must remain 54px there.
     alignment = settings.alignment
@@ -72,6 +78,31 @@ def _style_for(settings: SubtitleSettings, *, video_height: int, video_width: in
     # margin_x = phần thừa mỗi bên = (100 - width_pct) / 2 % của video_width
     width_pct = max(10, min(100, settings.subtitle_width))
     margin_x = max(4, round((100 - width_pct) / 200 * video_width))
+
+    if mode in ("rounded_box", "rounded-box"):
+        txt_color = settings.text_color if settings.text_color != (255, 255, 255) else (17, 17, 17)
+        bg_color = settings.highlight_color
+        return pysubs2.SSAStyle(
+            fontname=settings.fontname,
+            fontsize=max(10, settings.fontsize),
+            primarycolor=pysubs2.Color(*txt_color, 0),
+            secondarycolor=pysubs2.Color(*bg_color, 0),
+            outlinecolor=pysubs2.Color(*bg_color, 0),
+            backcolor=pysubs2.Color(*bg_color, 0),
+            bold=True,
+            italic=False,
+            scalex=100,
+            scaley=100,
+            spacing=0,
+            borderstyle=3,
+            outline=max(6, settings.stroke_width * 2.5),
+            shadow=0,
+            alignment=alignment,
+            marginl=margin_x,
+            marginr=margin_x,
+            marginv=margin_v if video_height else 30,
+            encoding=1,
+        )
 
     return pysubs2.SSAStyle(
         fontname=settings.fontname,
@@ -125,6 +156,7 @@ class SubtitleRenderer:
             self.settings,
             video_height=video_height,
             video_width=video_width if video_width else 1920,
+            mode=self.mode,
         )
 
         vh = video_height if video_height else 1080
@@ -146,6 +178,12 @@ class SubtitleRenderer:
                 # Soft Pop animation: start 0.92 -> overshoot 1.04 (100ms) -> end 1.00 (180ms) + fade in 180ms
                 anim_tag = r"{\fscx92\fscy92\fad(180,0)\t(0,100,\fscx104\fscy104)\t(100,180,\fscx100\fscy100)}"
                 clean.text = anim_tag + text
+                out.events.append(clean)
+                continue
+            elif self.mode in ("rounded_box", "rounded-box"):
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                clean.text = text
                 out.events.append(clean)
                 continue
             elif self.mode == "rise":

@@ -147,6 +147,15 @@ class TestBuildAss:
             assert r"\move(" in e.text
             assert r"\fad(200,0)" in e.text
 
+    def test_rounded_box_mode_includes_borderstyle_and_no_animation_tags(self):
+        ass = build_ass(self.subs, "rounded_box")
+        assert len(ass.events) == len(self.subs.events)
+        assert ass.styles["Default"].borderstyle == 3
+        for e in ass.events:
+            assert r"\fad" not in e.text
+            assert r"\fscx" not in e.text
+            assert r"\t(" not in e.text
+
     def test_default_style_applied(self):
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles

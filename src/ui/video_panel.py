@@ -428,6 +428,11 @@ class VideoCanvas(QWidget):
                 painter, fm, safe_w, margin_x, vx, vy, vw, vh, base_y,
                 text_color, hl_color, stroke_color, stroke_w, shadow_offset,
             )
+        elif style.mode in ("rounded_box", "rounded-box"):
+            self._paint_rounded_box_segment(
+                painter, fm, safe_w, margin_x, vx, vy, vw, vh, base_y,
+                text_color, hl_color, stroke_color, stroke_w, shadow_offset,
+            )
         elif style.mode in ("highlight", "punch"):
             self._paint_highlight_segment(
                 painter, fm, safe_w, margin_x, vx, vy, vw, vh, base_y,
@@ -512,6 +517,75 @@ class VideoCanvas(QWidget):
             self._paint_lines(painter, fm, wrapped, vx + margin_x, safe_w, base_y,
                               text_color, stroke_color, stroke_w, shadow_offset,
                               alignment=style.alignment)
+
+    def _paint_rounded_box_segment(
+        self,
+        painter: QPainter,
+        fm: QFontMetrics,
+        safe_w: int,
+        margin_x: int,
+        vx: int,
+        vy: int,
+        vw: int,
+        vh: int,
+        base_y: int,
+        text_color: QColor,
+        hl_color: QColor,
+        stroke_color: QColor,
+        stroke_w: float,
+        shadow_offset: float,
+    ) -> None:
+        if not self._clip:
+            return
+
+        wrapped = self._wrap_text(fm, self._clip.text, safe_w)
+
+        scale_y = vh / max(1, self._video_height)
+        padding_x = int(16 * scale_y)
+        padding_y = int(10 * scale_y)
+        radius = int(16 * scale_y)
+
+        line_h = fm.lineSpacing()
+        total_h = line_h * len(wrapped)
+        max_lw = max(fm.horizontalAdvance(line) for line in wrapped) if wrapped else 0
+
+        card_w = max_lw + padding_x * 2
+        card_h = total_h + padding_y * 2
+
+        # Vertical position
+        style = self._style
+        if style.alignment in (2, 3, 1):      # bottom
+            card_top = base_y - card_h
+        elif style.alignment in (5, 6, 4):    # center
+            card_top = base_y - card_h // 2
+        else:                                  # top
+            card_top = base_y
+
+        area_x = vx + margin_x
+        card_x = self._line_x(area_x, safe_w, card_w, style.alignment)
+
+        # Card background color: default #FFD900 or hl_color
+        bg_color = QColor(hl_color)
+        # Card text color: dark color #111111 if text_color is default white, otherwise text_color
+        txt_color_obj = QColor(17, 17, 17) if text_color == QColor(255, 255, 255) else text_color
+
+        painter.save()
+
+        # 1. Paint rounded rectangle box
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(bg_color)
+        painter.drawRoundedRect(QRect(card_x, card_top, card_w, card_h), radius, radius)
+
+        # 2. Paint text centered inside box
+        painter.setPen(txt_color_obj)
+        for i, line in enumerate(wrapped):
+            lw = fm.horizontalAdvance(line)
+            lx = card_x + (card_w - lw) // 2
+            ly = card_top + padding_y + i * line_h + fm.ascent()
+            painter.drawText(lx, ly, line)
+
+        painter.restore()
+
 
 
     def _paint_lines(

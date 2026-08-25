@@ -70,7 +70,7 @@ class SubtitleClip:
 # SubtitleStyle
 # ──────────────────────────────────────────────────────────────────────────────
 
-StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise", "pill"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise", "pill", "rounded_box", "rounded-box"]
 
 @dataclass
 class SubtitleStyle:
