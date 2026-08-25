@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QSizePolicy,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -166,10 +167,13 @@ class MainWindow(QMainWindow):
         # Separator
         root.addWidget(self._make_hsep())
 
-        # ── Main content: VideoPanel | Inspector ────────────────────────
-        content = QHBoxLayout()
-        content.setContentsMargins(0, 0, 0, 0)
-        content.setSpacing(0)
+        # ── Main content: VideoPanel | Inspector (splitter cho phép kéo) ──
+        self._h_splitter = QSplitter(Qt.Horizontal)
+        self._h_splitter.setHandleWidth(4)
+        self._h_splitter.setStyleSheet(
+            "QSplitter::handle { background-color: rgba(255,255,255,0.06); }"
+            "QSplitter::handle:hover { background-color: rgba(79,138,255,0.4); }"
+        )
 
         self._video_panel = VideoPanel()
         self._video_panel.video_selected.connect(self._on_video_selected)
@@ -178,17 +182,20 @@ class MainWindow(QMainWindow):
         self._video_panel.duration_changed.connect(self._on_duration_changed)
         self._video_panel.playback_state_changed.connect(self._on_playback_state_changed)
         self._video_panel.playback_error.connect(self._on_playback_error)
-        content.addWidget(self._video_panel, stretch=1)
-
-        content.addWidget(self._make_vsep())
+        self._h_splitter.addWidget(self._video_panel)
 
         self._inspector = Inspector()
         self._inspector.style_changed.connect(self._on_style_changed)
         self._inspector.clip_text_changed.connect(self._on_clip_text_changed)
         self._inspector.clip_delete_requested.connect(self._on_clip_delete_requested)
-        content.addWidget(self._inspector)
+        self._h_splitter.addWidget(self._inspector)
 
-        root.addLayout(content, stretch=1)
+        # Tỉ lệ mặc định: video chiếm phần lớn, inspector ~340px
+        self._h_splitter.setStretchFactor(0, 1)
+        self._h_splitter.setStretchFactor(1, 0)
+        self._h_splitter.setSizes([940, 340])
+
+        root.addWidget(self._h_splitter, stretch=1)
 
         # Separator
         root.addWidget(self._make_hsep())

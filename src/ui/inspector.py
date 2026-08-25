@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from .color_button import ColorButton
+from .preset_selector import PresetSelectorWidget
 from ..models import SubtitleClip, SubtitleStyle
 
 
@@ -67,8 +68,9 @@ class Inspector(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("Inspector")
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        self.setFixedWidth(280)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.setMinimumWidth(240)
+        self.setMaximumWidth(600)
 
         self._selected_clip_id: str | None = None
         self._block_text_signal: bool = False
@@ -152,20 +154,7 @@ class Inspector(QWidget):
 
     def get_style(self) -> SubtitleStyle:
         """Trả về SubtitleStyle hiện tại từ các control."""
-        if self._radio_rounded_box.isChecked():
-            mode = "rounded_box"
-        elif self._radio_pill.isChecked():
-            mode = "pill"
-        elif self._radio_soft_pop.isChecked():
-            mode = "soft_pop"
-        elif self._radio_punch.isChecked():
-            mode = "punch"
-        elif self._radio_rise.isChecked():
-            mode = "rise"
-        elif self._radio_highlight.isChecked():
-            mode = "highlight"
-        else:
-            mode = "normal"
+        mode = self._preset_selector._current_mode if hasattr(self, "_preset_selector") else "normal"
 
         return SubtitleStyle(
             mode=mode,
@@ -181,14 +170,8 @@ class Inspector(QWidget):
 
     def apply_style(self, style: SubtitleStyle) -> None:
         """Áp dụng SubtitleStyle lên các control (dùng khi load project)."""
-        self._radio_rounded_box.setChecked(style.mode in ("rounded_box", "rounded-box"))
-        self._radio_pill.setChecked(style.mode == "pill")
-        self._radio_soft_pop.setChecked(style.mode in ("soft_pop", "soft-pop"))
-        self._radio_punch.setChecked(style.mode == "punch")
-        self._radio_rise.setChecked(style.mode == "rise")
-        self._radio_highlight.setChecked(style.mode == "highlight")
-        if style.mode == "normal":
-            self._radio_normal.setChecked(True)
+        if hasattr(self, "_preset_selector"):
+            self._preset_selector.set_active_preset(style.mode)
 
         idx = next(
             (i for i, (_, v) in enumerate(POSITIONS) if v == style.alignment), 0
@@ -244,39 +227,10 @@ class Inspector(QWidget):
         header.setObjectName("SectionHeader")
         layout.addWidget(header)
 
-        # Mode radio
-        mode_w = QWidget()
-        mode_l = QVBoxLayout(mode_w)
-        mode_l.setContentsMargins(0, 0, 0, 0)
-        mode_l.setSpacing(6)
-
-        self._radio_normal = QRadioButton("Normal")
-        self._radio_normal.setChecked(True)
-        self._radio_soft_pop = QRadioButton("Soft Pop")
-        self._radio_punch = QRadioButton("Punch")
-        self._radio_rise = QRadioButton("Rise")
-        self._radio_highlight = QRadioButton("Word Highlight")
-        self._radio_pill = QRadioButton("Pill Animation")
-        self._radio_rounded_box = QRadioButton("Rounded Box")
-
-        self._mode_group = QButtonGroup(self)
-        self._mode_group.addButton(self._radio_normal)
-        self._mode_group.addButton(self._radio_soft_pop)
-        self._mode_group.addButton(self._radio_punch)
-        self._mode_group.addButton(self._radio_rise)
-        self._mode_group.addButton(self._radio_highlight)
-        self._mode_group.addButton(self._radio_pill)
-        self._mode_group.addButton(self._radio_rounded_box)
-        self._mode_group.buttonClicked.connect(self._emit_style)
-
-        mode_l.addWidget(self._radio_normal)
-        mode_l.addWidget(self._radio_soft_pop)
-        mode_l.addWidget(self._radio_punch)
-        mode_l.addWidget(self._radio_rise)
-        mode_l.addWidget(self._radio_highlight)
-        mode_l.addWidget(self._radio_pill)
-        mode_l.addWidget(self._radio_rounded_box)
-        layout.addWidget(mode_w)
+        # Mode Preset Selector (Replacing radio buttons with visual preview cards)
+        self._preset_selector = PresetSelectorWidget()
+        self._preset_selector.preset_changed.connect(self._emit_style)
+        layout.addWidget(self._preset_selector)
 
         # Small divider
         div = self._build_divider()
