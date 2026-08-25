@@ -218,7 +218,7 @@ class PresetSelectorWidget(QWidget):
     MODES = [
         ("highlight",   "Word Highlight", "highlight.gif", "✦",  "#FFD900"),
         ("normal",      "Normal",         None,            "T",  "#6C8AFF"),
-        ("soft_pop",    "Soft Pop",       None,            "💫", "#A78BFA"),
+        ("soft_pop",    "Soft Pop",       "soft_pop.gif",  "💫", "#A78BFA"),
         ("punch",       "Punch",          None,            "👊", "#F87171"),
         ("rise",        "Rise",           "rise.gif",      "⬆", "#34D399"),
         ("pill",        "Pill",           None,            "💊", "#60A5FA"),

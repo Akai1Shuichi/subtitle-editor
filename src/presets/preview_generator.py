@@ -333,11 +333,181 @@ def generate_rise_preview(
     return mp4_path, gif_path
 
 
-if __name__ == "__main__":
-    # print("=== Generating Highlight preview ===")
-    # generate_highlight_preview()
+    return mp4_path, gif_path
 
-    print("\n=== Generating Rise preview ===")
-    generate_rise_preview()
+
+def generate_soft_pop_preview(
+    output_dir: str | Path = PREVIEW_DIR,
+    width: int = PREV_W,
+    height: int = PREV_H,
+    fps: int = 12,
+    duration_ms: int = 2400,
+) -> tuple[Path, Path]:
+    """
+    Generate GIF preview cho mode Soft Pop.
+    Phrase pop nhẹ (scale 0.92 -> 1.04 -> 1.0) kèm fade-in, hold, fade-out. Loop.
+    """
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    gif_path = out_dir / "soft_pop.gif"
+    mp4_path = out_dir / "soft_pop.mp4"
+
+    clip = SubtitleClip(
+        id="preview_soft_pop",
+        text=PREVIEW_TEXT,
+        start_ms=0,
+        end_ms=duration_ms,
+    )
+
+    style = SubtitleStyle(
+        mode="soft_pop",
+        fontname="Arial Black",
+        fontsize=22,
+        text_color=(255, 255, 255),
+        highlight_color=(255, 210, 60),
+        stroke_color=(0, 0, 0),
+        stroke_width=2.0,
+        position_y=72,
+        alignment=5,
+        subtitle_width=88,
+    )
+
+    renderer = PillSubtitleRenderer()
+    layout = renderer.prepare_layout(clip.text, style, width, height)
+    font = get_font(style.fontname, style.fontsize)
+    stroke_rgba = parse_color_rgba(style.stroke_color)
+    text_rgba = parse_color_rgba(style.text_color)
+    stroke_w = int(style.stroke_width)
+
+    # Render static text onto a transparent layer
+    text_base = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw_t = ImageDraw.Draw(text_base)
+    for wl in layout.words:
+        baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+        draw_t.text(
+            (wl.x, baseline),
+            wl.text,
+            font=font,
+            anchor="ls",
+            fill=text_rgba,
+            stroke_width=stroke_w,
+            stroke_fill=stroke_rgba,
+        )
+
+    # Background
+    bg_base = Image.new("RGBA", (width, height), (10, 11, 16, 255))
+    draw_bg = ImageDraw.Draw(bg_base, "RGBA")
+    for y in range(height):
+        t = y / height
+        r = int(14 + 4 * t)
+        g = int(16 + 4 * t)
+        b = int(24 + 6 * t)
+        draw_bg.line([(0, y)], fill=(r, g, b, 255))
+
+    total_frames = int((duration_ms / 1000.0) * fps)
+    frames: list[Image.Image] = []
+    raw_bytes: list[bytes] = []
+
+    # Center of text phrase for scaling
+    cx = width / 2.0
+    cy = layout.words[0].baseline_y if (layout.words and layout.words[0].baseline_y) else height * 0.72
+
+    for i in range(total_frames):
+        t_norm = i / max(total_frames - 1, 1)
+
+        # Scale & Alpha keyframes:
+        # 0.0 -> 0.12: scale 0.90 -> 1.05, alpha 0 -> 255
+        # 0.12 -> 0.22: scale 1.05 -> 1.00, alpha 255
+        # 0.22 -> 0.72: scale 1.00, alpha 255
+        # 0.72 -> 1.00: scale 1.00 -> 0.95, alpha 255 -> 0
+        if t_norm < 0.12:
+            p = t_norm / 0.12
+            scale = 0.90 + 0.15 * p
+            alpha = int(255 * p)
+        elif t_norm < 0.22:
+            p = (t_norm - 0.12) / 0.10
+            scale = 1.05 - 0.05 * p
+            alpha = 255
+        elif t_norm < 0.72:
+            scale = 1.0
+            alpha = 255
+        else:
+            p = (t_norm - 0.72) / 0.28
+            scale = 1.0 - 0.05 * p
+            alpha = int(255 * (1.0 - p))
+
+        alpha = max(0, min(255, alpha))
+
+        frame = bg_base.copy()
+
+        if scale != 1.0 and scale > 0.1:
+            sw = int(width * scale)
+            sh = int(height * scale)
+            scaled_txt = text_base.resize((sw, sh), Image.Resampling.BILINEAR)
+
+            # Center align scaled image
+            scaled_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            offset_x = int(cx - (cx * scale))
+            offset_y = int(cy - (cy * scale))
+            scaled_layer.paste(scaled_txt, (offset_x, offset_y), scaled_txt)
+            text_frame = scaled_layer
+        else:
+            text_frame = text_base.copy()
+
+        # Apply alpha
+        r_ch, g_ch, b_ch, a_ch = text_frame.split()
+        a_ch = a_ch.point(lambda p: int(p * alpha / 255))
+        text_frame = Image.merge("RGBA", (r_ch, g_ch, b_ch, a_ch))
+        frame.alpha_composite(text_frame)
+
+        frame_rgb = frame.convert("RGB")
+        frames.append(frame_rgb)
+        raw_bytes.append(frame.tobytes("raw", "RGBA"))
+
+    if frames:
+        frame_ms = int(1000 / fps)
+        frames[0].save(
+            gif_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=frame_ms,
+            loop=0,
+            optimize=True,
+        )
+        print(f"GIF saved: {gif_path}")
+
+    try:
+        ffmpeg = get_ffmpeg()
+        cmd = [
+            ffmpeg, "-y",
+            "-f", "rawvideo", "-pix_fmt", "rgba",
+            "-s", f"{width}x{height}",
+            "-r", str(fps),
+            "-i", "pipe:0",
+            "-c:v", "libx264", "-preset", "fast",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            str(mp4_path),
+        ]
+        proc = subprocess.Popen(
+            cmd, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        for b in raw_bytes:
+            proc.stdin.write(b)
+        proc.stdin.close()
+        proc.wait()
+        print(f"MP4 saved: {mp4_path}")
+    except Exception as err:
+        print(f"Warning: MP4 skipped ({err})")
+
+    return mp4_path, gif_path
+
+
+if __name__ == "__main__":
+    print("=== Generating Soft Pop preview ===")
+    generate_soft_pop_preview()
 
     print("\nAll done!")
+
