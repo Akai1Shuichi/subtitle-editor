@@ -216,10 +216,10 @@ class PresetSelectorWidget(QWidget):
     preset_changed = Signal(str)
 
     MODES = [
-        ("highlight",   "Word Highlight", "highlight.gif", "✦",  "#FFD900"),
         ("normal",      "Normal",         None,            "T",  "#6C8AFF"),
+        ("highlight",   "Word Highlight", "highlight.gif", "✦",  "#FFD900"),
         ("soft_pop",    "Soft Pop",       "soft_pop.gif",  "💫", "#A78BFA"),
-        ("punch",       "Punch",          None,            "👊", "#F87171"),
+        ("punch",       "Punch",          "punch.gif",     "👊", "#F87171"),
         ("rise",        "Rise",           "rise.gif",      "⬆", "#34D399"),
         ("pill",        "Pill",           "pill.gif",      "💊", "#60A5FA"),
         ("rounded_box", "Rounded Box",    None,            "▣",  "#FB923C"),

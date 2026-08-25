@@ -625,10 +625,182 @@ def generate_pill_preview(
     return mp4_path, gif_path
 
 
+def generate_punch_preview(
+    output_dir: str | Path = PREVIEW_DIR,
+    width: int = PREV_W,
+    height: int = PREV_H,
+    fps: int = 15,
+    duration_ms: int = 2800,
+) -> tuple[Path, Path]:
+    """
+    Generate GIF preview cho mode Punch.
+    Từ đang phát phóng nhẹ (scale ≈ 1.18) rồi trở về kích thước ban đầu theo nhịp.
+    """
+    import math
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    gif_path = out_dir / "punch.gif"
+    mp4_path = out_dir / "punch.mp4"
+
+    clip = SubtitleClip(
+        id="preview_punch",
+        text=PREVIEW_TEXT,
+        start_ms=0,
+        end_ms=duration_ms,
+    )
+
+    style = SubtitleStyle(
+        mode="punch",
+        fontname="Arial Black",
+        fontsize=22,
+        text_color=(230, 230, 230),
+        highlight_color=(255, 215, 60),
+        stroke_color=(0, 0, 0),
+        stroke_width=2.0,
+        position_y=72,
+        alignment=5,
+        subtitle_width=88,
+    )
+
+    renderer = PillSubtitleRenderer()
+    words_timing: list[SubtitleWord] = renderer.extract_words_from_clip(clip)
+    layout = renderer.prepare_layout(clip.text, style, width, height)
+
+    font = get_font(style.fontname, style.fontsize)
+    inactive_rgba = parse_color_rgba(style.text_color)
+    highlight_rgba = parse_color_rgba(style.highlight_color)
+    stroke_rgba = parse_color_rgba(style.stroke_color)
+    stroke_w = int(style.stroke_width)
+
+    # Background
+    bg_base = Image.new("RGBA", (width, height), (10, 11, 16, 255))
+    draw_bg = ImageDraw.Draw(bg_base, "RGBA")
+    for y in range(height):
+        t = y / height
+        r = int(14 + 4 * t)
+        g = int(16 + 4 * t)
+        b = int(24 + 6 * t)
+        draw_bg.line([(0, y)], fill=(r, g, b, 255))
+
+    total_frames = int((duration_ms / 1000.0) * fps)
+    frames: list[Image.Image] = []
+    raw_bytes: list[bytes] = []
+
+    for i in range(total_frames):
+        t_ms = int((i / fps) * 1000)
+        frame = bg_base.copy()
+        layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+
+        active_idx = find_active_word(words_timing, t_ms, hold_during_gap=True)
+
+        for wl in layout.words:
+            baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+
+            if wl.index == active_idx and active_idx is not None and active_idx < len(words_timing):
+                w_timing = words_timing[active_idx]
+                w_dur = max(1, w_timing.end_ms - w_timing.start_ms)
+                w_t = (t_ms - w_timing.start_ms) / w_dur
+
+                # Punch curve: 0 -> 0.3 (scale 1 -> 1.18), 0.3 -> 0.6 (scale 1.18 -> 1.0)
+                if w_t < 0.30:
+                    p = w_t / 0.30
+                    scale = 1.0 + 0.18 * math.sin(p * math.pi / 2.0)
+                elif w_t < 0.60:
+                    p = (w_t - 0.30) / 0.30
+                    scale = 1.18 - 0.18 * math.sin(p * math.pi / 2.0)
+                else:
+                    scale = 1.0
+
+                # Render active word on temporary surface to apply scale transform around center
+                word_w = int(wl.width + stroke_w * 4 + 16)
+                word_h = int(wl.height + stroke_w * 4 + 16)
+                word_img = Image.new("RGBA", (word_w, word_h), (0, 0, 0, 0))
+                draw_w = ImageDraw.Draw(word_img)
+
+                draw_w.text(
+                    (word_w / 2.0, word_h * 0.7),
+                    wl.text,
+                    font=font,
+                    anchor="ms",
+                    fill=highlight_rgba,
+                    stroke_width=stroke_w,
+                    stroke_fill=stroke_rgba,
+                )
+
+                if scale != 1.0:
+                    sw = max(1, int(word_w * scale))
+                    sh = max(1, int(word_h * scale))
+                    word_img = word_img.resize((sw, sh), Image.Resampling.BILINEAR)
+
+                # Paste scaled active word centered at original word position
+                pos_x = int(wl.x + wl.width / 2.0 - word_img.width / 2.0)
+                pos_y = int(baseline - word_h * 0.7 + (word_h - word_img.height) / 2.0)
+                layer.paste(word_img, (pos_x, pos_y), word_img)
+
+            else:
+                draw_l = ImageDraw.Draw(layer)
+                draw_l.text(
+                    (wl.x, baseline),
+                    wl.text,
+                    font=font,
+                    anchor="ls",
+                    fill=inactive_rgba,
+                    stroke_width=stroke_w,
+                    stroke_fill=stroke_rgba,
+                )
+
+        frame.alpha_composite(layer)
+        frame_rgb = frame.convert("RGB")
+        frames.append(frame_rgb)
+        raw_bytes.append(frame.tobytes("raw", "RGBA"))
+
+    if frames:
+        frame_ms = int(1000 / fps)
+        frames[0].save(
+            gif_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=frame_ms,
+            loop=0,
+            optimize=True,
+        )
+        print(f"GIF saved: {gif_path}")
+
+    try:
+        ffmpeg = get_ffmpeg()
+        cmd = [
+            ffmpeg, "-y",
+            "-f", "rawvideo", "-pix_fmt", "rgba",
+            "-s", f"{width}x{height}",
+            "-r", str(fps),
+            "-i", "pipe:0",
+            "-c:v", "libx264", "-preset", "fast",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            str(mp4_path),
+        ]
+        proc = subprocess.Popen(
+            cmd, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        for b in raw_bytes:
+            proc.stdin.write(b)
+        proc.stdin.close()
+        proc.wait()
+        print(f"MP4 saved: {mp4_path}")
+    except Exception as err:
+        print(f"Warning: MP4 skipped ({err})")
+
+    return mp4_path, gif_path
+
+
 if __name__ == "__main__":
     print("=== Generating Preset Previews ===")
     # generate_highlight_preview()
     # generate_rise_preview()
     # generate_soft_pop_preview()
-    generate_pill_preview()
+    # generate_pill_preview()
+    generate_punch_preview()
     print("\nAll done!")
