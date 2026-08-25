@@ -181,26 +181,59 @@ _FONT_CACHE: dict[tuple[str, int], ImageFont.FreeTypeFont | ImageFont.ImageFont]
 
 
 def get_font(font_name: str, font_size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    """Load or retrieve cached font by name and size."""
+    """Load or retrieve cached font by name and size with cross-platform and Vietnamese Unicode support."""
     key = (font_name, font_size)
     if key in _FONT_CACHE:
         return _FONT_CACHE[key]
 
-    font = None
-    font_paths = [
-        font_name,
-        f"/usr/share/fonts/truetype/{font_name.lower()}.ttf",
-        f"/usr/share/fonts/TTF/{font_name.lower()}.ttf",
-        f"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        f"/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    name_clean = font_name.lower().strip()
+    cands = [font_name]
+
+    # "Arial Black" / "ariblk" lacks extended Vietnamese diacritics in Windows Fonts (ariblk.ttf),
+    # so we prefer fonts with full Unicode support (Arial Bold, Segoe UI Bold, Roboto Bold, Tahoma Bold).
+    if "black" in name_clean or "ariblk" in name_clean:
+        cands.extend(["arialbd.ttf", "segoeuib.ttf", "Roboto-Bold.ttf", "tahomabd.ttf", "arial.ttf"])
+    elif "segoe" in name_clean:
+        cands.extend(["segoeuib.ttf", "segoeui.ttf", "arialbd.ttf"])
+    elif "roboto" in name_clean:
+        cands.extend(["Roboto-Bold.ttf", "Roboto-Regular.ttf", "arialbd.ttf"])
+    else:
+        cands.extend([
+            f"{font_name}.ttf",
+            f"{font_name}.otf",
+            "segoeuib.ttf",
+            "arialbd.ttf",
+            "arial.ttf",
+            "Roboto-Bold.ttf",
+            "tahomabd.ttf",
+            "DejaVuSans-Bold.ttf",
+        ])
+
+    search_dirs = [
+        "",
+        "C:/Windows/Fonts",
+        os.path.expandvars("%WINDIR%/Fonts"),
+        "/usr/share/fonts",
+        "/usr/share/fonts/truetype",
+        "/usr/share/fonts/TTF",
+        "/usr/share/fonts/truetype/dejavu",
+        "/usr/share/fonts/truetype/liberation",
+        "/usr/share/fonts/truetype/freefont",
+        "/Library/Fonts",
+        "/System/Library/Fonts",
     ]
-    for p in font_paths:
-        try:
-            font = ImageFont.truetype(p, font_size)
+
+    font = None
+    for cand in cands:
+        if font is not None:
             break
-        except OSError:
-            continue
+        for sdir in search_dirs:
+            p = os.path.join(sdir, cand) if sdir else cand
+            try:
+                font = ImageFont.truetype(p, font_size)
+                break
+            except (OSError, Exception):
+                continue
 
     if font is None:
         try:
@@ -479,17 +512,15 @@ class PillSubtitleRenderer:
 
         font = get_font(style.fontname, style.fontsize)
 
+        draw = ImageDraw.Draw(img)
+
         # 1. Render Pill Background
         if pill_rect and opacity > 0.0:
-            pill_img = Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
-            p_draw = ImageDraw.Draw(pill_img)
-
             bg_rgba = parse_color_rgba(config.highlight_color)
             fill_color = (bg_rgba[0], bg_rgba[1], bg_rgba[2], int(bg_rgba[3] * config.bg_opacity * opacity))
-
             radius = pill_rect.height / 2 if config.radius_mode == "pill" else config.radius
 
-            p_draw.rounded_rectangle(
+            draw.rounded_rectangle(
                 [
                     pill_rect.x,
                     pill_rect.y,
@@ -499,9 +530,6 @@ class PillSubtitleRenderer:
                 radius=max(1, int(radius)),
                 fill=fill_color,
             )
-            img = Image.alpha_composite(img, pill_img)
-
-        draw = ImageDraw.Draw(img)
 
         # Determine active text color
         if config.active_text_color == "auto":
@@ -556,9 +584,6 @@ class PillSubtitleRenderer:
 
         # 4. Render Debug Layout Boxes if enabled
         if config.debug_layout:
-            debug_img = Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
-            d_draw = ImageDraw.Draw(debug_img)
-
             # Draw Line boxes (Blue)
             lines_map: dict[int, list[WordLayout]] = {}
             for wl in layout.words:
@@ -568,21 +593,19 @@ class PillSubtitleRenderer:
                 l_y = l_words[0].y
                 l_w = (l_words[-1].x + l_words[-1].width) - l_x
                 l_h = l_words[0].height
-                d_draw.rectangle([l_x, l_y, l_x + l_w, l_y + l_h], outline=(0, 0, 255, 255), width=2)
+                draw.rectangle([l_x, l_y, l_x + l_w, l_y + l_h], outline=(0, 0, 255, 255), width=2)
 
             # Draw Word layout boxes (Red)
             for wl in layout.words:
-                d_draw.rectangle([wl.x, wl.y, wl.x + wl.width, wl.y + wl.height], outline=(255, 0, 0, 255), width=1)
+                draw.rectangle([wl.x, wl.y, wl.x + wl.width, wl.y + wl.height], outline=(255, 0, 0, 255), width=1)
 
             # Draw Pill rect (Green)
             if pill_rect:
-                d_draw.rectangle(
+                draw.rectangle(
                     [pill_rect.x, pill_rect.y, pill_rect.x + pill_rect.width, pill_rect.y + pill_rect.height],
                     outline=(0, 255, 0, 255),
                     width=2,
                 )
-
-            img = Image.alpha_composite(img, debug_img)
 
         return img
 
@@ -643,6 +666,18 @@ class PillSubtitleRenderer:
         except FileNotFoundError as exc:
             raise FFmpegNotFoundError("ffmpeg binary not found.") from exc
 
+        stderr_chunks: list[str] = []
+        def _drain_stderr() -> None:
+            try:
+                if proc.stderr:
+                    for chunk in iter(lambda: proc.stderr.read(4096), b""):
+                        stderr_chunks.append(chunk.decode("utf-8", errors="replace"))
+            except Exception:
+                pass
+
+        stderr_thread = threading.Thread(target=_drain_stderr, daemon=True)
+        stderr_thread.start()
+
         sorted_clips = sorted(clips, key=lambda c: c.start_ms)
         blank_bytes = b"\x00" * (vw * vh * 4)
 
@@ -651,6 +686,7 @@ class PillSubtitleRenderer:
                 if cancel_event and cancel_event.is_set():
                     proc.kill()
                     proc.wait()
+                    stderr_thread.join(timeout=1.0)
                     if output_path.exists():
                         output_path.unlink()
                     raise RuntimeError("Export cancelled by user.")
@@ -686,18 +722,22 @@ class PillSubtitleRenderer:
                     pct = min((frame_idx / total_frames) * 100.0, 99.9)
                     on_progress(pct)
 
-            proc.stdin.close()
+            if proc.stdin:
+                proc.stdin.close()
             proc.wait()
+            stderr_thread.join(timeout=2.0)
         except Exception as exc:
             proc.kill()
             if output_path.exists():
                 output_path.unlink()
-            raise RuntimeError(f"Pill export failed: {exc}") from exc
+            err_msg = "".join(stderr_chunks[-5:]).strip() if stderr_chunks else str(exc)
+            raise RuntimeError(f"Pill export failed: {err_msg}") from exc
 
         if proc.returncode != 0:
             if output_path.exists():
                 output_path.unlink()
-            raise RuntimeError(f"FFmpeg process returned non-zero exit code {proc.returncode}")
+            err_msg = "".join(stderr_chunks[-5:]).strip() if stderr_chunks else f"exit code {proc.returncode}"
+            raise RuntimeError(f"FFmpeg process returned non-zero exit code {proc.returncode}: {err_msg}")
 
         if on_progress:
             on_progress(100.0)

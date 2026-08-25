@@ -852,11 +852,9 @@ draw.text(
 Nếu active word redraw bị lệch do kerning/context, có 2 hướng:
 
 ### Preferred
-
 Render line thành mask/token spans từ layout engine và composite active color theo word region.
 
 ### MVP
-
 Dùng exact `word.x` từ prefix measurement và cùng `anchor="lt"`.
 
 Không tự center active word trong Pill.
@@ -919,7 +917,6 @@ debug_layout = False
 Khi `True`, render:
 
 ### Word layout box
-
 outline đỏ:
 
 ```text
@@ -927,7 +924,6 @@ RED = word layout box
 ```
 
 ### Pill rect
-
 outline xanh:
 
 ```text
@@ -935,7 +931,6 @@ GREEN = Pill rect
 ```
 
 ### Line box
-
 outline xanh dương:
 
 ```text
@@ -943,7 +938,6 @@ BLUE = line box
 ```
 
 ### Anchor / baseline
-
 có thể vẽ small point/cross.
 
 Mục tiêu khi debug:
