@@ -35,9 +35,9 @@ from ..models import SubtitleClip, SubtitleStyle
 # ── Constants ──────────────────────────────────────────────────────────────
 
 FONTS = [
-    "Arial Black", "Impact", "Anton", "Montserrat ExtraBold", "Montserrat",
+    "Arial", "Arial Black", "Impact", "Anton", "Montserrat ExtraBold", "Montserrat",
     "Inter", "Roboto", "Open Sans", "Lato",
-    "Nunito", "Poppins", "Source Sans Pro", "Ubuntu", "Arial",
+    "Nunito", "Poppins", "Source Sans Pro", "Ubuntu",
     "Helvetica Neue", "Georgia", "Times New Roman",
 ]
 
@@ -273,7 +273,7 @@ class Inspector(QWidget):
 
         self._stroke_spin = QSpinBox()
         self._stroke_spin.setRange(1, 8)
-        self._stroke_spin.setValue(4)
+        self._stroke_spin.setValue(1)
         self._stroke_spin.setSuffix(" px")
         self._stroke_spin.valueChanged.connect(self._emit_style)
         form.addRow("Viền chữ", self._stroke_spin)

@@ -228,7 +228,7 @@ class PresetSelectorWidget(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._cards: dict[str, ModePreviewCard] = {}
-        self._current_mode = "highlight"
+        self._current_mode = "normal"
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
@@ -251,7 +251,7 @@ class PresetSelectorWidget(QWidget):
             grid.addWidget(card, row, col)
             self._cards[mode_key] = card
 
-        self.set_active_preset("highlight")
+        self.set_active_preset("normal")
 
     def set_active_preset(self, mode_key: str) -> None:
         key = mode_key

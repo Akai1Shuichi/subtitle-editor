@@ -81,12 +81,12 @@ class SubtitleStyle:
     """
 
     mode: StyleMode = "normal"
-    fontname: str = "Arial Black"
+    fontname: str = "Arial"
     fontsize: int = 54
     text_color: tuple[int, int, int] = (255, 255, 255)
     highlight_color: tuple[int, int, int] = (255, 217, 0)
     stroke_color: tuple[int, int, int] = (0, 0, 0)
-    stroke_width: float = 4.0
+    stroke_width: float = 1.0
     shadow: float = 2.0
     position_y: int = 82       # % từ trên, tương đương bottom: 18%
     alignment: int = 2         # pysubs2.Alignment value (2 = BOTTOM_CENTER)

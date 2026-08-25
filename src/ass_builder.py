@@ -25,13 +25,13 @@ StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "ris
 class SubtitleSettings:
     """Visual settings in the actual ASS/video pixel coordinate system."""
 
-    fontname: str = "Arial Black"
+    fontname: str = "Arial"
     fontsize: int = 54
     fontweight: int = 900
     text_color: tuple[int, int, int] = (255, 255, 255)
     highlight_color: tuple[int, int, int] = (255, 217, 0)
     stroke_color: tuple[int, int, int] = (0, 0, 0)
-    stroke_width: float = 4.0
+    stroke_width: float = 1.0
     shadow: float = 2.0
     position_y: int = 82  # top-origin percentage; equivalent to bottom: 18%
     max_words_per_group: int = 5
@@ -280,7 +280,7 @@ def build_ass(
     subs: pysubs2.SSAFile,
     mode: StyleMode = "normal",
     *,
-    fontname: str = "Arial Black",
+    fontname: str = "Arial",
     fontsize: int = 54,
     text_color: tuple[int, int, int] = (255, 255, 255),
     highlight_color: tuple[int, int, int] = (255, 217, 0),
@@ -291,7 +291,7 @@ def build_ass(
     video_height: int = 0,
     position_y: int = 82,
     stroke_color: tuple[int, int, int] = (0, 0, 0),
-    stroke_width: float = 4.0,
+    stroke_width: float = 1.0,
 ) -> pysubs2.SSAFile:
     """Build a reusable normal or word-pop-highlight ASS subtitle track.
 
