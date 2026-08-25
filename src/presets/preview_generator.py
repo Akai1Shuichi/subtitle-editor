@@ -796,11 +796,167 @@ def generate_punch_preview(
     return mp4_path, gif_path
 
 
+def generate_rounded_box_preview(
+    output_dir: str | Path = PREVIEW_DIR,
+    width: int = PREV_W,
+    height: int = PREV_H,
+    fps: int = 12,
+    duration_ms: int = 2400,
+) -> tuple[Path, Path]:
+    """
+    Generate GIF preview cho mode Rounded Box / Caption Card.
+    Visual theo docs: Background màu vàng sáng (#FFD900), chữ màu đen (#111111),
+    bo góc lớn (rounded box), không stroke, căn giữa, hiển thị dạng SHOW -> HOLD -> HIDE.
+    """
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    gif_path = out_dir / "rounded_box.gif"
+    mp4_path = out_dir / "rounded_box.mp4"
+
+    clip = SubtitleClip(
+        id="preview_rounded_box",
+        text=PREVIEW_TEXT,
+        start_ms=0,
+        end_ms=duration_ms,
+    )
+
+    style = SubtitleStyle(
+        mode="rounded_box",
+        fontname="Arial Black",
+        fontsize=22,
+        text_color=(17, 17, 17),
+        highlight_color=(17, 17, 17),
+        stroke_color=(0, 0, 0),
+        stroke_width=0.0,
+        position_y=72,
+        alignment=5,
+        subtitle_width=88,
+    )
+
+    renderer = PillSubtitleRenderer()
+    layout = renderer.prepare_layout(clip.text, style, width, height)
+    font = get_font(style.fontname, style.fontsize)
+    text_rgba = (17, 17, 17, 255)
+
+    # Background canvas
+    bg_base = Image.new("RGBA", (width, height), (10, 11, 16, 255))
+    draw_bg = ImageDraw.Draw(bg_base, "RGBA")
+    for y in range(height):
+        t = y / height
+        r = int(14 + 4 * t)
+        g = int(16 + 4 * t)
+        b = int(24 + 6 * t)
+        draw_bg.line([(0, y)], fill=(r, g, b, 255))
+
+    # Compute bounding box for caption card
+    if layout.words:
+        min_x = min(wl.x for wl in layout.words) - 14
+        max_x = max(wl.x + wl.width for wl in layout.words) + 14
+        min_y = min(wl.y for wl in layout.words) - 6
+        max_y = max(wl.y + wl.height for wl in layout.words) + 6
+    else:
+        min_x, min_y, max_x, max_y = 20, height * 0.6, width - 20, height * 0.8
+
+    box_rect = [min_x, min_y, max_x, max_y]
+
+    # Static caption card layer: Bright Yellow background + dark text
+    card_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw_c = ImageDraw.Draw(card_layer, "RGBA")
+
+    # Yellow background box #FFD900
+    draw_c.rounded_rectangle(
+        box_rect,
+        radius=12,
+        fill=(255, 217, 0, 255),
+    )
+
+    # Dark text inside yellow box
+    for wl in layout.words:
+        baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+        draw_c.text(
+            (wl.x, baseline),
+            wl.text,
+            font=font,
+            anchor="ls",
+            fill=text_rgba,
+        )
+
+    # Loop frames: SHOW -> HOLD -> HIDE
+    total_frames = int((duration_ms / 1000.0) * fps)
+    frames: list[Image.Image] = []
+    raw_bytes: list[bytes] = []
+
+    for i in range(total_frames):
+        t_norm = i / max(total_frames - 1, 1)
+
+        if t_norm < 0.15:
+            alpha = int(255 * (t_norm / 0.15))
+        elif t_norm < 0.78:
+            alpha = 255
+        else:
+            alpha = int(255 * (1.0 - (t_norm - 0.78) / 0.22))
+
+        alpha = max(0, min(255, alpha))
+
+        frame = bg_base.copy()
+
+        faded_card = card_layer.copy()
+        r_ch, g_ch, b_ch, a_ch = faded_card.split()
+        a_ch = a_ch.point(lambda p: int(p * alpha / 255))
+        faded_card = Image.merge("RGBA", (r_ch, g_ch, b_ch, a_ch))
+        frame.alpha_composite(faded_card)
+
+        frame_rgb = frame.convert("RGB")
+        frames.append(frame_rgb)
+        raw_bytes.append(frame.tobytes("raw", "RGBA"))
+
+    if frames:
+        frame_ms = int(1000 / fps)
+        frames[0].save(
+            gif_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=frame_ms,
+            loop=0,
+            optimize=True,
+        )
+        print(f"GIF saved: {gif_path}")
+
+    try:
+        ffmpeg = get_ffmpeg()
+        cmd = [
+            ffmpeg, "-y",
+            "-f", "rawvideo", "-pix_fmt", "rgba",
+            "-s", f"{width}x{height}",
+            "-r", str(fps),
+            "-i", "pipe:0",
+            "-c:v", "libx264", "-preset", "fast",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            str(mp4_path),
+        ]
+        proc = subprocess.Popen(
+            cmd, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        for b in raw_bytes:
+            proc.stdin.write(b)
+        proc.stdin.close()
+        proc.wait()
+        print(f"MP4 saved: {mp4_path}")
+    except Exception as err:
+        print(f"Warning: MP4 skipped ({err})")
+
+    return mp4_path, gif_path
+
+
 if __name__ == "__main__":
     print("=== Generating Preset Previews ===")
     # generate_highlight_preview()
     # generate_rise_preview()
     # generate_soft_pop_preview()
     # generate_pill_preview()
-    generate_punch_preview()
-    print("\nAll done!")
+    # generate_punch_preview()
+    generate_rounded_box_preview()
+

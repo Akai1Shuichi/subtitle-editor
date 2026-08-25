@@ -222,7 +222,7 @@ class PresetSelectorWidget(QWidget):
         ("punch",       "Punch",          "punch.gif",     "👊", "#F87171"),
         ("rise",        "Rise",           "rise.gif",      "⬆", "#34D399"),
         ("pill",        "Pill",           "pill.gif",      "💊", "#60A5FA"),
-        ("rounded_box", "Rounded Box",    None,            "▣",  "#FB923C"),
+        ("rounded_box", "Rounded Box",    "rounded_box.gif", "▣", "#FB923C"),
     ]
 
     def __init__(self, parent: QWidget | None = None):
