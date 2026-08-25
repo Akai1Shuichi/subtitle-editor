@@ -493,7 +493,13 @@ class PillSubtitleRenderer:
         if config is None:
             hl = style.highlight_color
             hl_hex = f"#{hl[0]:02x}{hl[1]:02x}{hl[2]:02x}" if isinstance(hl, tuple) else str(hl)
-            config = PillAnimationConfig(highlight_color=hl_hex)
+            scale = max(0.2, style.fontsize / 54.0)
+            config = PillAnimationConfig(
+                highlight_color=hl_hex,
+                padding_x=max(3, int(12 * scale)),
+                padding_y=max(1, int(4 * scale)),
+                radius=max(3, int(10 * scale)),
+            )
 
         img = Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
         if not clip or not clip.is_active_at(time_ms):

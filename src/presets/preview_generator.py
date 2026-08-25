@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw
 from src.models import SubtitleClip, SubtitleStyle
 from src.pill_renderer import (
     PillSubtitleRenderer,
+    PillAnimationConfig,
     SubtitleWord,
     find_active_word,
     get_font,
@@ -505,9 +506,129 @@ def generate_soft_pop_preview(
     return mp4_path, gif_path
 
 
+def generate_pill_preview(
+    output_dir: str | Path = PREVIEW_DIR,
+    width: int = PREV_W,
+    height: int = PREV_H,
+    fps: int = 15,
+    duration_ms: int = 3000,
+) -> tuple[Path, Path]:
+    """
+    Generate GIF preview cho mode Pill.
+    Nền capsule màu vàng di chuyển mượt giữa các từ.
+    """
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    gif_path = out_dir / "pill.gif"
+    mp4_path = out_dir / "pill.mp4"
+
+    clip = SubtitleClip(
+        id="preview_pill",
+        text=PREVIEW_TEXT,
+        start_ms=0,
+        end_ms=duration_ms,
+    )
+
+    style = SubtitleStyle(
+        mode="pill",
+        fontname="Arial Black",
+        fontsize=22,
+        text_color=(255, 255, 255),
+        highlight_color=(255, 210, 60),
+        stroke_color=(0, 0, 0),
+        stroke_width=0.0,
+        position_y=72,
+        alignment=5,
+        subtitle_width=88,
+    )
+
+    renderer = PillSubtitleRenderer()
+
+    # Background
+    bg_base = Image.new("RGBA", (width, height), (10, 11, 16, 255))
+    draw_bg = ImageDraw.Draw(bg_base, "RGBA")
+    for y in range(height):
+        t = y / height
+        r = int(14 + 4 * t)
+        g = int(16 + 4 * t)
+        b = int(24 + 6 * t)
+        draw_bg.line([(0, y)], fill=(r, g, b, 255))
+
+    total_frames = int((duration_ms / 1000.0) * fps)
+    frames: list[Image.Image] = []
+    raw_bytes: list[bytes] = []
+
+    config = PillAnimationConfig(
+        highlight_color="#FFD249",
+        padding_x=4,
+        padding_y=2,
+        radius=5,
+        bg_opacity=1.0,
+    )
+
+    for i in range(total_frames):
+        t_ms = int((i / fps) * 1000)
+        frame = bg_base.copy()
+
+        pill_layer = renderer.render_frame(
+            clip=clip,
+            time_ms=t_ms,
+            style=style,
+            config=config,
+            video_width=width,
+            video_height=height,
+        )
+        frame.alpha_composite(pill_layer)
+
+        frame_rgb = frame.convert("RGB")
+        frames.append(frame_rgb)
+        raw_bytes.append(frame.tobytes("raw", "RGBA"))
+
+    if frames:
+        frame_ms = int(1000 / fps)
+        frames[0].save(
+            gif_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=frame_ms,
+            loop=0,
+            optimize=True,
+        )
+        print(f"GIF saved: {gif_path}")
+
+    try:
+        ffmpeg = get_ffmpeg()
+        cmd = [
+            ffmpeg, "-y",
+            "-f", "rawvideo", "-pix_fmt", "rgba",
+            "-s", f"{width}x{height}",
+            "-r", str(fps),
+            "-i", "pipe:0",
+            "-c:v", "libx264", "-preset", "fast",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            str(mp4_path),
+        ]
+        proc = subprocess.Popen(
+            cmd, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        for b in raw_bytes:
+            proc.stdin.write(b)
+        proc.stdin.close()
+        proc.wait()
+        print(f"MP4 saved: {mp4_path}")
+    except Exception as err:
+        print(f"Warning: MP4 skipped ({err})")
+
+    return mp4_path, gif_path
+
+
 if __name__ == "__main__":
-    print("=== Generating Soft Pop preview ===")
-    generate_soft_pop_preview()
-
+    print("=== Generating Preset Previews ===")
+    # generate_highlight_preview()
+    # generate_rise_preview()
+    # generate_soft_pop_preview()
+    generate_pill_preview()
     print("\nAll done!")
-
