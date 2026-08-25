@@ -193,7 +193,7 @@ class MainWindow(QMainWindow):
         # Tỉ lệ mặc định: video chiếm phần lớn, inspector ~340px
         self._h_splitter.setStretchFactor(0, 1)
         self._h_splitter.setStretchFactor(1, 0)
-        self._h_splitter.setSizes([940, 340])
+        self._h_splitter.setSizes([940, 400])
 
         root.addWidget(self._h_splitter, stretch=1)
 
