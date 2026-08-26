@@ -24,12 +24,17 @@ import uuid
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QHBoxLayout,
+    QLineEdit,
     QMainWindow,
     QMessageBox,
+    QPlainTextEdit,
     QSizePolicy,
     QSplitter,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -482,17 +487,31 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_add_subtitle_requested(self) -> None:
-        """Thêm clip 2 giây tại playhead và chọn ngay để sửa trong Inspector."""
-        start_ms = self._current_time_ms
+        """Thêm clip phụ đề mới tại khoảng trống sẵn có gần playhead nhất."""
+        range_res = self._project.find_available_clip_range(
+            current_time_ms=self._current_time_ms,
+            video_duration_ms=self._video_duration_ms,
+        )
+        if not range_res:
+            self._show_error(
+                "Không thể thêm phụ đề",
+                "Không còn khoảng trống trên timeline để chèn phụ đề mới."
+            )
+            return
+
+        start_ms, end_ms = range_res
         new_clip = SubtitleClip(
             id=str(uuid.uuid4()),
             text="New subtitle",
             start_ms=start_ms,
-            end_ms=start_ms + 2000,
+            end_ms=end_ms,
         )
         self._project.clips.append(new_clip)
         self._selected_clip_id = new_clip.id
+        if self._current_time_ms != start_ms:
+            self._video_panel.seek(start_ms)
         self._update_ui_state()
+
 
     @Slot(str)
     def _on_clip_selected(self, clip_id: str) -> None:
@@ -503,6 +522,17 @@ class MainWindow(QMainWindow):
     def _on_clip_deselected(self) -> None:
         self._selected_clip_id = None
         self._update_ui_state()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        """Bắt phím Delete / Backspace để xóa clip đang chọn (nếu không đang nhập text)."""
+        if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+            focus_w = QApplication.focusWidget()
+            if not isinstance(focus_w, (QLineEdit, QTextEdit, QPlainTextEdit)):
+                if self._selected_clip_id:
+                    self._on_clip_delete_requested(self._selected_clip_id)
+                    event.accept()
+                    return
+        super().keyPressEvent(event)
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Bước 3: Playback

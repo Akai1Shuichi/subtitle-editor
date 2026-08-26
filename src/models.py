@@ -142,6 +142,57 @@ class EditorProject:
         """Trả về clips sắp xếp theo start_ms."""
         return sorted(self.clips, key=lambda c: c.start_ms)
 
+    def find_available_clip_range(
+        self,
+        current_time_ms: int,
+        video_duration_ms: int = 0,
+        desired_duration_ms: int = 2000,
+        min_duration_ms: int = 200,
+    ) -> Optional[tuple[int, int]]:
+        """
+        Tìm khoảng thời gian [start_ms, end_ms] trống phù hợp để chèn SubtitleClip mới.
+
+        - Bắt đầu tìm từ current_time_ms.
+        - Không đè (overlap) lên bất kỳ clip hiện có nào.
+        - Giới hạn bởi 0 và video_duration_ms (nếu > 0).
+        - Đảm bảo độ dài clip >= min_duration_ms và <= desired_duration_ms.
+
+        Trả về (start_ms, end_ms) hoặc None nếu không còn khoảng trống nào hợp lệ.
+        """
+        max_bound = video_duration_ms if video_duration_ms > 0 else 999999999
+        sorted_clips = self.sorted_clips()
+
+        # Tạo danh sách các khoảng trống (gaps) [g_start, g_end]
+        gaps: list[tuple[int, int]] = []
+        curr_pos = 0
+        for clip in sorted_clips:
+            if clip.start_ms > curr_pos:
+                gaps.append((curr_pos, clip.start_ms))
+            curr_pos = max(curr_pos, clip.end_ms)
+
+        if curr_pos < max_bound:
+            gaps.append((curr_pos, max_bound))
+
+        # 1. Thử tìm gap tại hoặc sau current_time_ms
+        for g_start, g_end in gaps:
+            if g_end <= current_time_ms:
+                continue
+            effective_start = max(current_time_ms, g_start)
+            if g_end - effective_start >= min_duration_ms:
+                new_start = effective_start
+                new_end = min(effective_start + desired_duration_ms, g_end)
+                return (new_start, new_end)
+
+        # 2. Nếu không tìm thấy gap nào tại/sau current_time_ms, thử tìm gap trước current_time_ms
+        for g_start, g_end in gaps:
+            if g_end - g_start >= min_duration_ms:
+                new_start = g_start
+                new_end = min(g_start + desired_duration_ms, g_end)
+                return (new_start, new_end)
+
+        return None
+
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper: SRT → SubtitleClip[]

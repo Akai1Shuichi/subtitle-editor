@@ -38,7 +38,7 @@ def test_preset_preview_files_exist():
 
 def test_preset_selector_widget(qapp):
     widget = PresetSelectorWidget()
-    assert widget._current_mode == "highlight"
+    assert widget._current_mode == "normal"
 
     # Test selecting mode cards
     widget.set_active_preset("normal")

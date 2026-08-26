@@ -94,6 +94,7 @@ class _TimelineCanvas(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setFixedHeight(TRACK_TOTAL_HEIGHT)
 
         self._clips: list[SubtitleClip] = []
@@ -183,6 +184,7 @@ class _TimelineCanvas(QWidget):
         if event.button() != Qt.LeftButton:
             return
 
+        self.setFocus()
         pos = event.pos()
 
         # Click trên Ruler (top area)

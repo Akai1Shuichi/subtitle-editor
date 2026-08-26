@@ -75,6 +75,61 @@ class TestTimelineWidget(unittest.TestCase):
         # c2 không được lấn sang clip c1 (c1.end_ms = 2000ms)
         self.assertGreaterEqual(new_start, 2000)
 
+    def test_find_available_clip_range_empty(self):
+        from src.models import EditorProject
+        project = EditorProject()
+        res = project.find_available_clip_range(current_time_ms=1000, video_duration_ms=10000)
+        self.assertEqual(res, (1000, 3000))
+
+    def test_find_available_clip_range_inside_clip(self):
+        from src.models import EditorProject, SubtitleClip
+        project = EditorProject()
+        c1 = SubtitleClip(id="c1", text="Sub 1", start_ms=1000, end_ms=3000)
+        c2 = SubtitleClip(id="c2", text="Sub 2", start_ms=4000, end_ms=6000)
+        project.clips = [c1, c2]
+
+        # Playhead ở 2000ms (nằm trong c1 [1000-3000ms]) -> phải tìm gap gần nhất sau đó là [3000, 4000]
+        res = project.find_available_clip_range(current_time_ms=2000, video_duration_ms=10000)
+        self.assertEqual(res, (3000, 4000))
+
+    def test_find_available_clip_range_small_gap(self):
+        from src.models import EditorProject, SubtitleClip
+        project = EditorProject()
+        c1 = SubtitleClip(id="c1", text="Sub 1", start_ms=0, end_ms=2000)
+        c2 = SubtitleClip(id="c2", text="Sub 2", start_ms=2500, end_ms=5000)
+        project.clips = [c1, c2]
+
+        # Playhead ở 2100ms (nằm trong gap 2000ms-2500ms, độ dài 500ms < desired 2000ms)
+        # Clip mới phải tự động thu gọn vừa với khoảng trống (2100ms-2500ms)
+        res = project.find_available_clip_range(current_time_ms=2100, video_duration_ms=10000)
+        self.assertEqual(res, (2100, 2500))
+
+    def test_find_available_clip_range_full_timeline(self):
+        from src.models import EditorProject, SubtitleClip
+        project = EditorProject()
+        c1 = SubtitleClip(id="c1", text="Sub 1", start_ms=0, end_ms=10000)
+        project.clips = [c1]
+
+        # Timeline đầy -> trả về None
+    def test_delete_key_shortcut(self):
+        from src.ui.main_window import MainWindow
+        from PySide6.QtGui import QKeyEvent
+        from PySide6.QtCore import Qt
+
+        win = MainWindow()
+        c1 = SubtitleClip(id="c1", text="Sub 1", start_ms=1000, end_ms=3000)
+        win._project.clips = [c1]
+        win._selected_clip_id = "c1"
+
+        # Giả lập nhấn phím Delete khi không gõ text
+        event = QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Delete, Qt.NoModifier)
+        win.keyPressEvent(event)
+
+        # Clip c1 phải được xóa thành công khỏi project
+        self.assertEqual(len(win._project.clips), 0)
+        self.assertIsNone(win._selected_clip_id)
+
 
 if __name__ == "__main__":
     unittest.main()
+
