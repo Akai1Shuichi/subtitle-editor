@@ -88,26 +88,36 @@ class VideoInfo:
 def _find_binary(name: str) -> str:
     """
     Tìm binary theo thứ tự:
-    1. binaries/<name> (bundled)
-    2. PATH
+    1. binaries/<name> trong _MEIPASS (nếu đóng gói trong EXE)
+    2. binaries/<name> cùng cấp file executable (.exe)
+    3. Cùng thư mục với file executable (.exe)
+    4. binaries/<name> trong thư mục mã nguồn
+    5. PATH hệ thống
     """
     import sys
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        binaries_dir = Path(sys._MEIPASS) / "binaries"
-    else:
-        binaries_dir = Path(__file__).parent.parent / "binaries"
+    candidates: list[Path] = []
 
-    for ext in ("", ".exe"):
-        candidate = binaries_dir / (name + ext)
-        if candidate.is_file():
-            return str(candidate)
+    if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
+            candidates.append(Path(sys._MEIPASS) / "binaries")
+        exe_dir = Path(sys.executable).parent
+        candidates.append(exe_dir / "binaries")
+        candidates.append(exe_dir)
+    
+    candidates.append(Path(__file__).parent.parent / "binaries")
+
+    for binaries_dir in candidates:
+        for ext in ("", ".exe"):
+            candidate = binaries_dir / (name + ext)
+            if candidate.is_file():
+                return str(candidate)
 
     found = shutil.which(name)
     if found:
         return found
 
     raise FFmpegNotFoundError(
-        f"Không tìm thấy '{name}'. Hãy cài FFmpeg hoặc đặt file vào thư mục binaries/."
+        f"Không tìm thấy '{name}'. Hãy cài FFmpeg vào PATH hệ thống hoặc đặt file '{name}.exe' vào thư mục binaries/ (cùng cấp với file .exe)."
     )
 
 
