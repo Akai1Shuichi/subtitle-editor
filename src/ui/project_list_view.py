@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -34,6 +35,19 @@ from PySide6.QtWidgets import (
 from ..models import ProjectMetadata
 from ..project_manager import ProjectManager
 from .project_card import ProjectCardWidget, _format_duration, _format_timestamp
+
+
+def _get_asset_path(filename: str) -> Path:
+    candidates = [
+        Path(__file__).parent.parent.parent / "data" / "assets" / filename,
+        Path("data/assets") / filename,
+        Path.cwd() / "data" / "assets" / filename,
+        Path.cwd() / "subtitle-editor" / "data" / "assets" / filename,
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return Path("data/assets") / filename
 
 
 class PathSettingsDialog(QDialog):
@@ -252,6 +266,11 @@ class ProjectListView(QWidget):
                 border-bottom: 1px solid #3c3c3c;
                 font-weight: bold;
             }
+            QWidget#DashboardFooter {
+                background-color: #252526;
+                border: 1px solid #3c3c3c;
+                border-radius: 6px;
+            }
         """)
 
     def _init_ui(self) -> None:
@@ -364,6 +383,71 @@ class ProjectListView(QWidget):
         self.stack.addWidget(self.empty_widget)
 
         main_layout.addWidget(self.stack)
+
+        # 3. Footer Bar (Dùng icon ảnh từ data\assets)
+        footer = QWidget()
+        footer.setObjectName("DashboardFooter")
+        footer_layout = QHBoxLayout(footer)
+        footer_layout.setContentsMargins(14, 8, 14, 8)
+        footer_layout.setSpacing(8)
+        footer_layout.setAlignment(Qt.AlignCenter)
+
+        def _make_icon_label(icon_filename: str) -> QLabel:
+            lbl = QLabel()
+            icon_path = _get_asset_path(icon_filename)
+            if icon_path.is_file():
+                pixmap = QPixmap(str(icon_path))
+                if not pixmap.isNull():
+                    lbl.setPixmap(pixmap.scaled(16, 16, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            return lbl
+
+        # AI Item
+        footer_layout.addWidget(_make_icon_label("telegram.png"))
+        ai_label = QLabel('AI mình dùng để vibe code <a href="https://t.me/DichVuIT_bot" style="color: #0098ff; text-decoration: none; font-weight: bold;">tại đây : @DichVuIT_bot</a>')
+        ai_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        ai_label.setOpenExternalLinks(True)
+        footer_layout.addWidget(ai_label)
+
+        # Separator 1
+        sep1 = QLabel("•")
+        sep1.setStyleSheet("color: #555555; font-size: 11px; margin: 0 4px;")
+        footer_layout.addWidget(sep1)
+
+        # Fanpage Item
+        footer_layout.addWidget(_make_icon_label("fanpage.png"))
+        fp_label = QLabel('<a href="https://web.facebook.com/profile.php?id=61567027726244" style="color: #0098ff; text-decoration: none; font-weight: bold;">Fanpage</a>')
+        fp_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        fp_label.setOpenExternalLinks(True)
+        footer_layout.addWidget(fp_label)
+
+        # Separator 2
+        sep2 = QLabel("•")
+        sep2.setStyleSheet("color: #555555; font-size: 11px; margin: 0 4px;")
+        footer_layout.addWidget(sep2)
+
+        # Zalo Item
+        footer_layout.addWidget(_make_icon_label("zalo.png"))
+        zalo_label = QLabel('<a href="https://zalo.me/g/b98og9ldg1rjg7uxg8pt" style="color: #0098ff; text-decoration: none; font-weight: bold;">Zalo</a>')
+        zalo_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        zalo_label.setOpenExternalLinks(True)
+        footer_layout.addWidget(zalo_label)
+
+        # Separator 3
+        sep3 = QLabel("•")
+        sep3.setStyleSheet("color: #555555; font-size: 11px; margin: 0 4px;")
+        footer_layout.addWidget(sep3)
+
+        # Donate Item
+        donate_icon = QLabel("💖")
+        donate_icon.setStyleSheet("font-size: 13px;")
+        footer_layout.addWidget(donate_icon)
+
+        donate_label = QLabel('Ủng hộ mình tại <a href="https://qr-donate.vercel.app/" style="color: #0098ff; text-decoration: none; font-weight: bold;">Donate</a>')
+        donate_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        donate_label.setOpenExternalLinks(True)
+        footer_layout.addWidget(donate_label)
+
+        main_layout.addWidget(footer)
 
     def refresh_projects(self) -> None:
         """Nạp lại danh sách dự án từ ProjectManager và render lại UI."""
