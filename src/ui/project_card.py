@@ -60,7 +60,6 @@ class ProjectCardWidget(QFrame):
 
     open_requested = Signal(str)
     rename_requested = Signal(str)
-    duplicate_requested = Signal(str)
     delete_requested = Signal(str)
 
     def __init__(self, metadata: ProjectMetadata, parent: Optional[QWidget] = None) -> None:
@@ -164,10 +163,6 @@ class ProjectCardWidget(QFrame):
         btn_rename = QPushButton("Sửa tên")
         btn_rename.clicked.connect(lambda: self.rename_requested.emit(self.metadata.project_id))
         btn_layout.addWidget(btn_rename)
-
-        btn_dup = QPushButton("Nhân bản")
-        btn_dup.clicked.connect(lambda: self.duplicate_requested.emit(self.metadata.project_id))
-        btn_layout.addWidget(btn_dup)
 
         btn_del = QPushButton("Xóa")
         btn_del.setObjectName("btnDelete")

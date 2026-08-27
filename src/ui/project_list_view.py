@@ -267,7 +267,6 @@ class ProjectListView(QWidget):
             card = ProjectCardWidget(meta)
             card.open_requested.connect(self._on_open_project)
             card.rename_requested.connect(self._on_rename_project)
-            card.duplicate_requested.connect(self._on_duplicate_project)
             card.delete_requested.connect(self._on_delete_project)
             self.grid_layout.addWidget(card, row, col)
 
@@ -296,10 +295,6 @@ class ProjectListView(QWidget):
             btn_rename = QPushButton("Sửa")
             btn_rename.clicked.connect(lambda _, pid=meta.project_id: self._on_rename_project(pid))
             a_layout.addWidget(btn_rename)
-
-            btn_dup = QPushButton("Bản sao")
-            btn_dup.clicked.connect(lambda _, pid=meta.project_id: self._on_duplicate_project(pid))
-            a_layout.addWidget(btn_dup)
 
             btn_del = QPushButton("Xóa")
             btn_del.setStyleSheet("color: #ff6b6b;")
@@ -361,13 +356,6 @@ class ProjectListView(QWidget):
         if ok and new_name.strip():
             self.pm.rename_project(project_id, new_name.strip())
             self.refresh_projects()
-
-    def _on_duplicate_project(self, project_id: str) -> None:
-        try:
-            self.pm.duplicate_project(project_id)
-            self.refresh_projects()
-        except Exception as e:
-            QMessageBox.critical(self, "Lỗi", f"Không thể nhân bản dự án: {e}")
 
     def _on_delete_project(self, project_id: str) -> None:
         reply = QMessageBox.question(

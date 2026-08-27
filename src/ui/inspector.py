@@ -266,7 +266,7 @@ class Inspector(QWidget):
 
         self._position_y_spin = QSpinBox()
         self._position_y_spin.setRange(50, 95)
-        self._position_y_spin.setValue(82)
+        self._position_y_spin.setValue(90)
         self._position_y_spin.setSuffix(" %")
         self._position_y_spin.valueChanged.connect(self._emit_style)
         form.addRow("Vị trí dọc", self._position_y_spin)

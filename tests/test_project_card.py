@@ -39,12 +39,10 @@ def test_project_card_widget_init_and_signals(qapp):
     # Test signals
     open_received = []
     rename_received = []
-    dup_received = []
     del_received = []
 
     card.open_requested.connect(lambda pid: open_received.append(pid))
     card.rename_requested.connect(lambda pid: rename_received.append(pid))
-    card.duplicate_requested.connect(lambda pid: dup_received.append(pid))
     card.delete_requested.connect(lambda pid: del_received.append(pid))
 
     # Find buttons
@@ -53,7 +51,6 @@ def test_project_card_widget_init_and_signals(qapp):
 
     assert "Mở" in btn_map
     assert "Sửa tên" in btn_map
-    assert "Nhân bản" in btn_map
     assert "Xóa" in btn_map
 
     btn_map["Mở"].click()
@@ -61,9 +58,6 @@ def test_project_card_widget_init_and_signals(qapp):
 
     btn_map["Sửa tên"].click()
     assert rename_received == ["test-card-1"]
-
-    btn_map["Nhân bản"].click()
-    assert dup_received == ["test-card-1"]
 
     btn_map["Xóa"].click()
     assert del_received == ["test-card-1"]

@@ -110,7 +110,7 @@ class SubtitleStyle:
     stroke_color: tuple[int, int, int] = (0, 0, 0)
     stroke_width: float = 1.0
     shadow: float = 2.0
-    position_y: int = 82       # % từ trên, tương đương bottom: 18%
+    position_y: int = 90       # % từ trên, tương đương bottom: 10%
     alignment: int = 2         # pysubs2.Alignment value (2 = BOTTOM_CENTER)
     subtitle_width: int = 80   # % chiều rộng video, 30-100
 
@@ -147,7 +147,7 @@ class SubtitleStyle:
             stroke_color=_to_tuple3(data.get("stroke_color"), (0, 0, 0)),
             stroke_width=float(data.get("stroke_width", 1.0)),
             shadow=float(data.get("shadow", 2.0)),
-            position_y=int(data.get("position_y", 82)),
+            position_y=int(data.get("position_y", 90)),
             alignment=int(data.get("alignment", 2)),
             subtitle_width=int(data.get("subtitle_width", 80)),
         )

@@ -33,7 +33,7 @@ class SubtitleSettings:
     stroke_color: tuple[int, int, int] = (0, 0, 0)
     stroke_width: float = 1.0
     shadow: float = 2.0
-    position_y: int = 82  # top-origin percentage; equivalent to bottom: 18%
+    position_y: int = 90  # top-origin percentage; equivalent to bottom: 10%
     max_words_per_group: int = 5
     alignment: Alignment = Alignment.BOTTOM_CENTER
     subtitle_width: int = 80  # % chiều rộng video mà subtitle chiếm (30–100)
@@ -289,7 +289,7 @@ def build_ass(
     word_timings: Optional[TimingFile] = None,
     video_width: int = 0,
     video_height: int = 0,
-    position_y: int = 82,
+    position_y: int = 90,
     stroke_color: tuple[int, int, int] = (0, 0, 0),
     stroke_width: float = 1.0,
 ) -> pysubs2.SSAFile:
