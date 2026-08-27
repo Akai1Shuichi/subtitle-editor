@@ -7,6 +7,7 @@ Import Video, Import SRT, Import CapCut JSON, Import JSON (Veed / word timing), 
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMenu,
+    QMessageBox,
     QPushButton,
     QWidget,
 )

@@ -22,7 +22,6 @@ htmlcov/
 coverage.xml
 
 # ── PyInstaller output ────────────────────────────────────────────────────
-*.spec
 dist/
 build/
 
@@ -34,7 +33,6 @@ temp/
 output/
 
 # FFmpeg binary bundled (user tự tải)
-binaries/
 
 # File cấu hình project local (đường dẫn riêng của từng máy)
 *.project.json
