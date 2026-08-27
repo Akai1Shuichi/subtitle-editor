@@ -3,7 +3,7 @@
 ## Phase 1: Data Model & Storage Layer (Lớp Dữ Liệu & Lưu Trữ)
 - [x] **Định nghĩa Data Structure cho Project Metadata (`ProjectMetadata`)**:
   - Các trường: `project_id`, `name`, `created_at`, `updated_at`, `video_path`, `thumbnail_path`, `duration_ms`, `clip_count`.
-- [ ] **Xây dựng Project Serialization / Deserialization**:
+- [x] **Xây dựng Project Serialization / Deserialization**:
   - Hỗ trợ lưu `EditorProject` thành file dự án (định dạng `.subproj` hoặc JSON) chứa clips, style, thông tin video và cấu hình.
   - Hỗ trợ load file dự án khôi phục lại đầy đủ state cho `EditorProject`.
 - [ ] **Tạo Module `ProjectManager` (`src/project_manager.py`)**:

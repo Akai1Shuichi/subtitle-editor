@@ -14,6 +14,7 @@ SRT KHÔNG được parse lại sau bước import.
 from __future__ import annotations
 
 import copy
+import json
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -67,6 +68,25 @@ class SubtitleClip:
             f"text={self.text[:20]!r})"
         )
 
+    def to_dict(self) -> dict:
+        """Chuyển SubtitleClip thành dict để serialize JSON."""
+        return {
+            "id": self.id,
+            "text": self.text,
+            "start_ms": self.start_ms,
+            "end_ms": self.end_ms,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> SubtitleClip:
+        """Khôi phục SubtitleClip từ dict JSON."""
+        return cls(
+            id=data.get("id", str(uuid.uuid4())),
+            text=data.get("text", ""),
+            start_ms=int(data.get("start_ms", 0)),
+            end_ms=int(data.get("end_ms", 0)),
+        )
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # SubtitleStyle
@@ -93,6 +113,44 @@ class SubtitleStyle:
     position_y: int = 82       # % từ trên, tương đương bottom: 18%
     alignment: int = 2         # pysubs2.Alignment value (2 = BOTTOM_CENTER)
     subtitle_width: int = 80   # % chiều rộng video, 30-100
+
+    def to_dict(self) -> dict:
+        """Chuyển SubtitleStyle thành dict để serialize JSON."""
+        return {
+            "mode": self.mode,
+            "fontname": self.fontname,
+            "fontsize": self.fontsize,
+            "text_color": list(self.text_color),
+            "highlight_color": list(self.highlight_color),
+            "stroke_color": list(self.stroke_color),
+            "stroke_width": self.stroke_width,
+            "shadow": self.shadow,
+            "position_y": self.position_y,
+            "alignment": self.alignment,
+            "subtitle_width": self.subtitle_width,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> SubtitleStyle:
+        """Khôi phục SubtitleStyle từ dict JSON."""
+        def _to_tuple3(val, default: tuple[int, int, int]) -> tuple[int, int, int]:
+            if isinstance(val, (list, tuple)) and len(val) == 3:
+                return (int(val[0]), int(val[1]), int(val[2]))
+            return default
+
+        return cls(
+            mode=data.get("mode", "normal"),
+            fontname=data.get("fontname", "Arial"),
+            fontsize=int(data.get("fontsize", 54)),
+            text_color=_to_tuple3(data.get("text_color"), (255, 255, 255)),
+            highlight_color=_to_tuple3(data.get("highlight_color"), (255, 217, 0)),
+            stroke_color=_to_tuple3(data.get("stroke_color"), (0, 0, 0)),
+            stroke_width=float(data.get("stroke_width", 1.0)),
+            shadow=float(data.get("shadow", 2.0)),
+            position_y=int(data.get("position_y", 82)),
+            alignment=int(data.get("alignment", 2)),
+            subtitle_width=int(data.get("subtitle_width", 80)),
+        )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -271,6 +329,66 @@ class EditorProject:
             duration_ms=duration,
             clip_count=len(self.clips),
         )
+
+    # ── Serialization / Deserialization ───────────────────────────────────
+
+    def to_dict(self) -> dict:
+        """Chuyển EditorProject thành dict sẵn sàng serialize JSON."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "thumbnail_path": self.thumbnail_path,
+            "video_info": self.video_info.to_dict() if self.video_info else None,
+            "clips": [clip.to_dict() for clip in self.clips],
+            "style": self.style.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> EditorProject:
+        """Khôi phục EditorProject từ dict JSON."""
+        v_info_data = data.get("video_info")
+        video_info = VideoInfo.from_dict(v_info_data) if v_info_data else None
+        clips = [SubtitleClip.from_dict(c) for c in data.get("clips", [])]
+        style_data = data.get("style")
+        style = SubtitleStyle.from_dict(style_data) if style_data else SubtitleStyle()
+
+        return cls(
+            id=data.get("id", str(uuid.uuid4())),
+            name=data.get("name", "Untitled Project"),
+            created_at=data.get("created_at", datetime.now().isoformat()),
+            updated_at=data.get("updated_at", datetime.now().isoformat()),
+            thumbnail_path=data.get("thumbnail_path", ""),
+            video_info=video_info,
+            clips=clips,
+            style=style,
+        )
+
+    def to_json(self, indent: int = 2) -> str:
+        """Chuyển EditorProject sang chuỗi JSON."""
+        return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> EditorProject:
+        """Khôi phục EditorProject từ chuỗi JSON."""
+        data = json.loads(json_str)
+        return cls.from_dict(data)
+
+    def save_to_file(self, path: str | Path) -> None:
+        """Lưu EditorProject vào file dự án (.subproj / JSON)."""
+        file_path = Path(path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        self.updated_at = datetime.now().isoformat()
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(self.to_json())
+
+    @classmethod
+    def load_from_file(cls, path: str | Path) -> EditorProject:
+        """Khôi phục EditorProject từ file dự án (.subproj / JSON)."""
+        file_path = Path(path)
+        with open(file_path, "r", encoding="utf-8") as f:
+            return cls.from_json(f.read())
 
     def save_checkpoint(self, selected_clip_id: Optional[str] = None) -> None:
         """Lưu snapshot hiện tại vào undo stack."""

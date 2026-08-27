@@ -47,6 +47,27 @@ class VideoInfo:
         m, s = divmod(int(self.duration), 60)
         return f"{m:02d}:{s:02d}"
 
+    def to_dict(self) -> dict:
+        """Chuyển VideoInfo thành dict để serialize JSON."""
+        return {
+            "width": self.width,
+            "height": self.height,
+            "duration": self.duration,
+            "fps": self.fps,
+            "path": str(self.path),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VideoInfo:
+        """Khôi phục VideoInfo từ dict JSON."""
+        return cls(
+            width=int(data.get("width", 0)),
+            height=int(data.get("height", 0)),
+            duration=float(data.get("duration", 0.0)),
+            fps=float(data.get("fps", 0.0)),
+            path=Path(data.get("path", "")),
+        )
+
 
 # ---------------------------------------------------------------------------
 # Helpers
