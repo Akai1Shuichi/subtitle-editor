@@ -69,13 +69,13 @@ class PathSettingsDialog(QDialog):
                 color: #ffffff;
             }
             QLabel.sectionTitle {
-                font-size: 13px;
+                font-size: 14px;
                 font-weight: bold;
                 color: #dddddd;
             }
             QLabel.pathBox {
                 color: #4a9eff;
-                font-size: 11px;
+                font-size: 12px;
                 background-color: #2b2b2b;
                 border: 1px solid #3c3c3c;
                 border-radius: 6px;
@@ -87,7 +87,7 @@ class PathSettingsDialog(QDialog):
                 border: 1px solid #3c3c3c;
                 border-radius: 6px;
                 padding: 6px 14px;
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: bold;
             }
             QPushButton.btnPick:hover {
@@ -100,8 +100,8 @@ class PathSettingsDialog(QDialog):
                 color: #ffffff;
                 border: none;
                 border-radius: 6px;
-                padding: 7px 24px;
-                font-size: 12px;
+                padding: 8px 26px;
+                font-size: 13px;
                 font-weight: bold;
             }
             QPushButton#btnClose:hover {
@@ -226,7 +226,7 @@ class ProjectListView(QWidget):
                 border-radius: 6px;
                 padding: 6px 12px;
                 color: #ffffff;
-                font-size: 12px;
+                font-size: 13px;
             }
             QPushButton#btnNewProject {
                 background-color: #007acc;
@@ -235,7 +235,7 @@ class ProjectListView(QWidget):
                 border-radius: 6px;
                 padding: 8px 16px;
                 font-weight: bold;
-                font-size: 12px;
+                font-size: 13px;
             }
             QPushButton#btnNewProject:hover {
                 background-color: #0098ff;
@@ -246,6 +246,7 @@ class ProjectListView(QWidget):
                 border: 1px solid #3c3c3c;
                 border-radius: 6px;
                 padding: 6px 12px;
+                font-size: 13px;
             }
             QPushButton#btnToggleView:hover {
                 background-color: #383838;
@@ -404,46 +405,46 @@ class ProjectListView(QWidget):
         # AI Item
         footer_layout.addWidget(_make_icon_label("telegram.png"))
         ai_label = QLabel('AI mình dùng để vibe code <a href="https://t.me/DichVuIT_bot" style="color: #0098ff; text-decoration: none; font-weight: bold;">tại đây : @DichVuIT_bot</a>')
-        ai_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        ai_label.setStyleSheet("color: #cccccc; font-size: 12px;")
         ai_label.setOpenExternalLinks(True)
         footer_layout.addWidget(ai_label)
 
         # Separator 1
         sep1 = QLabel("•")
-        sep1.setStyleSheet("color: #555555; font-size: 11px; margin: 0 4px;")
+        sep1.setStyleSheet("color: #555555; font-size: 12px; margin: 0 4px;")
         footer_layout.addWidget(sep1)
 
         # Fanpage Item
         footer_layout.addWidget(_make_icon_label("fanpage.png"))
         fp_label = QLabel('<a href="https://web.facebook.com/profile.php?id=61567027726244" style="color: #0098ff; text-decoration: none; font-weight: bold;">Fanpage</a>')
-        fp_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        fp_label.setStyleSheet("color: #cccccc; font-size: 12px;")
         fp_label.setOpenExternalLinks(True)
         footer_layout.addWidget(fp_label)
 
         # Separator 2
         sep2 = QLabel("•")
-        sep2.setStyleSheet("color: #555555; font-size: 11px; margin: 0 4px;")
+        sep2.setStyleSheet("color: #555555; font-size: 12px; margin: 0 4px;")
         footer_layout.addWidget(sep2)
 
         # Zalo Item
         footer_layout.addWidget(_make_icon_label("zalo.png"))
         zalo_label = QLabel('<a href="https://zalo.me/g/b98og9ldg1rjg7uxg8pt" style="color: #0098ff; text-decoration: none; font-weight: bold;">Zalo</a>')
-        zalo_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        zalo_label.setStyleSheet("color: #cccccc; font-size: 12px;")
         zalo_label.setOpenExternalLinks(True)
         footer_layout.addWidget(zalo_label)
 
         # Separator 3
         sep3 = QLabel("•")
-        sep3.setStyleSheet("color: #555555; font-size: 11px; margin: 0 4px;")
+        sep3.setStyleSheet("color: #555555; font-size: 12px; margin: 0 4px;")
         footer_layout.addWidget(sep3)
 
         # Donate Item
         donate_icon = QLabel("💖")
-        donate_icon.setStyleSheet("font-size: 13px;")
+        donate_icon.setStyleSheet("font-size: 14px;")
         footer_layout.addWidget(donate_icon)
 
         donate_label = QLabel('Ủng hộ mình tại <a href="https://qr-donate.vercel.app/" style="color: #0098ff; text-decoration: none; font-weight: bold;">Donate</a>')
-        donate_label.setStyleSheet("color: #cccccc; font-size: 11px;")
+        donate_label.setStyleSheet("color: #cccccc; font-size: 12px;")
         donate_label.setOpenExternalLinks(True)
         footer_layout.addWidget(donate_label)
 

@@ -94,8 +94,8 @@ class ProjectCardWidget(QFrame):
                 color: #e0e0e0;
                 border: 1px solid #4a4a4a;
                 border-radius: 4px;
-                padding: 4px 6px;
-                font-size: 11px;
+                padding: 4px 8px;
+                font-size: 12px;
             }
             QPushButton:hover {
                 background-color: #007acc;
@@ -123,7 +123,7 @@ class ProjectCardWidget(QFrame):
                 background-color: #1e1e1e;
                 border-radius: 6px;
                 color: #888888;
-                font-size: 12px;
+                font-size: 13px;
             }
         """)
         self._load_thumbnail()
@@ -135,14 +135,14 @@ class ProjectCardWidget(QFrame):
         self.name_label = QLabel(self.metadata.name)
         font = QFont()
         font.setBold(True)
-        font.setPointSize(11)
+        font.setPointSize(12)
         self.name_label.setFont(font)
         self.name_label.setToolTip(self.metadata.name)
         title_layout.addWidget(self.name_label)
 
         if getattr(self.metadata, "is_example", False):
             badge = QLabel("Ví dụ")
-            badge.setStyleSheet("background-color: #007acc; color: #ffffff; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;")
+            badge.setStyleSheet("background-color: #007acc; color: #ffffff; border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: bold;")
             title_layout.addWidget(badge)
         title_layout.addStretch()
         layout.addLayout(title_layout)
@@ -152,12 +152,12 @@ class ProjectCardWidget(QFrame):
         updated_str = _format_timestamp(self.metadata.updated_at)
         info_text = f"⏱ {dur_str}  •  📝 {self.metadata.clip_count} clips"
         self.info_label = QLabel(info_text)
-        self.info_label.setStyleSheet("color: #aaaaaa; font-size: 11px;")
+        self.info_label.setStyleSheet("color: #aaaaaa; font-size: 12px;")
         layout.addWidget(self.info_label)
 
         # Updated date
         self.date_label = QLabel(f"📅 {updated_str}")
-        self.date_label.setStyleSheet("color: #777777; font-size: 10px;")
+        self.date_label.setStyleSheet("color: #777777; font-size: 11px;")
         layout.addWidget(self.date_label)
 
         # 4. Action Buttons (Open, Rename, Delete - Rename and Delete are hidden for example project)

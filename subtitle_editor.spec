@@ -25,7 +25,7 @@ hiddenimports = [
     'PIL',
 ]
 
-icon_path = SPEC_DIR.parent / "SEditor" / "Assets" / "SEditor.ico"
+icon_path = SPEC_DIR / "data" / "assets" / "icon.ico"
 icon_file = str(icon_path) if icon_path.is_file() else None
 
 a = Analysis(

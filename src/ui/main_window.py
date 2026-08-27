@@ -24,7 +24,7 @@ import uuid
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject, QTimer
-from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
+from PySide6.QtGui import QIcon, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -136,6 +136,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Subtitle Video Editor")
         self.setMinimumSize(1100, 700)
         self.resize(1280, 780)
+
+        icon_path = Path(__file__).parent.parent.parent / "data" / "assets" / "icon.ico"
+        if not icon_path.is_file():
+            icon_path = Path("data/assets/icon.ico")
+        if icon_path.is_file():
+            self.setWindowIcon(QIcon(str(icon_path.resolve())))
 
         # ── Application state ──────────────────────────────────────────
         self._project_manager: ProjectManager = ProjectManager(projects_dir=projects_dir)
