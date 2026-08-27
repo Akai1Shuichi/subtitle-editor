@@ -19,7 +19,7 @@
 - [x] **Thiết kế Component `ProjectCardWidget` (`src/ui/project_card.py`)**:
   - Hiển thị thumbnail video, tên dự án, thời lượng, số lượng clip, thời gian cập nhật lần cuối.
   - Các nút thao tác nhanh (Mở, Đổi tên, Nhân bản, Xóa).
-- [ ] **Thiết kế Component `ProjectListView` (`src/ui/project_list_view.py`)**:
+- [x] **Thiết kế Component `ProjectListView` (`src/ui/project_list_view.py`)**:
   - Chế độ hiển thị dạng Grid (Cards) hoặc List (Bảng).
   - Thanh tìm kiếm (Search bar) lọc dự án theo tên.
   - Nút "Tạo Dự Án Mới" (`+ New Project`) kèm dialog chọn Video / Subtitle.
