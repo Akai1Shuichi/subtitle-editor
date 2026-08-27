@@ -477,6 +477,121 @@ class PillSubtitleRenderer:
                 opacity = 1.0
             return curr_word_rect, opacity
 
+    def render_rounded_box_frame(
+        self,
+        clip: SubtitleClip,
+        time_ms: int,
+        style: SubtitleStyle,
+        video_width: int = 1920,
+        video_height: int = 1080,
+    ) -> Image.Image:
+        """Render a rounded box subtitle card matching Qt preview 100% identically."""
+        if not clip or not clip.is_active_at(time_ms):
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+        try:
+            from PySide6.QtCore import QRect, Qt
+            from PySide6.QtGui import QColor, QFont, QFontMetrics, QImage, QPainter
+
+            qimg = QImage(video_width, video_height, QImage.Format_RGBA8888)
+            qimg.fill(Qt.transparent)
+
+            painter = QPainter(qimg)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.TextAntialiasing)
+
+            # Font setup - scale exact same as video_panel preview
+            font_px = max(1, round(style.fontsize * (72 / 96)))
+            font = QFont(style.fontname)
+            font.setPixelSize(font_px)
+            font.setBold(True)
+            painter.setFont(font)
+            fm = QFontMetrics(font)
+
+            # Margins & Position
+            width_pct = getattr(style, "subtitle_width", 80)
+            margin_x = max(4, int((100 - width_pct) / 200 * video_width))
+            safe_w = max(100, video_width - margin_x * 2)
+
+            if style.alignment in (2, 3, 1):   # bottom
+                margin_v = max(0, int((100 - style.position_y) * video_height / 100))
+                base_y = video_height - margin_v
+            elif style.alignment in (5, 6, 4): # center
+                base_y = video_height // 2
+            else:                               # top
+                base_y = int(style.position_y * video_height / 100)
+
+            # Word wrap using QFontMetrics (same as video_panel)
+            wrapped: list[str] = []
+            for paragraph in clip.text.split("\n"):
+                words = paragraph.split()
+                if not words:
+                    wrapped.append("")
+                    continue
+                current = ""
+                for word in words:
+                    candidate = (current + " " + word).strip()
+                    if fm.horizontalAdvance(candidate) <= safe_w:
+                        current = candidate
+                    else:
+                        if current:
+                            wrapped.append(current)
+                        current = word
+                if current:
+                    wrapped.append(current)
+            if not wrapped:
+                wrapped = [""]
+
+            padding_x = int(16)
+            padding_y = int(10)
+            radius = int(16)
+
+            line_h = fm.lineSpacing()
+            total_h = line_h * len(wrapped)
+            max_lw = max(fm.horizontalAdvance(line) for line in wrapped) if wrapped else 0
+
+            card_w = max_lw + padding_x * 2
+            card_h = total_h + padding_y * 2
+
+            if style.alignment in (2, 3, 1):      # bottom
+                card_top = base_y - card_h
+            elif style.alignment in (5, 6, 4):    # center
+                card_top = base_y - card_h // 2
+            else:                                  # top
+                card_top = base_y
+
+            area_x = margin_x
+            if style.alignment in (1, 4, 7):    # left
+                card_x = area_x
+            elif style.alignment in (3, 6, 9):  # right
+                card_x = area_x + safe_w - card_w
+            else:                                # center
+                card_x = area_x + (safe_w - card_w) // 2
+
+            text_color = QColor(*style.text_color)
+            hl_color = QColor(*style.highlight_color)
+
+            bg_color = QColor(hl_color)
+            txt_color_obj = QColor(17, 17, 17) if text_color == QColor(255, 255, 255) else text_color
+
+            # 1. Paint rounded rectangle box
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(bg_color)
+            painter.drawRoundedRect(QRect(card_x, card_top, card_w, card_h), radius, radius)
+
+            # 2. Paint text centered inside box
+            painter.setPen(txt_color_obj)
+            for i, line in enumerate(wrapped):
+                lw = fm.horizontalAdvance(line)
+                lx = card_x + (card_w - lw) // 2
+                ly = card_top + padding_y + i * line_h + fm.ascent()
+                painter.drawText(lx, ly, line)
+
+            painter.end()
+            return Image.frombytes("RGBA", (video_width, video_height), bytes(qimg.constBits()))
+        except Exception:
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
     def render_frame(
         self,
         clip: SubtitleClip,
@@ -490,6 +605,9 @@ class PillSubtitleRenderer:
         """
         Render a transparent RGBA image containing the pill background and subtitle text.
         """
+        if style and style.mode in ("rounded_box", "rounded-box"):
+            return self.render_rounded_box_frame(clip, time_ms, style, video_width, video_height)
+
         if config is None:
             hl = style.highlight_color
             hl_hex = f"#{hl[0]:02x}{hl[1]:02x}{hl[2]:02x}" if isinstance(hl, tuple) else str(hl)

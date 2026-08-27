@@ -99,7 +99,7 @@ class ExportWorker(QObject):
     @Slot()
     def run(self) -> None:
         try:
-            if self._style and self._style.mode == "pill":
+            if self._style and self._style.mode in ("pill", "rounded_box", "rounded-box"):
                 result = export_video_pill(
                     self._video_info,
                     self._clips,

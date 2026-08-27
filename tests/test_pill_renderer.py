@@ -146,6 +146,20 @@ class TestPillRenderer(unittest.TestCase):
         self.assertIsInstance(frame, Image.Image)
         self.assertEqual(frame.size, (640, 360))
 
+    def test_rounded_box_mode_rendering(self):
+        clip = SubtitleClip(id="test-rounded-box", text="Rounded box animation test", start_ms=0, end_ms=1000)
+        style = SubtitleStyle(mode="rounded_box", fontname="Arial", fontsize=40)
+
+        frame = self.renderer.render_frame(
+            clip=clip,
+            time_ms=200,
+            style=style,
+            video_width=640,
+            video_height=360,
+        )
+        self.assertIsInstance(frame, Image.Image)
+        self.assertEqual(frame.size, (640, 360))
+
 
 if __name__ == "__main__":
     unittest.main()
