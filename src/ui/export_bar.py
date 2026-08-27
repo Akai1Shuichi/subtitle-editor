@@ -36,20 +36,21 @@ class ExportBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("ExportBar")
-        self.setFixedHeight(90)
+        self.setFixedHeight(46)
 
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(20, 10, 20, 10)
-        outer.setSpacing(8)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 6, 20, 6)
+        layout.setSpacing(10)
 
-        # ── Row 1: output path ───────────────────────────────────────────
-        row1 = QHBoxLayout()
-        row1.setSpacing(10)
+        # Output Path Label & Edit
+        lbl = QLabel("📁 File Output:")
+        lbl.setStyleSheet("color: #aaaaaa; font-weight: bold; font-size: 11px;")
+        layout.addWidget(lbl)
 
         self._path_edit = QLineEdit()
         self._path_edit.setPlaceholderText("Thư mục / tên file output…")
         self._path_edit.setObjectName("PathEdit")
-        row1.addWidget(self._path_edit, stretch=1)
+        layout.addWidget(self._path_edit, stretch=1)
 
         browse_btn = QPushButton("…")
         browse_btn.setObjectName("BrowseBtn")
@@ -57,27 +58,25 @@ class ExportBar(QWidget):
         browse_btn.setCursor(Qt.PointingHandCursor)
         browse_btn.setToolTip("Chọn thư mục output")
         browse_btn.clicked.connect(self._pick_output)
-        row1.addWidget(browse_btn)
+        layout.addWidget(browse_btn)
 
-        outer.addLayout(row1)
-
-        # ── Row 2: progress bar + timer + cancel ─────────────────────────
-        row2 = QHBoxLayout()
-        row2.setSpacing(10)
-
+        # Progress bar + timer + cancel
         self._progress = QProgressBar()
         self._progress.setObjectName("ExportProgress")
         self._progress.setRange(0, 100)
         self._progress.setValue(0)
         self._progress.setTextVisible(False)
+        self._progress.setFixedWidth(160)
         self._progress.setFixedHeight(8)
-        row2.addWidget(self._progress, stretch=1)
+        self._progress.setVisible(False)
+        layout.addWidget(self._progress)
 
         self._timer_label = QLabel("00:00")
         self._timer_label.setObjectName("TimerLabel")
         self._timer_label.setAlignment(Qt.AlignCenter)
-        self._timer_label.setFixedWidth(50)
-        row2.addWidget(self._timer_label)
+        self._timer_label.setFixedWidth(45)
+        self._timer_label.setVisible(False)
+        layout.addWidget(self._timer_label)
 
         self._cancel_btn = QPushButton("Hủy")
         self._cancel_btn.setObjectName("CancelBtn")
@@ -85,9 +84,7 @@ class ExportBar(QWidget):
         self._cancel_btn.setCursor(Qt.PointingHandCursor)
         self._cancel_btn.setVisible(False)
         self._cancel_btn.clicked.connect(self._on_cancel_clicked)
-        row2.addWidget(self._cancel_btn)
-
-        outer.addLayout(row2)
+        layout.addWidget(self._cancel_btn)
 
         # ── Timer nội bộ ─────────────────────────────────────────────────
         self._elapsed_secs = 0
@@ -116,6 +113,8 @@ class ExportBar(QWidget):
 
     def start_export_ui(self) -> None:
         """Chuyển UI sang trạng thái đang export."""
+        self._progress.setVisible(True)
+        self._timer_label.setVisible(True)
         self._cancel_btn.setVisible(True)
         self._progress.setValue(0)
         self._elapsed_secs = 0
@@ -130,6 +129,8 @@ class ExportBar(QWidget):
             self._progress.setValue(100)
         else:
             self._progress.setValue(0)
+            self._progress.setVisible(False)
+            self._timer_label.setVisible(False)
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots

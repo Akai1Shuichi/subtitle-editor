@@ -205,6 +205,12 @@ class MainWindow(QMainWindow):
         editor_layout.setContentsMargins(0, 0, 0, 0)
         editor_layout.setSpacing(0)
 
+        # Export Bar (Đặt ngay phía trên màn hình Editor / dưới HeaderBar)
+        self._export_bar = ExportBar()
+        self._export_bar.cancel_requested.connect(self._on_cancel_requested)
+        editor_layout.addWidget(self._export_bar)
+        editor_layout.addWidget(self._make_hsep())
+
         # Splitter: VideoPanel | Inspector
         self._h_splitter = QSplitter(Qt.Horizontal)
         self._h_splitter.setHandleWidth(4)
@@ -234,7 +240,7 @@ class MainWindow(QMainWindow):
         editor_layout.addWidget(self._h_splitter, stretch=1)
         editor_layout.addWidget(self._make_hsep())
 
-        # Interactive Timeline
+        # Interactive Timeline (Đáy màn hình)
         self._timeline = TimelineWidget()
         self._timeline.clip_selected.connect(self._on_clip_selected)
         self._timeline.clip_deselected.connect(self._on_clip_deselected)
@@ -245,12 +251,7 @@ class MainWindow(QMainWindow):
         self._timeline.seek_requested.connect(self._video_panel.seek)
         editor_layout.addWidget(self._timeline)
 
-        editor_layout.addWidget(self._make_hsep())
-
-        # Export Bar
-        self._export_bar = ExportBar()
-        self._export_bar.cancel_requested.connect(self._on_cancel_requested)
-        editor_layout.addWidget(self._export_bar)
+        self._view_stack.addWidget(self._editor_container)
 
         self._view_stack.addWidget(self._editor_container)
         root.addWidget(self._view_stack, stretch=1)
