@@ -82,6 +82,7 @@ class _TimelineCanvas(QWidget):
     clip_selected = Signal(str)
     clip_deselected = Signal()
     clip_timing_changed = Signal(str, int, int)  # clip_id, start_ms, end_ms
+    drag_started = Signal()
     seek_requested = Signal(int)  # ms
 
     # Drag modes
@@ -202,6 +203,7 @@ class _TimelineCanvas(QWidget):
             self._drag_start_x = pos.x()
             self._drag_orig_start_ms = clip.start_ms
             self._drag_orig_end_ms = clip.end_ms
+            self.drag_started.emit()
 
             if clip.id != self._selected_clip_id:
                 self._selected_clip_id = clip.id
@@ -436,6 +438,7 @@ class TimelineWidget(QWidget):
     clip_selected = Signal(str)
     clip_deselected = Signal()
     clip_timing_changed = Signal(str, int, int)  # clip_id, start_ms, end_ms
+    drag_started = Signal()
     add_subtitle_requested = Signal()
     play_pause_requested = Signal()
     seek_requested = Signal(int)  # ms
@@ -528,6 +531,7 @@ class TimelineWidget(QWidget):
         self._canvas.clip_selected.connect(self.clip_selected)
         self._canvas.clip_deselected.connect(self.clip_deselected)
         self._canvas.clip_timing_changed.connect(self.clip_timing_changed)
+        self._canvas.drag_started.connect(self.drag_started)
         self._canvas.seek_requested.connect(self.seek_requested)
 
         self._scroll.setWidget(self._canvas)

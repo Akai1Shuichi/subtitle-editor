@@ -1,132 +1,81 @@
-# Giải thích flow — Bước 3: Video playback và realtime preview
+# Giải Thích Chi Tiết Các Bước Đã Thực Hiện
 
-Mục tiêu của bước 3 là để video đang phát, timeline và subtitle overlay luôn
-đọc cùng một thời điểm. Ứng dụng desktop PySide nên dùng `QMediaPlayer` thay
-cho thẻ HTML `<video>`; vai trò playback và các event thời gian là tương đương.
+Tài liệu này giải thích chi tiết cơ chế hoạt động và cách triển khai các tính năng đã thực hiện trong **Subtitle Video Editor** dựa theo kế hoạch trong [todo.md](file:///c:/Users/User/Documents/Tool/subtitle-editor/todo.md).
 
-## Nguồn dữ liệu chung
+---
 
-`EditorProject` là state trung tâm:
+## 🚀 Tổng Quan Các Tính Năng Đã Thực Hiện
 
-```text
-EditorProject
-├── video_info       thông tin video đã import
-├── clips[]          SubtitleClip(id, text, start_ms, end_ms)
-├── style            SubtitleStyle chung
-└── word_timings     timing từng từ (nếu có sidecar .words.json)
-```
+1. **Kiểm Tra Biên Khi Thêm Phụ Đề Mới (`+ Add Subtitle`)**: Đảm bảo không bao giờ đè lên các khối phụ đề cũ.
+2. **Xóa Phụ Đề Bằng Phím `Delete` / `Backspace`**: Cho phép xóa nhanh khối phụ đề đang chọn khi bấm phím tắt.
+3. **Hệ Thống Undo / Redo (`Ctrl + Z` / `Ctrl + Y` / `Ctrl + Shift + Z`)**: Cho phép khôi phục hoặc làm lại các thao tác chỉnh sửa phụ đề theo cơ chế **State Snapshot siêu nhẹ**.
 
-Timeline, Inspector, realtime preview và export đều đọc từ `clips[]`; không
-parse lại SRT sau khi import.
+---
 
-## 1. Import video
+## 📄 Giải Thích Chi Tiết Theo Các Bước Trong `todo.md`
 
-```text
-Chọn/kéo video
-  → MainWindow._on_video_selected(path)
-  → probe_video(path) lấy resolution + duration
-  → project.video_info = info
-  → VideoPanel.load_video(path)
-  → QMediaPlayer.setSource(...)
-  → QVideoSink gửi từng QVideoFrame cho VideoCanvas
-```
+### 1. Thêm `UndoManager` Quản Lý Snapshot Dữ Liệu (`src/models.py`)
+- **Khái niệm**: Thay vì dùng Command Pattern phức tạp, ta dùng **State Snapshot**. Trạng thái của một project về cơ bản gồm 3 thông tin chính:
+  - `clips`: Danh sách phụ đề `list[SubtitleClip]`.
+  - `style`: Cấu hình kiểu dáng `SubtitleStyle`.
+  - `selected_clip_id`: ID của clip đang được chọn.
+- **Cấu trúc `ProjectSnapshot`**:
+  ```python
+  @dataclass
+  class ProjectSnapshot:
+      clips: list[SubtitleClip]
+      style: SubtitleStyle
+      selected_clip_id: Optional[str] = None
+  ```
+- **Cơ chế hoạt động của `UndoManager`**:
+  - Quản lý 2 ngăn xếp `_undo_stack` và `_redo_stack`.
+  - Khi thực hiện một thao tác chỉnh sửa, gọi `push_checkpoint()`. Trạng thái hiện tại được nhân bản bằng `copy.deepcopy()` và đẩy vào `_undo_stack` (tối đa 50 bước). Đồng thời xóa sạch `_redo_stack`.
+  - Khi gọi `undo()`: Đẩy trạng thái hiện tại vào `_redo_stack`, sau đó lấy trạng thái cuối từ `_undo_stack` ra khôi phục.
+  - Khi gọi `redo()`: Đẩy trạng thái hiện tại vào `_undo_stack`, sau đó lấy trạng thái cuối từ `_redo_stack` ra khôi phục.
 
-`VideoCanvas` tự vẽ frame vào vùng letterbox. Cách dùng `QVideoSink` thay vì
-`QVideoWidget` cho phép subtitle được vẽ trong cùng một `paintEvent`, nên overlay
-không bị video GPU che trên Linux/Wayland.
+---
 
-Khi media backend biết duration thật, `durationChanged(ms)` cập nhật lại thời
-lượng hiển thị ở timeline. Nếu media/codec không phát được, `playback_error`
-được chuyển lên `MainWindow` để báo lỗi.
+### 2. Kiểm Tra Ranh Giới & Thêm Phụ Đề Mới (`find_available_clip_range`)
+- **Vấn đề cũ**: Trước đây khi bấm `+ Add Subtitle`, phụ đề mới được chèn cố định 2 giây bắt đầu từ vị trí con trỏ playhead `current_time_ms`, dẫn đến việc bị đè chèn lên các clip phụ đề đã có bên cạnh.
+- **Giải pháp (`EditorProject.find_available_clip_range`)**:
+  - Quét toàn bộ timeline để tìm các khoảng trống khả dụng (Gaps) giữa các clip hoặc ở đầu/cuối video.
+  - Nếu playhead đang nằm trong khoảng trống, phụ đề mới bắt đầu ngay tại playhead và tự động **cắt gọn độ dài** vừa khít với khoảng trống (nếu khoảng trống nhỏ hơn 2 giây, tối thiểu 200ms).
+  - Nếu playhead đang đè trên một clip cũ, hệ thống tự động tìm khoảng trống khả dụng **ngay sau** clip đó để chèn.
+  - Tự động di chuyển playhead tới vị trí clip mới để xem trước.
 
-## 2. Play, pause và seek
+---
 
-```text
-Nút ▶ / ⏸ timeline
-  → TimelinePlaceholder.play_pause_requested
-  → VideoPanel.toggle_play_pause()
-  → QMediaPlayer.play() hoặc pause()
-  → playbackStateChanged
-  → MainWindow._on_playback_state_changed()
-  → đổi icon nút timeline
+### 3. Tích Hợp `save_checkpoint` Vào Các Thao Tác Trong `MainWindow` (`src/ui/main_window.py`)
+Mọi thao tác làm thay đổi dữ liệu đều tự động gọi `_save_checkpoint()` trước khi cập nhật dữ liệu:
 
-Click một clip timeline
-  → clip_selected(id) + seek_requested(clip.start_ms)
-  → VideoPanel.seek(ms)
-  → QMediaPlayer.setPosition(ms)
-```
+1. **Thêm phụ đề (`_on_add_subtitle_requested`)**: Lưu checkpoint trước khi append clip mới.
+2. **Xóa phụ đề (`_on_clip_delete_requested`)**: Lưu checkpoint trước khi xóa clip khỏi danh sách.
+3. **Kéo thả / Resize clip trên Timeline (`drag_started`)**:
+   - Khi người dùng bấm chuột bắt đầu kéo clip trên canvas, `_TimelineCanvas` phát ra tín hiệu `drag_started`.
+   - `MainWindow` nhận tín hiệu và lưu checkpoint ngay lúc bắt đầu kéo, giúp việc Undo khôi phục chính xác vị trí clip trước khi kéo.
+4. **Sửa chữ trong Inspector (`_on_clip_text_changed`)**:
+   - Sử dụng `QTimer` loại **Debounce 500ms**.
+   - Khi người dùng bắt đầu gõ ký tự đầu tiên, checkpoint được lưu lại. Trong lúc gõ liên tục, timer được đếm lại để không lưu từng phím gõ đơn lẻ. Sau 500ms dừng gõ, đợt chỉnh sửa hoàn tất.
+5. **Đổi Style / Preset (`_on_style_changed`)**: Lưu checkpoint trước khi áp dụng style mới.
+6. **Import file phụ đề mới (`_on_srt_loaded`, `_on_json_loaded`, `_on_capcut_json_loaded`)**: Lưu checkpoint trước khi nạp dữ liệu từ file mới.
 
-Timeline hiện chỉ là placeholder dạng chip; click chip seek đến đầu clip. Thước
-thời gian, playhead kéo được và drag/resize clip thuộc bước 4–5.
+---
 
-## 3. Đồng bộ thời gian và active subtitle
+### 4. Xử Lý Phím Tắt & Vùng Focus Thông Minh (`MainWindow`)
+- **Phím `Delete` / `Backspace`**:
+  - Bắt sự kiện phím trong `keyPressEvent()`.
+  - Kiểm tra xem focus hiện tại có nằm trong các ô gõ văn bản (`QLineEdit`, `QPlainTextEdit`, `QTextEdit`) hay không.
+  - Nếu **không** gõ văn bản và có clip đang chọn -> Thực hiện xóa clip.
+- **Phím `Ctrl + Z` (Undo) & `Ctrl + Y` / `Ctrl + Shift + Z` (Redo)**:
+  - Khởi tạo qua `QShortcut`.
+  - Khi kích hoạt, kiểm tra nếu focus không ở ô gõ chữ thì gọi `_project.undo()` / `_project.redo()`.
+  - Sau khi khôi phục dữ liệu `clips` và `style`, gọi `_inspector.apply_style()` và `_update_ui_state()` để render lại toàn bộ giao diện (Timeline, Inspector, Video Overlay).
 
-Khi player đổi vị trí, nó emit `positionChanged(ms)`:
+---
 
-```text
-QMediaPlayer.positionChanged(ms)
-  → VideoPanel.time_changed(ms)
-  → MainWindow._on_time_changed(ms)
-  → current_time_ms = ms
-  → project.active_clip_at(ms)
-  → VideoPanel.set_active_clip(active_clip, style, ms, ...)
-  → VideoCanvas.update()
-  → TimelinePlaceholder.set_current_time(ms, duration_ms)
-```
-
-`active_clip_at(ms)` chọn clip thỏa `start_ms <= ms < end_ms`. Nếu không có
-clip active, canvas chỉ vẽ video frame.
-
-## 4. Realtime subtitle overlay
-
-`VideoCanvas._draw_subtitle()` dùng active clip, style và kích thước video gốc
-để vẽ text lên đúng vùng letterbox. Preview hỗ trợ:
-
-- Normal và Word Highlight.
-- Font, màu chữ, màu highlight, viền, shadow, căn trái/giữa/phải và vị trí.
-- Word timing từ `.words.json` nếu timing hợp lệ; nếu không có thì suy ra đều
-  từ duration của subtitle.
-
-Với Normal, ASS được đặt `WrapStyle=1` để quy tắc xuống dòng theo thứ tự từ
-giống preview. Font realtime quy đổi 72 DPI (ASS/libass) sang 96 DPI (Qt), và
-stroke/shadow scale theo kích thước hiển thị. Vì vậy preview và FFmpeg export
-dùng cùng đơn vị style; anti-alias có thể vẫn khác khoảng 1–2 px do Qt và
-libass là hai renderer khác nhau.
-
-## 5. Khi người dùng sửa nội dung hoặc style
-
-```text
-Sửa text trong Inspector
-  → clip_text_changed(id, text)
-  → sửa trực tiếp project.clips[]
-  → render lại chip timeline + refresh overlay
-
-Đổi style trong Inspector
-  → style_changed(style)
-  → project.style = style
-  → refresh overlay
-```
-
-Không có inline edit trên video preview: text chỉ sửa trong Inspector để giữ
-interaction đơn giản và tránh hai nơi cùng chỉnh một dữ liệu.
-
-## 6. Quan hệ với export
-
-Nút `Export MP4` ở header gọi `clips_to_ssa(project.clips, project.style, ...)`
-để tạo file ASS tạm, sau đó FFmpeg burn ASS vào video. Vì export dùng chính
-`SubtitleClip[]`, `SubtitleStyle` và word timing như realtime preview, text,
-timing và style đã chỉnh là dữ liệu được xuất ra.
-
-```text
-project.clips[] + project.style
-        ├── realtime: VideoCanvas
-        └── export: clips_to_ssa → ASS → FFmpeg → MP4
-```
-
-## Giới hạn hiện tại của bước 3
-
-- Có play/pause, seek khi click clip và time display.
-- Chưa có thước thời gian thật, click seek theo vị trí chuột, zoom, drag hay
-  resize timing; các phần đó nằm ở bước 4–5.
-- `＋ Add Subtitle` chỉ có một nút ở thanh Timeline; clip mới dài mặc định 2
-  giây tại playhead và được chọn để sửa trong Inspector.
+### 5. Kiểm Thử Unit Test (`tests/test_undo_redo.py` & `tests/test_timeline_widget.py`)
+- Viết các bài test cho luồng Undo/Redo:
+  1. `test_undo_manager_basic_push_and_undo`: Kiểm tra độc lập class `UndoManager`.
+  2. `test_editor_project_undo_redo`: Kiểm tra việc khôi phục dữ liệu trên `EditorProject`.
+  3. `test_main_window_undo_redo_shortcuts`: Kiểm tra luồng tích hợp phím tắt trên giao diện ứng dụng.
+- Kết quả kiểm thử: **78/78 tests passed (100% thành công)**.

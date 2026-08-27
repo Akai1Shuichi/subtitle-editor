@@ -13,6 +13,7 @@ SRT KHÔNG được parse lại sau bước import.
 
 from __future__ import annotations
 
+import copy
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -94,6 +95,85 @@ class SubtitleStyle:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# UndoManager (State Snapshot)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class ProjectSnapshot:
+    clips: list[SubtitleClip]
+    style: SubtitleStyle
+    selected_clip_id: Optional[str] = None
+
+
+class UndoManager:
+    """Quản lý lịch sử Undo / Redo bằng State Snapshot siêu nhẹ."""
+
+    def __init__(self, max_depth: int = 50):
+        self.max_depth = max_depth
+        self._undo_stack: list[ProjectSnapshot] = []
+        self._redo_stack: list[ProjectSnapshot] = []
+
+    def push_checkpoint(
+        self,
+        clips: list[SubtitleClip],
+        style: SubtitleStyle,
+        selected_clip_id: Optional[str] = None,
+    ) -> None:
+        """Lưu snapshot của trạng thái hiện tại trước khi thay đổi."""
+        snapshot = ProjectSnapshot(
+            clips=copy.deepcopy(clips),
+            style=copy.deepcopy(style),
+            selected_clip_id=selected_clip_id,
+        )
+        self._undo_stack.append(snapshot)
+        if len(self._undo_stack) > self.max_depth:
+            self._undo_stack.pop(0)
+        self._redo_stack.clear()
+
+    def can_undo(self) -> bool:
+        return len(self._undo_stack) > 0
+
+    def can_redo(self) -> bool:
+        return len(self._redo_stack) > 0
+
+    def undo(
+        self,
+        current_clips: list[SubtitleClip],
+        current_style: SubtitleStyle,
+        current_selected_id: Optional[str] = None,
+    ) -> Optional[ProjectSnapshot]:
+        """Thực hiện Undo: lưu trạng thái hiện tại vào redo_stack và khôi phục trạng thái từ undo_stack."""
+        if not self.can_undo():
+            return None
+
+        current_snapshot = ProjectSnapshot(
+            clips=copy.deepcopy(current_clips),
+            style=copy.deepcopy(current_style),
+            selected_clip_id=current_selected_id,
+        )
+        self._redo_stack.append(current_snapshot)
+        return self._undo_stack.pop()
+
+    def redo(
+        self,
+        current_clips: list[SubtitleClip],
+        current_style: SubtitleStyle,
+        current_selected_id: Optional[str] = None,
+    ) -> Optional[ProjectSnapshot]:
+        """Thực hiện Redo: lưu trạng thái hiện tại vào undo_stack và khôi phục trạng thái từ redo_stack."""
+        if not self.can_redo():
+            return None
+
+        current_snapshot = ProjectSnapshot(
+            clips=copy.deepcopy(current_clips),
+            style=copy.deepcopy(current_style),
+            selected_clip_id=current_selected_id,
+        )
+        self._undo_stack.append(current_snapshot)
+        return self._redo_stack.pop()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # EditorProject — single source of truth
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -113,8 +193,31 @@ class EditorProject:
     clips: list[SubtitleClip] = field(default_factory=list)
     style: SubtitleStyle = field(default_factory=SubtitleStyle)
     word_timings: Optional[TimingFile] = None
+    undo_manager: UndoManager = field(default_factory=UndoManager)
 
     # ── Helpers ───────────────────────────────────────────────────────────
+
+    def save_checkpoint(self, selected_clip_id: Optional[str] = None) -> None:
+        """Lưu snapshot hiện tại vào undo stack."""
+        self.undo_manager.push_checkpoint(self.clips, self.style, selected_clip_id)
+
+    def undo(self, current_selected_id: Optional[str] = None) -> Optional[str]:
+        """Thực hiện undo, trả về selected_clip_id đã khôi phục (nếu có)."""
+        res = self.undo_manager.undo(self.clips, self.style, current_selected_id)
+        if res is not None:
+            self.clips = res.clips
+            self.style = res.style
+            return res.selected_clip_id
+        return None
+
+    def redo(self, current_selected_id: Optional[str] = None) -> Optional[str]:
+        """Thực hiện redo, trả về selected_clip_id đã khôi phục (nếu có)."""
+        res = self.undo_manager.redo(self.clips, self.style, current_selected_id)
+        if res is not None:
+            self.clips = res.clips
+            self.style = res.style
+            return res.selected_clip_id
+        return None
 
     @property
     def has_video(self) -> bool:

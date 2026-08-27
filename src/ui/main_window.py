@@ -23,8 +23,8 @@ import threading
 import uuid
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject, QTimer
+from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -144,7 +144,13 @@ class MainWindow(QMainWindow):
         self._export_thread: QThread | None        = None
         self._temp_ass: str | None                 = None
 
+        # ── Text edit debounce timer ──────────────────────────────────
+        self._text_edit_timer = QTimer(self)
+        self._text_edit_timer.setSingleShot(True)
+        self._text_edit_timer.setInterval(500)
+
         self._build_ui()
+        self._setup_shortcuts()
         self._apply_stylesheet()
         self._update_ui_state()
 
@@ -210,6 +216,7 @@ class MainWindow(QMainWindow):
         self._timeline.clip_selected.connect(self._on_clip_selected)
         self._timeline.clip_deselected.connect(self._on_clip_deselected)
         self._timeline.clip_timing_changed.connect(self._on_clip_timing_changed)
+        self._timeline.drag_started.connect(self._save_checkpoint)
         self._timeline.add_subtitle_requested.connect(self._on_add_subtitle_requested)
         # ── Playback & Seek controls ───────────────────────────────────
         self._timeline.play_pause_requested.connect(self._video_panel.toggle_play_pause)
@@ -315,6 +322,43 @@ class MainWindow(QMainWindow):
 
         self._update_ui_state()
 
+    def _setup_shortcuts(self) -> None:
+        self._undo_shortcut = QShortcut(QKeySequence.Undo, self)
+        self._undo_shortcut.activated.connect(self._on_undo_triggered)
+
+        self._redo_shortcut_y = QShortcut(QKeySequence("Ctrl+Y"), self)
+        self._redo_shortcut_y.activated.connect(self._on_redo_triggered)
+
+        self._redo_shortcut_shift_z = QShortcut(QKeySequence("Ctrl+Shift+Z"), self)
+        self._redo_shortcut_shift_z.activated.connect(self._on_redo_triggered)
+
+    def _save_checkpoint(self) -> None:
+        self._project.save_checkpoint(self._selected_clip_id)
+
+    @Slot()
+    def _on_undo_triggered(self) -> None:
+        focus_w = QApplication.focusWidget()
+        if isinstance(focus_w, (QLineEdit, QTextEdit, QPlainTextEdit)):
+            return
+
+        new_selected = self._project.undo(self._selected_clip_id)
+        if new_selected is not None or self._project.undo_manager.can_undo():
+            self._selected_clip_id = new_selected
+            self._inspector.apply_style(self._project.style)
+            self._update_ui_state()
+
+    @Slot()
+    def _on_redo_triggered(self) -> None:
+        focus_w = QApplication.focusWidget()
+        if isinstance(focus_w, (QLineEdit, QTextEdit, QPlainTextEdit)):
+            return
+
+        new_selected = self._project.redo(self._selected_clip_id)
+        if new_selected is not None or self._project.undo_manager.can_redo():
+            self._selected_clip_id = new_selected
+            self._inspector.apply_style(self._project.style)
+            self._update_ui_state()
+
     # ──────────────────────────────────────────────────────────────────────
     # Slots – SRT
     # ──────────────────────────────────────────────────────────────────────
@@ -330,6 +374,7 @@ class MainWindow(QMainWindow):
             self._show_error("Lỗi subtitle", str(exc))
             return
 
+        self._save_checkpoint()
         self._project.clips = clips
         self._selected_clip_id = None  # bỏ selection cũ khi load SRT mới
 
@@ -364,6 +409,7 @@ class MainWindow(QMainWindow):
             self._show_error("Lỗi không xác định", f"Không parse được file JSON:\n{exc}")
             return
 
+        self._save_checkpoint()
         self._project.clips        = clips
         self._project.word_timings = timing
         self._selected_clip_id     = None   # bỏ selection cũ
@@ -388,6 +434,7 @@ class MainWindow(QMainWindow):
             self._show_error("Lỗi không xác định", f"Không parse được file CapCut JSON:\n{exc}")
             return
 
+        self._save_checkpoint()
         self._project.clips        = clips
         self._project.word_timings = timing
         self._selected_clip_id     = None   # bỏ selection cũ
@@ -400,6 +447,7 @@ class MainWindow(QMainWindow):
 
     @Slot(object)
     def _on_style_changed(self, style: SubtitleStyle) -> None:
+        self._save_checkpoint()
         self._project.style = style
         # Cập nhật trạng thái nút Import JSON theo mode
         self._header_bar.set_highlight_mode(style.mode == "highlight")
@@ -466,7 +514,10 @@ class MainWindow(QMainWindow):
     def _on_clip_text_changed(self, clip_id: str, new_text: str) -> None:
         """Cập nhật text của clip trong project khi người dùng sửa inspector."""
         clip = self._project.clip_by_id(clip_id)
-        if clip:
+        if clip and clip.text != new_text:
+            if not self._text_edit_timer.isActive():
+                self._save_checkpoint()
+            self._text_edit_timer.start(500)
             clip.text = new_text
             # Cập nhật chip trên timeline (không cần rebuild toàn bộ)
             self._timeline.set_clips(
@@ -479,6 +530,7 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_clip_delete_requested(self, clip_id: str) -> None:
         """Xóa clip khỏi project."""
+        self._save_checkpoint()
         self._project.clips = [
             c for c in self._project.clips if c.id != clip_id
         ]
@@ -499,6 +551,7 @@ class MainWindow(QMainWindow):
             )
             return
 
+        self._save_checkpoint()
         start_ms, end_ms = range_res
         new_clip = SubtitleClip(
             id=str(uuid.uuid4()),
