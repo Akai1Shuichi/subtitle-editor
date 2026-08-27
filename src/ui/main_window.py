@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
         # ── Application state ──────────────────────────────────────────
         p_dir = projects_dir if projects_dir is not None else "data/projects"
         self._project_manager: ProjectManager = ProjectManager(projects_dir=p_dir)
-        self._project: EditorProject           = EditorProject()
+        self._project: EditorProject | None    = None
         self._selected_clip_id: str | None       = None
         self._current_time_ms: int              = 0   # playhead — wire từ QMediaPlayer (bước 3)
         self._video_duration_ms: int            = 0   # duration từ QMediaPlayer
@@ -274,8 +274,8 @@ class MainWindow(QMainWindow):
     # ──────────────────────────────────────────────────────────────────────
 
     def _auto_save_current_project(self) -> None:
-        """Tự động lưu dự án hiện tại nếu đã có dữ liệu hoặc ID."""
-        if hasattr(self, "_project") and self._project and self._project.id:
+        """Tự động lưu dự án hiện tại nếu đã có dự án được mở."""
+        if self._project is not None and self._project.id:
             try:
                 self._project_manager.save_project(self._project)
             except Exception as e:
@@ -287,6 +287,7 @@ class MainWindow(QMainWindow):
         self._auto_save_current_project()
         self._project_list_view.refresh_projects()
         self._header_bar.update_recent_projects(self._project_manager.list_projects())
+        self._header_bar.set_editor_mode(False)
         self._view_stack.setCurrentWidget(self._project_list_view)
 
     @Slot(str)
@@ -314,6 +315,7 @@ class MainWindow(QMainWindow):
         self._update_ui_state()
 
         self._header_bar.update_recent_projects(self._project_manager.list_projects())
+        self._header_bar.set_editor_mode(True)
         self._view_stack.setCurrentWidget(self._editor_container)
 
     def closeEvent(self, event) -> None:
@@ -327,13 +329,13 @@ class MainWindow(QMainWindow):
 
     def _update_ui_state(self) -> None:
         """Master function: cập nhật toàn bộ UI dựa theo project state."""
-        has_video = self._project.has_video
-        has_clips = self._project.has_clips
+        has_video = self._project.has_video if self._project else False
+        has_clips = self._project.has_clips if self._project else False
         can_export = has_video and has_clips
 
         selected_clip = (
             self._project.clip_by_id(self._selected_clip_id)
-            if self._selected_clip_id
+            if (self._project and self._selected_clip_id)
             else None
         )
 
@@ -342,7 +344,7 @@ class MainWindow(QMainWindow):
         self._header_bar.set_export_enabled(can_export)
 
         # Video panel
-        if has_video:
+        if has_video and self._project and self._project.video_info:
             vi = self._project.video_info
             self._video_panel.set_video_info(
                 name=vi.path.name,
@@ -358,7 +360,7 @@ class MainWindow(QMainWindow):
         # Timeline
         self._timeline.set_has_video(has_video)
         self._timeline.set_clips(
-            self._project.sorted_clips() if has_clips else [],
+            self._project.sorted_clips() if (has_clips and self._project) else [],
             selected_clip_id=self._selected_clip_id,
         )
         self._timeline.set_current_time(self._current_time_ms, self._video_duration_ms)
@@ -413,6 +415,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_undo_triggered(self) -> None:
+        if self._project is None:
+            return
         focus_w = QApplication.focusWidget()
         if isinstance(focus_w, (QLineEdit, QTextEdit, QPlainTextEdit)):
             return
@@ -425,6 +429,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_redo_triggered(self) -> None:
+        if self._project is None:
+            return
         focus_w = QApplication.focusWidget()
         if isinstance(focus_w, (QLineEdit, QTextEdit, QPlainTextEdit)):
             return
@@ -531,12 +537,14 @@ class MainWindow(QMainWindow):
 
     def _refresh_overlay(self) -> None:
         """Cập nhật subtitle overlay dựa theo current_time_ms và style hiện tại."""
+        if self._project is None:
+            self._video_panel.set_active_clip(None, SubtitleStyle(), self._current_time_ms)
+            return
+
         active = self._project.active_clip_at(self._current_time_ms)
         vi     = self._project.video_info
         word_timing = None
         if active and self._project.word_timings:
-            # Export tạo SSA events từ sorted_clips(), nên dùng cùng index để
-            # preview highlight đúng các mốc timing custom của export.
             clip_index = self._project.sorted_clips().index(active)
             word_timing = self._project.word_timings.get_line(clip_index)
         self._video_panel.set_active_clip(

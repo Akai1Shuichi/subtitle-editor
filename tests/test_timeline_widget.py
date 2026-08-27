@@ -113,10 +113,12 @@ class TestTimelineWidget(unittest.TestCase):
         # Timeline đầy -> trả về None
     def test_delete_key_shortcut(self):
         from src.ui.main_window import MainWindow
+        from src.models import EditorProject
         from PySide6.QtGui import QKeyEvent
         from PySide6.QtCore import Qt
 
         win = MainWindow()
+        win._project = EditorProject()
         c1 = SubtitleClip(id="c1", text="Sub 1", start_ms=1000, end_ms=3000)
         win._project.clips = [c1]
         win._selected_clip_id = "c1"

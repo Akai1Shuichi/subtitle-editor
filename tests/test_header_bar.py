@@ -48,3 +48,15 @@ def test_header_bar_projects_and_recent_menu(qapp):
     # Trigger action
     actions[0].trigger()
     assert recent_selected == ["p1"]
+
+    # Test editor mode visibility toggle
+    header.show()
+    header.set_editor_mode(False)  # Dashboard mode
+    assert not header._projects_btn.isVisible()
+    assert header._recent_btn.isVisible()
+    assert not header._export_btn.isVisible()
+
+    header.set_editor_mode(True)   # Editor mode
+    assert header._projects_btn.isVisible()
+    assert not header._recent_btn.isVisible()
+    assert header._export_btn.isVisible()

@@ -72,6 +72,7 @@ class TestUndoRedo(unittest.TestCase):
 
     def test_main_window_undo_redo_shortcuts(self):
         win = MainWindow()
+        win._project = EditorProject()
         c1 = SubtitleClip(id="c1", text="Initial Sub", start_ms=1000, end_ms=3000)
 
         # Import clip c1

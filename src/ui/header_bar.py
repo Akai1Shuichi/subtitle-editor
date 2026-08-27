@@ -59,11 +59,16 @@ class HeaderBar(QWidget):
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(10)
 
-        # ── Projects / Dashboard Button ────────────────────────────────────
-        self._projects_btn = QPushButton("📂 Projects")
+        # ── Title ─────────────────────────────────────────────────────────
+        title = QLabel("Subtitle Video Editor version 1.0.0")
+        title.setObjectName("AppTitle")
+        layout.addWidget(title)
+
+        # ── Home / Dashboard Button ────────────────────────────────────────
+        self._projects_btn = QPushButton("🏠 Home")
         self._projects_btn.setObjectName("HeaderSecBtn")
         self._projects_btn.setCursor(Qt.PointingHandCursor)
-        self._projects_btn.setToolTip("Quản lý danh sách dự án")
+        self._projects_btn.setToolTip("Quay về màn hình chính Dashboard")
         self._projects_btn.clicked.connect(self.projects_requested)
         layout.addWidget(self._projects_btn)
 
@@ -76,10 +81,6 @@ class HeaderBar(QWidget):
         self._recent_btn.setMenu(self._recent_menu)
         layout.addWidget(self._recent_btn)
 
-        # ── Title ─────────────────────────────────────────────────────────
-        title = QLabel("Subtitle Video Editor")
-        title.setObjectName("AppTitle")
-        layout.addWidget(title)
         layout.addStretch()
 
         # ── Import Video ───────────────────────────────────────────────────
@@ -134,6 +135,21 @@ class HeaderBar(QWidget):
     # ──────────────────────────────────────────────────────────────────────
     # Public API
     # ──────────────────────────────────────────────────────────────────────
+
+    def set_editor_mode(self, is_editor: bool) -> None:
+        """
+        Thiết lập hiển thị các phần tử trên HeaderBar:
+        - ở ngoài Dashboard (is_editor=False): Hiện 'Gần đây ▼', ẩn 'Home', ẩn các nút Import/Export tool.
+        - ở trong Editor (is_editor=True): Hiện 'Home', ẩn 'Gần đây ▼', hiện các nút Import/Export tool.
+        """
+        self._projects_btn.setVisible(is_editor)
+        self._recent_btn.setVisible(not is_editor)
+
+        self._import_video_btn.setVisible(is_editor)
+        self._import_srt_btn.setVisible(is_editor)
+        self._import_capcut_json_btn.setVisible(is_editor)
+        self._import_json_btn.setVisible(is_editor)
+        self._export_btn.setVisible(is_editor)
 
     def update_recent_projects(self, projects: list[ProjectMetadata]) -> None:
         """Cập nhật danh sách dự án gần đây trong menu dropdown."""

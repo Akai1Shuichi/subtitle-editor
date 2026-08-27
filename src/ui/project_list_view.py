@@ -12,10 +12,7 @@ from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QDialog,
     QFileDialog,
-    QFormLayout,
-    QFrame,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
@@ -25,7 +22,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -36,126 +32,6 @@ from PySide6.QtWidgets import (
 from ..models import ProjectMetadata
 from ..project_manager import ProjectManager
 from .project_card import ProjectCardWidget, _format_duration, _format_timestamp
-
-
-class NewProjectDialog(QDialog):
-    """Dialog nhập thông tin khi tạo dự án mới."""
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.setWindowTitle("Tạo Dự Án Mới")
-        self.setFixedWidth(450)
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #2b2b2b;
-                color: #ffffff;
-            }
-            QLabel {
-                color: #e0e0e0;
-                font-size: 12px;
-            }
-            QLineEdit {
-                background-color: #1e1e1e;
-                border: 1px solid #3c3c3c;
-                border-radius: 4px;
-                padding: 6px;
-                color: #ffffff;
-            }
-            QPushButton {
-                background-color: #383838;
-                color: #ffffff;
-                border: 1px solid #4a4a4a;
-                border-radius: 4px;
-                padding: 6px 12px;
-            }
-            QPushButton:hover {
-                background-color: #007acc;
-            }
-            QPushButton#btnCreate {
-                background-color: #007acc;
-                font-weight: bold;
-            }
-            QPushButton#btnCreate:hover {
-                background-color: #0098ff;
-            }
-        """)
-
-        layout = QVBoxLayout(self)
-        layout.setSpacing(12)
-
-        form = QFormLayout()
-        form.setSpacing(8)
-
-        # Name
-        self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Ví dụ: Subtitle Video Hot Trend")
-        form.addRow("Tên dự án:", self.name_input)
-
-        # Video path
-        v_layout = QHBoxLayout()
-        self.video_input = QLineEdit()
-        self.video_input.setPlaceholderText("Đường dẫn file video (tùy chọn)")
-        btn_browse_v = QPushButton("Chọn...")
-        btn_browse_v.clicked.connect(self._browse_video)
-        v_layout.addWidget(self.video_input)
-        v_layout.addWidget(btn_browse_v)
-        form.addRow("File Video:", v_layout)
-
-        # SRT path
-        s_layout = QHBoxLayout()
-        self.srt_input = QLineEdit()
-        self.srt_input.setPlaceholderText("Đường dẫn file phụ đề SRT (tùy chọn)")
-        btn_browse_s = QPushButton("Chọn...")
-        btn_browse_s.clicked.connect(self._browse_srt)
-        s_layout.addWidget(self.srt_input)
-        s_layout.addWidget(btn_browse_s)
-        form.addRow("File Subtitle:", s_layout)
-
-        layout.addLayout(form)
-
-        # Dialog Buttons
-        btn_box = QHBoxLayout()
-        btn_box.addStretch()
-
-        btn_cancel = QPushButton("Hủy")
-        btn_cancel.clicked.connect(self.reject)
-        btn_box.addWidget(btn_cancel)
-
-        btn_create = QPushButton("Tạo dự án")
-        btn_create.setObjectName("btnCreate")
-        btn_create.clicked.connect(self.accept)
-        btn_box.addWidget(btn_create)
-
-        layout.addLayout(btn_box)
-
-    def _browse_video(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Chọn file Video",
-            "",
-            "Video Files (*.mp4 *.mkv *.avi *.mov *.webm);;All Files (*.*)",
-        )
-        if file_path:
-            self.video_input.setText(file_path)
-            if not self.name_input.text().strip():
-                self.name_input.setText(Path(file_path).stem)
-
-    def _browse_srt(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Chọn file Subtitle SRT",
-            "",
-            "SRT Files (*.srt);;All Files (*.*)",
-        )
-        if file_path:
-            self.srt_input.setText(file_path)
-            if not self.name_input.text().strip():
-                self.name_input.setText(Path(file_path).stem)
-
-    def get_data(self) -> tuple[str, str, str]:
-        name = self.name_input.text().strip() or "Untitled Project"
-        return name, self.video_input.text().strip(), self.srt_input.text().strip()
-
 
 class ProjectListView(QWidget):
     """
@@ -433,19 +309,16 @@ class ProjectListView(QWidget):
             self.table.setCellWidget(row, 4, actions_widget)
 
     def _show_create_project_dialog(self) -> None:
-        dialog = NewProjectDialog(self)
-        if dialog.exec() == QDialog.Accepted:
-            name, video_path, srt_path = dialog.get_data()
-            try:
-                new_project = self.pm.create_project(
-                    name=name,
-                    video_path=video_path,
-                    srt_path=srt_path,
-                )
-                self.refresh_projects()
-                self.open_project_requested.emit(new_project.id)
-            except Exception as e:
-                QMessageBox.critical(self, "Lỗi", f"Không thể tạo dự án: {e}")
+        """Tạo dự án mới trực tiếp và chuyển thẳng tới Editor View không qua dialog."""
+        existing_projects = self.pm.list_projects()
+        count = len(existing_projects) + 1
+        name = f"Dự án mới {count}"
+        try:
+            new_project = self.pm.create_project(name=name)
+            self.refresh_projects()
+            self.open_project_requested.emit(new_project.id)
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Không thể tạo dự án: {e}")
 
     def _on_open_project(self, project_id: str) -> None:
         # Relink check
