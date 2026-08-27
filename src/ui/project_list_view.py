@@ -144,6 +144,13 @@ class ProjectListView(QWidget):
         self.btn_toggle_view.clicked.connect(self._toggle_view_mode)
         toolbar.addWidget(self.btn_toggle_view)
 
+        # Storage Settings button
+        self.btn_settings = QPushButton("⚙ Cài Đặt Lưu")
+        self.btn_settings.setObjectName("btnToggleView")
+        self.btn_settings.setToolTip("Cài đặt vị trí lưu thư mục các dự án")
+        self.btn_settings.clicked.connect(self._show_storage_settings_dialog)
+        toolbar.addWidget(self.btn_settings)
+
         # New Project Button
         btn_new = QPushButton("+ Tạo Dự Án Mới")
         btn_new.setObjectName("btnNewProject")
@@ -292,19 +299,44 @@ class ProjectListView(QWidget):
             btn_open.clicked.connect(lambda _, pid=meta.project_id: self._on_open_project(pid))
             a_layout.addWidget(btn_open)
 
-            btn_rename = QPushButton("Sửa")
-            btn_rename.clicked.connect(lambda _, pid=meta.project_id: self._on_rename_project(pid))
-            a_layout.addWidget(btn_rename)
+            if not getattr(meta, "is_example", False):
+                btn_rename = QPushButton("Sửa")
+                btn_rename.clicked.connect(lambda _, pid=meta.project_id: self._on_rename_project(pid))
+                a_layout.addWidget(btn_rename)
 
-            btn_del = QPushButton("Xóa")
-            btn_del.setStyleSheet("color: #ff6b6b;")
-            btn_del.clicked.connect(lambda _, pid=meta.project_id: self._on_delete_project(pid))
-            a_layout.addWidget(btn_del)
+                btn_del = QPushButton("Xóa")
+                btn_del.setStyleSheet("color: #ff6b6b;")
+                btn_del.clicked.connect(lambda _, pid=meta.project_id: self._on_delete_project(pid))
+                a_layout.addWidget(btn_del)
 
             self.table.setCellWidget(row, 4, actions_widget)
 
+    def _show_storage_settings_dialog(self) -> None:
+        current_dir = str(self.pm.projects_dir)
+        reply = QMessageBox.question(
+            self,
+            "Cài Đặt Vị Trí Lưu Dự Án",
+            f"Thư mục lưu các dự án hiện tại:\n{current_dir}\n\nBạn có muốn chọn thư mục lưu mới không?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if reply == QMessageBox.Yes:
+            new_dir = QFileDialog.getExistingDirectory(
+                self,
+                "Chọn thư mục lưu dự án mới",
+                current_dir,
+            )
+            if new_dir:
+                self.pm.set_projects_dir(new_dir)
+                self.refresh_projects()
+                QMessageBox.information(
+                    self,
+                    "Thành Công",
+                    f"Đã cập nhật vị trí lưu dự án mới tại:\n{new_dir}",
+                )
+
     def _show_create_project_dialog(self) -> None:
-        """Tạo dự án mới trực tiếp và chuyển thẳng tới Editor View không qua dialog."""
+        """Khởi tạo dự án mới trực tiếp không qua dialog."""
         existing_projects = self.pm.list_projects()
         count = len(existing_projects) + 1
         name = f"Dự án mới {count}"
@@ -345,6 +377,10 @@ class ProjectListView(QWidget):
         self.open_project_requested.emit(project_id)
 
     def _on_rename_project(self, project_id: str) -> None:
+        if project_id == "5f60564a-01bf-4280-8924-d96817b8541d":
+            QMessageBox.warning(self, "Không thể sửa tên", "Dự án Ví dụ không thể đổi tên.")
+            return
+
         try:
             proj = self.pm.load_project(project_id)
         except Exception:
@@ -358,6 +394,10 @@ class ProjectListView(QWidget):
             self.refresh_projects()
 
     def _on_delete_project(self, project_id: str) -> None:
+        if project_id == "5f60564a-01bf-4280-8924-d96817b8541d":
+            QMessageBox.warning(self, "Không thể xóa", "Dự án Ví dụ mặc định không thể xóa.")
+            return
+
         reply = QMessageBox.question(
             self,
             "Xác Nhận Xóa",

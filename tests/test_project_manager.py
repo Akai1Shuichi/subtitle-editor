@@ -11,13 +11,14 @@ def pm(tmp_path):
 
 
 def test_create_and_list_projects(pm):
-    assert len(pm.list_projects()) == 0
+    initial_count = len(pm.list_projects())
+    assert initial_count >= 1  # Includes default example project
 
     p1 = pm.create_project("Project Alpha")
     p2 = pm.create_project("Project Beta")
 
     projects = pm.list_projects()
-    assert len(projects) == 2
+    assert len(projects) == initial_count + 2
     names = [p.name for p in projects]
     assert "Project Alpha" in names
     assert "Project Beta" in names
@@ -55,6 +56,7 @@ def test_rename_project(pm):
 
 
 def test_duplicate_project(pm):
+    initial_count = len(pm.list_projects())
     orig = pm.create_project("Original Project")
     orig.clips.append(SubtitleClip(id="c1", text="Clip 1", start_ms=100, end_ms=500))
     pm.save_project(orig)
@@ -66,10 +68,11 @@ def test_duplicate_project(pm):
     assert dup.clips[0].text == "Clip 1"
 
     projects = pm.list_projects()
-    assert len(projects) == 2
+    assert len(projects) == initial_count + 2
 
 
 def test_delete_project(pm):
+    initial_count = len(pm.list_projects())
     p = pm.create_project("To Be Deleted")
     p_id = p.id
     assert pm._get_project_path(p_id).is_file()
@@ -77,7 +80,7 @@ def test_delete_project(pm):
     result = pm.delete_project(p_id)
     assert result is True
     assert not pm._get_project_path(p_id).is_file()
-    assert len(pm.list_projects()) == 0
+    assert len(pm.list_projects()) == initial_count
 
     # Delete non-existent project returns False
     assert pm.delete_project(p_id) is False

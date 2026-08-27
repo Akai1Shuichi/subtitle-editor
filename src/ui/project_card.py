@@ -129,14 +129,23 @@ class ProjectCardWidget(QFrame):
         self._load_thumbnail()
         layout.addWidget(self.thumb_label)
 
-        # 2. Project Name
+        # 2. Project Name & Badge
+        title_layout = QHBoxLayout()
+        title_layout.setContentsMargins(0, 0, 0, 0)
         self.name_label = QLabel(self.metadata.name)
         font = QFont()
         font.setBold(True)
         font.setPointSize(11)
         self.name_label.setFont(font)
         self.name_label.setToolTip(self.metadata.name)
-        layout.addWidget(self.name_label)
+        title_layout.addWidget(self.name_label)
+
+        if getattr(self.metadata, "is_example", False):
+            badge = QLabel("Ví dụ")
+            badge.setStyleSheet("background-color: #007acc; color: #ffffff; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;")
+            title_layout.addWidget(badge)
+        title_layout.addStretch()
+        layout.addLayout(title_layout)
 
         # 3. Details (Duration + Clip count)
         dur_str = _format_duration(self.metadata.duration_ms)
@@ -151,7 +160,7 @@ class ProjectCardWidget(QFrame):
         self.date_label.setStyleSheet("color: #777777; font-size: 10px;")
         layout.addWidget(self.date_label)
 
-        # 4. Action Buttons (Open, Rename, Duplicate, Delete)
+        # 4. Action Buttons (Open, Rename, Delete - Rename and Delete are hidden for example project)
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(4)
 
@@ -160,14 +169,15 @@ class ProjectCardWidget(QFrame):
         btn_open.clicked.connect(lambda: self.open_requested.emit(self.metadata.project_id))
         btn_layout.addWidget(btn_open)
 
-        btn_rename = QPushButton("Sửa tên")
-        btn_rename.clicked.connect(lambda: self.rename_requested.emit(self.metadata.project_id))
-        btn_layout.addWidget(btn_rename)
+        if not getattr(self.metadata, "is_example", False):
+            btn_rename = QPushButton("Sửa tên")
+            btn_rename.clicked.connect(lambda: self.rename_requested.emit(self.metadata.project_id))
+            btn_layout.addWidget(btn_rename)
 
-        btn_del = QPushButton("Xóa")
-        btn_del.setObjectName("btnDelete")
-        btn_del.clicked.connect(lambda: self.delete_requested.emit(self.metadata.project_id))
-        btn_layout.addWidget(btn_del)
+            btn_del = QPushButton("Xóa")
+            btn_del.setObjectName("btnDelete")
+            btn_del.clicked.connect(lambda: self.delete_requested.emit(self.metadata.project_id))
+            btn_layout.addWidget(btn_del)
 
         layout.addLayout(btn_layout)
 

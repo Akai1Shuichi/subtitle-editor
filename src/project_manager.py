@@ -17,6 +17,45 @@ from .models import EditorProject, ProjectMetadata, SubtitleClip, clips_from_srt
 from .video_info import probe_video, VideoInfo
 
 
+DEFAULT_EXAMPLE_ID = "5f60564a-01bf-4280-8924-d96817b8541d"
+CONFIG_FILE = Path.home() / ".subtitle_editor" / "app_config.json"
+
+
+def get_default_projects_dir() -> Path:
+    """Trả về đường dẫn mặc định lưu project trong thư mục Subtitle_Editor_Projects trên Desktop của HĐH."""
+    desktop = Path.home() / "Desktop"
+    if desktop.exists():
+        return desktop / "Subtitle_Editor_Projects"
+    return Path.home() / "Subtitle_Editor_Projects"
+
+
+def load_app_config() -> dict:
+    """Đọc file cấu hình JSON."""
+    if CONFIG_FILE.is_file():
+        try:
+            import json
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                p = data.get("projects_dir", "")
+                if p and ("tmp" in p.lower() or "temp" in p.lower()):
+                    return {}
+                return data
+        except Exception:
+            pass
+    return {}
+
+
+def save_app_config(config: dict) -> None:
+    """Lưu file cấu hình JSON."""
+    try:
+        import json
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[ProjectManager] Lỗi lưu cấu hình: {e}")
+
+
 class ProjectManager:
     """
     Service quản lý dự án (Project Manager).
@@ -25,34 +64,44 @@ class ProjectManager:
     trong thư mục lưu trữ (`data/projects/`).
     """
 
-    def __init__(self, projects_dir: str | Path = "data/projects") -> None:
-        self.projects_dir = Path(projects_dir)
+    def __init__(self, projects_dir: str | Path | None = None) -> None:
+        if projects_dir is None:
+            saved_dir = load_app_config().get("projects_dir")
+            if saved_dir:
+                self.projects_dir = Path(saved_dir)
+            else:
+                self.projects_dir = get_default_projects_dir()
+        else:
+            self.projects_dir = Path(projects_dir)
+
         self.projects_dir.mkdir(parents=True, exist_ok=True)
         self._ensure_default_project()
 
+    def set_projects_dir(self, new_dir: str | Path, save_config: bool = True) -> None:
+        """Thay đổi thư mục lưu trữ dự án và lưu cấu hình."""
+        self.projects_dir = Path(new_dir)
+        self.projects_dir.mkdir(parents=True, exist_ok=True)
+        if save_config and "tmp" not in str(self.projects_dir).lower() and "temp" not in str(self.projects_dir).lower():
+            save_app_config({"projects_dir": str(self.projects_dir)})
+        self._ensure_default_project()
+
+    def _get_example_project_path(self) -> Optional[Path]:
+        """Tìm file dự án mẫu mặc định trong dữ liệu ứng dụng."""
+        default_filename = f"{DEFAULT_EXAMPLE_ID}.subproj"
+        candidates = [
+            Path(__file__).parent.parent / "data" / "projects" / default_filename,
+            Path("data/projects") / default_filename,
+            Path.cwd() / "data" / "projects" / default_filename,
+            Path.cwd() / "subtitle-editor" / "data" / "projects" / default_filename,
+        ]
+        for cand in candidates:
+            if cand.is_file():
+                return cand
+        return None
+
     def _ensure_default_project(self) -> None:
-        """Tự động khôi phục dự án mẫu mặc định (5f60564a-01bf-4280-8924-d96817b8541d.subproj) nếu chưa có."""
-        default_filename = "5f60564a-01bf-4280-8924-d96817b8541d.subproj"
-        target_file = self.projects_dir / default_filename
-
-        # Chỉ áp dụng cho thư mục ứng dụng mặc định 'data/projects'
-        try:
-            if self.projects_dir.resolve() != (Path(__file__).parent.parent / "data" / "projects").resolve():
-                return
-        except Exception:
-            pass
-
-        if not target_file.is_file():
-            root_sample = Path(__file__).parent.parent / "data" / "projects" / default_filename
-            local_sample = Path("data/projects") / default_filename
-            src_sample = root_sample if root_sample.is_file() else local_sample
-
-            if src_sample.is_file() and src_sample != target_file:
-                import shutil
-                try:
-                    shutil.copyfile(src_sample, target_file)
-                except Exception as e:
-                    print(f"[ProjectManager] Lỗi khôi phục dự án mẫu: {e}")
+        """Đảm bảo dự án mẫu mặc định tồn tại trong dữ liệu ứng dụng."""
+        pass
 
     def _get_project_path(self, project_id: str) -> Path:
         """Trả về đường dẫn file dự án (.subproj) tương ứng với project_id."""
@@ -61,17 +110,28 @@ class ProjectManager:
     def list_projects(self) -> list[ProjectMetadata]:
         """
         Quét thư mục lưu trữ và trả về danh sách ProjectMetadata
-        của tất cả các dự án, sắp xếp theo thời gian cập nhật mới nhất.
+        của tất cả các dự án, bao gồm cả dự án ví dụ mặc định.
         """
         metadata_list: list[ProjectMetadata] = []
+        found_ids = set()
 
         for item in self.projects_dir.glob("*.subproj"):
             try:
                 project = EditorProject.load_from_file(item)
                 metadata_list.append(project.to_metadata())
+                found_ids.add(project.id)
             except Exception as e:
-                # Bỏ qua file bị hỏng / không đọc được
                 print(f"[ProjectManager] Lỗi đọc file dự án {item}: {e}")
+
+        # Nạp dự án ví dụ mặc định nếu không có trong thư mục của người dùng
+        if DEFAULT_EXAMPLE_ID not in found_ids:
+            ex_path = self._get_example_project_path()
+            if ex_path and ex_path.is_file():
+                try:
+                    ex_proj = EditorProject.load_from_file(ex_path)
+                    metadata_list.append(ex_proj.to_metadata())
+                except Exception as e:
+                    print(f"[ProjectManager] Lỗi đọc dự án mẫu mặc định: {e}")
 
         # Sắp xếp theo updated_at mới nhất đến cũ nhất
         metadata_list.sort(key=lambda m: m.updated_at, reverse=True)
@@ -132,13 +192,14 @@ class ProjectManager:
     def load_project(self, project_id: str) -> EditorProject:
         """
         Khôi phục đối tượng EditorProject từ file dự án.
-
-        Raises
-        ------
-        FileNotFoundError: Nếu dự án không tồn tại.
+        Nạp từ thư mục ứng dụng nếu là dự án ví dụ mặc định.
         """
         path = self._get_project_path(project_id)
         if not path.is_file():
+            if project_id == DEFAULT_EXAMPLE_ID:
+                ex_path = self._get_example_project_path()
+                if ex_path and ex_path.is_file():
+                    return EditorProject.load_from_file(ex_path)
             raise FileNotFoundError(f"Không tìm thấy dự án với ID: {project_id}")
         return EditorProject.load_from_file(path)
 
@@ -154,8 +215,13 @@ class ProjectManager:
     def delete_project(self, project_id: str) -> bool:
         """
         Xóa file dự án và cache dữ liệu liên quan.
-        Trả về True nếu xóa thành công, False nếu dự án không tồn tại.
+        Không cho phép xóa dự án ví dụ mặc định (5f60564a-01bf-4280-8924-d96817b8541d).
+        Trả về True nếu xóa thành công, False nếu không xóa được hoặc không tồn tại.
         """
+        if project_id == DEFAULT_EXAMPLE_ID:
+            print(f"[ProjectManager] Không thể xóa dự án ví dụ mặc định: {project_id}")
+            return False
+
         path = self._get_project_path(project_id)
         if path.is_file():
             try:
@@ -193,8 +259,13 @@ class ProjectManager:
     def rename_project(self, project_id: str, new_name: str) -> EditorProject:
         """
         Đổi tên một dự án hiện có.
+        Không cho phép đổi tên dự án ví dụ mặc định (5f60564a-01bf-4280-8924-d96817b8541d).
         """
         project = self.load_project(project_id)
+        if project_id == DEFAULT_EXAMPLE_ID:
+            print(f"[ProjectManager] Không thể đổi tên dự án ví dụ mặc định: {project_id}")
+            return project
+
         project.name = new_name.strip() or "Untitled Project"
         self.save_project(project)
         return project

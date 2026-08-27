@@ -252,6 +252,10 @@ class ProjectMetadata:
     duration_ms: int = 0
     clip_count: int = 0
 
+    @property
+    def is_example(self) -> bool:
+        return self.project_id == "5f60564a-01bf-4280-8924-d96817b8541d"
+
     def to_dict(self) -> dict:
         """Chuyển ProjectMetadata thành dict sẵn sàng serialize JSON."""
         return {
@@ -415,6 +419,10 @@ class EditorProject:
     @property
     def has_video(self) -> bool:
         return self.video_info is not None
+
+    @property
+    def is_example(self) -> bool:
+        return self.id == "5f60564a-01bf-4280-8924-d96817b8541d"
 
     @property
     def has_clips(self) -> bool:

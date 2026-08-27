@@ -137,8 +137,7 @@ class MainWindow(QMainWindow):
         self.resize(1280, 780)
 
         # ── Application state ──────────────────────────────────────────
-        p_dir = projects_dir if projects_dir is not None else "data/projects"
-        self._project_manager: ProjectManager = ProjectManager(projects_dir=p_dir)
+        self._project_manager: ProjectManager = ProjectManager(projects_dir=projects_dir)
         self._project: EditorProject | None    = None
         self._selected_clip_id: str | None       = None
         self._current_time_ms: int              = 0   # playhead — wire từ QMediaPlayer (bước 3)
