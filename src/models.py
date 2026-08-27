@@ -16,6 +16,7 @@ from __future__ import annotations
 import copy
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -174,6 +175,54 @@ class UndoManager:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# ProjectMetadata
+# ──────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class ProjectMetadata:
+    """
+    Thông tin tổng quan (metadata) của dự án.
+    Dùng cho màn hình danh sách dự án (Project List / Dashboard).
+    """
+
+    project_id: str
+    name: str
+    created_at: str    # ISO format string (ví dụ: 2026-08-27T15:00:00)
+    updated_at: str    # ISO format string
+    video_path: str = ""
+    thumbnail_path: str = ""
+    duration_ms: int = 0
+    clip_count: int = 0
+
+    def to_dict(self) -> dict:
+        """Chuyển ProjectMetadata thành dict sẵn sàng serialize JSON."""
+        return {
+            "project_id": self.project_id,
+            "name": self.name,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "video_path": self.video_path,
+            "thumbnail_path": self.thumbnail_path,
+            "duration_ms": self.duration_ms,
+            "clip_count": self.clip_count,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> ProjectMetadata:
+        """Tạo ProjectMetadata từ dict JSON."""
+        return cls(
+            project_id=data.get("project_id", str(uuid.uuid4())),
+            name=data.get("name", "Untitled Project"),
+            created_at=data.get("created_at", ""),
+            updated_at=data.get("updated_at", ""),
+            video_path=data.get("video_path", ""),
+            thumbnail_path=data.get("thumbnail_path", ""),
+            duration_ms=int(data.get("duration_ms", 0)),
+            clip_count=int(data.get("clip_count", 0)),
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # EditorProject — single source of truth
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -182,12 +231,20 @@ class EditorProject:
     """
     State trung tâm của editor.
 
+    id          : định danh duy nhất của dự án (uuid string)
+    name        : tên dự án
     clips       : danh sách SubtitleClip — single source of truth cho
                   timeline, inspector, preview và export.
     style       : style toàn cục của project.
     video_info  : thông tin video (width, height, duration, fps, path).
     word_timings: timing từng từ (tùy chọn, dùng cho highlight mode export).
     """
+
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = "Untitled Project"
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    thumbnail_path: str = ""
 
     video_info: Optional[VideoInfo] = None
     clips: list[SubtitleClip] = field(default_factory=list)
@@ -196,6 +253,24 @@ class EditorProject:
     undo_manager: UndoManager = field(default_factory=UndoManager)
 
     # ── Helpers ───────────────────────────────────────────────────────────
+
+    def to_metadata(self) -> ProjectMetadata:
+        """Tạo ProjectMetadata từ EditorProject hiện tại."""
+        now_iso = datetime.now().isoformat()
+        created = self.created_at or now_iso
+        updated = self.updated_at or now_iso
+        duration = int(self.video_info.duration * 1000) if self.video_info else 0
+        v_path = str(self.video_info.path) if self.video_info and self.video_info.path else ""
+        return ProjectMetadata(
+            project_id=self.id,
+            name=self.name,
+            created_at=created,
+            updated_at=updated,
+            video_path=v_path,
+            thumbnail_path=self.thumbnail_path,
+            duration_ms=duration,
+            clip_count=len(self.clips),
+        )
 
     def save_checkpoint(self, selected_clip_id: Optional[str] = None) -> None:
         """Lưu snapshot hiện tại vào undo stack."""
