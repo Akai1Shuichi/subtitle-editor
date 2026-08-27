@@ -12,8 +12,10 @@ from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QDialog,
     QFileDialog,
     QGridLayout,
+    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
@@ -32,6 +34,146 @@ from PySide6.QtWidgets import (
 from ..models import ProjectMetadata
 from ..project_manager import ProjectManager
 from .project_card import ProjectCardWidget, _format_duration, _format_timestamp
+
+
+class PathSettingsDialog(QDialog):
+    """Hộp thoại cài đặt đường dẫn lưu dự án và xuất video (giao diện gọn gàng, hiện đại)."""
+
+    def __init__(self, project_manager: ProjectManager, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self.pm = project_manager
+        self.setWindowTitle("⚙ Cài Đặt Đường Dẫn")
+        self.setMinimumWidth(560)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self._setup_style()
+        self._init_ui()
+
+    def _setup_style(self) -> None:
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1e1e1e;
+                color: #ffffff;
+            }
+            QLabel.sectionTitle {
+                font-size: 13px;
+                font-weight: bold;
+                color: #dddddd;
+            }
+            QLabel.pathBox {
+                color: #4a9eff;
+                font-size: 11px;
+                background-color: #2b2b2b;
+                border: 1px solid #3c3c3c;
+                border-radius: 6px;
+                padding: 7px 10px;
+            }
+            QPushButton.btnPick {
+                background-color: #2b2b2b;
+                color: #ffffff;
+                border: 1px solid #3c3c3c;
+                border-radius: 6px;
+                padding: 6px 14px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            QPushButton.btnPick:hover {
+                background-color: #383838;
+                border-color: #007acc;
+                color: #ffffff;
+            }
+            QPushButton#btnClose {
+                background-color: #007acc;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 7px 24px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            QPushButton#btnClose:hover {
+                background-color: #0098ff;
+            }
+        """)
+
+    def _init_ui(self) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
+
+        # 1. Projects Directory Section
+        v_proj = QVBoxLayout()
+        v_proj.setSpacing(8)
+
+        lbl_proj_title = QLabel("📁 Thư Mục Lưu Dự Án (.subproj)")
+        lbl_proj_title.setProperty("class", "sectionTitle")
+        v_proj.addWidget(lbl_proj_title)
+
+        row_proj = QHBoxLayout()
+        row_proj.setSpacing(8)
+
+        self.lbl_proj = QLabel(str(self.pm.projects_dir))
+        self.lbl_proj.setProperty("class", "pathBox")
+        self.lbl_proj.setWordWrap(True)
+        row_proj.addWidget(self.lbl_proj, stretch=1)
+
+        btn_change_proj = QPushButton("Chọn thư mục")
+        btn_change_proj.setProperty("class", "btnPick")
+        btn_change_proj.setCursor(Qt.PointingHandCursor)
+        btn_change_proj.clicked.connect(self._on_change_proj_dir)
+        row_proj.addWidget(btn_change_proj)
+
+        v_proj.addLayout(row_proj)
+        layout.addLayout(v_proj)
+
+        # 2. Export Video Directory Section
+        v_exp = QVBoxLayout()
+        v_exp.setSpacing(8)
+
+        lbl_exp_title = QLabel("🎬 Thư Mục Xuất Video (.mp4)")
+        lbl_exp_title.setProperty("class", "sectionTitle")
+        v_exp.addWidget(lbl_exp_title)
+
+        row_exp = QHBoxLayout()
+        row_exp.setSpacing(8)
+
+        self.lbl_exp = QLabel(str(self.pm.export_dir))
+        self.lbl_exp.setProperty("class", "pathBox")
+        self.lbl_exp.setWordWrap(True)
+        row_exp.addWidget(self.lbl_exp, stretch=1)
+
+        btn_change_exp = QPushButton("Chọn thư mục")
+        btn_change_exp.setProperty("class", "btnPick")
+        btn_change_exp.setCursor(Qt.PointingHandCursor)
+        btn_change_exp.clicked.connect(self._on_change_exp_dir)
+        row_exp.addWidget(btn_change_exp)
+
+        v_exp.addLayout(row_exp)
+        layout.addLayout(v_exp)
+
+        # Bottom Close button
+        layout.addSpacing(10)
+        btn_close = QPushButton("Đóng")
+        btn_close.setObjectName("btnClose")
+        btn_close.setCursor(Qt.PointingHandCursor)
+        btn_close.clicked.connect(self.accept)
+        layout.addWidget(btn_close, alignment=Qt.AlignRight)
+
+    def _on_change_proj_dir(self) -> None:
+        new_dir = QFileDialog.getExistingDirectory(
+            self, "Chọn thư mục lưu dự án mới", str(self.pm.projects_dir)
+        )
+        if new_dir:
+            self.pm.set_projects_dir(new_dir)
+            self.lbl_proj.setText(str(self.pm.projects_dir))
+
+    def _on_change_exp_dir(self) -> None:
+        new_dir = QFileDialog.getExistingDirectory(
+            self, "Chọn thư mục xuất video mới", str(self.pm.export_dir)
+        )
+        if new_dir:
+            self.pm.set_export_dir(new_dir)
+            self.lbl_exp.setText(str(self.pm.export_dir))
+
 
 class ProjectListView(QWidget):
     """
@@ -144,10 +286,10 @@ class ProjectListView(QWidget):
         self.btn_toggle_view.clicked.connect(self._toggle_view_mode)
         toolbar.addWidget(self.btn_toggle_view)
 
-        # Storage Settings button
-        self.btn_settings = QPushButton("⚙ Cài Đặt Lưu")
+        # Path Settings button (Combine projects_dir and export_dir)
+        self.btn_settings = QPushButton("⚙ Cài Đặt Đường Dẫn")
         self.btn_settings.setObjectName("btnToggleView")
-        self.btn_settings.setToolTip("Cài đặt vị trí lưu thư mục các dự án")
+        self.btn_settings.setToolTip("Cài đặt đường dẫn lưu dự án và xuất video")
         self.btn_settings.clicked.connect(self._show_storage_settings_dialog)
         toolbar.addWidget(self.btn_settings)
 
@@ -312,28 +454,9 @@ class ProjectListView(QWidget):
             self.table.setCellWidget(row, 4, actions_widget)
 
     def _show_storage_settings_dialog(self) -> None:
-        current_dir = str(self.pm.projects_dir)
-        reply = QMessageBox.question(
-            self,
-            "Cài Đặt Vị Trí Lưu Dự Án",
-            f"Thư mục lưu các dự án hiện tại:\n{current_dir}\n\nBạn có muốn chọn thư mục lưu mới không?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
-        if reply == QMessageBox.Yes:
-            new_dir = QFileDialog.getExistingDirectory(
-                self,
-                "Chọn thư mục lưu dự án mới",
-                current_dir,
-            )
-            if new_dir:
-                self.pm.set_projects_dir(new_dir)
-                self.refresh_projects()
-                QMessageBox.information(
-                    self,
-                    "Thành Công",
-                    f"Đã cập nhật vị trí lưu dự án mới tại:\n{new_dir}",
-                )
+        dlg = PathSettingsDialog(self.pm, parent=self)
+        dlg.exec()
+        self.refresh_projects()
 
     def _show_create_project_dialog(self) -> None:
         """Khởi tạo dự án mới trực tiếp không qua dialog."""

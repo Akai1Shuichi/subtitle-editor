@@ -22,11 +22,13 @@ CONFIG_FILE = Path.home() / ".subtitle_editor" / "app_config.json"
 
 
 def get_default_projects_dir() -> Path:
-    """Trả về đường dẫn mặc định lưu project trong thư mục Subtitle_Editor_Projects trên Desktop của HĐH."""
-    desktop = Path.home() / "Desktop"
-    if desktop.exists():
-        return desktop / "Subtitle_Editor_Projects"
+    """Trả về đường dẫn mặc định lưu project trong thư mục Subtitle_Editor_Projects tại Home của HĐH."""
     return Path.home() / "Subtitle_Editor_Projects"
+
+
+def get_default_export_dir() -> Path:
+    """Trả về đường dẫn mặc định xuất video trong thư mục Subtitle_Editor_Video_Export tại Home của HĐH."""
+    return Path.home() / "Subtitle_Editor_Video_Export"
 
 
 def load_app_config() -> dict:
@@ -37,9 +39,13 @@ def load_app_config() -> dict:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 p = data.get("projects_dir", "")
-                if p and ("tmp" in p.lower() or "temp" in p.lower()):
-                    return {}
-                return data
+                e = data.get("export_dir", "")
+                res = {}
+                if p and not ("tmp" in p.lower() or "temp" in p.lower()):
+                    res["projects_dir"] = p
+                if e and not ("tmp" in e.lower() or "temp" in e.lower()):
+                    res["export_dir"] = e
+                return res
         except Exception:
             pass
     return {}
@@ -50,8 +56,11 @@ def save_app_config(config: dict) -> None:
     try:
         import json
         CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        # Merge with existing config
+        current = load_app_config()
+        current.update(config)
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump(config, f, ensure_ascii=False, indent=2)
+            json.dump(current, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"[ProjectManager] Lỗi lưu cấu hình: {e}")
 
@@ -64,17 +73,33 @@ class ProjectManager:
     trong thư mục lưu trữ (`data/projects/`).
     """
 
-    def __init__(self, projects_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        projects_dir: str | Path | None = None,
+        export_dir: str | Path | None = None,
+    ) -> None:
+        cfg = load_app_config()
+
         if projects_dir is None:
-            saved_dir = load_app_config().get("projects_dir")
-            if saved_dir:
-                self.projects_dir = Path(saved_dir)
+            saved_pdir = cfg.get("projects_dir")
+            if saved_pdir:
+                self.projects_dir = Path(saved_pdir)
             else:
                 self.projects_dir = get_default_projects_dir()
         else:
             self.projects_dir = Path(projects_dir)
 
+        if export_dir is None:
+            saved_edir = cfg.get("export_dir")
+            if saved_edir:
+                self.export_dir = Path(saved_edir)
+            else:
+                self.export_dir = get_default_export_dir()
+        else:
+            self.export_dir = Path(export_dir)
+
         self.projects_dir.mkdir(parents=True, exist_ok=True)
+        self.export_dir.mkdir(parents=True, exist_ok=True)
         self._ensure_default_project()
 
     def set_projects_dir(self, new_dir: str | Path, save_config: bool = True) -> None:
@@ -84,6 +109,13 @@ class ProjectManager:
         if save_config and "tmp" not in str(self.projects_dir).lower() and "temp" not in str(self.projects_dir).lower():
             save_app_config({"projects_dir": str(self.projects_dir)})
         self._ensure_default_project()
+
+    def set_export_dir(self, new_dir: str | Path, save_config: bool = True) -> None:
+        """Thay đổi thư mục xuất video và lưu cấu hình."""
+        self.export_dir = Path(new_dir)
+        self.export_dir.mkdir(parents=True, exist_ok=True)
+        if save_config and "tmp" not in str(self.export_dir).lower() and "temp" not in str(self.export_dir).lower():
+            save_app_config({"export_dir": str(self.export_dir)})
 
     def _get_example_project_path(self) -> Optional[Path]:
         """Tìm file dự án mẫu mặc định trong dữ liệu ứng dụng."""

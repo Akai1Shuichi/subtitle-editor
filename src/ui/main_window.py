@@ -310,6 +310,7 @@ class MainWindow(QMainWindow):
             if Path(vpath).is_file():
                 self._video_panel.load_video(vpath)
 
+        self._export_bar.set_output_path(self._get_export_output_filepath())
         self._timeline.set_clips(self._project.clips)
         self._inspector.apply_style(self._project.style)
         self._update_ui_state()
@@ -372,6 +373,15 @@ class MainWindow(QMainWindow):
     # Slots – Video
     # ──────────────────────────────────────────────────────────────────────
 
+    def _get_export_output_filepath(self) -> str:
+        export_dir = self._project_manager.export_dir
+        export_dir.mkdir(parents=True, exist_ok=True)
+        if self._project and self._project.video_info and self._project.video_info.path:
+            stem = Path(self._project.video_info.path).stem
+        else:
+            stem = "output"
+        return str(export_dir / f"{stem}_subtitled.mp4")
+
     @Slot(str)
     def _on_video_selected(self, path: str) -> None:
         try:
@@ -393,9 +403,8 @@ class MainWindow(QMainWindow):
         self._video_duration_ms = int(info.duration * 1000)
         self._video_panel.load_video(path)
 
-        # Gợi ý output path
-        default_out = str(Path("output") / (info.path.stem + "_subtitled.mp4"))
-        self._export_bar.set_output_path(default_out)
+        # Gợi ý output path dựa trên thư mục xuất video được cấu hình
+        self._export_bar.set_output_path(self._get_export_output_filepath())
 
         self._update_ui_state()
 
@@ -773,7 +782,7 @@ class MainWindow(QMainWindow):
             return
         if not self._build_ass_to_temp():
             return
-        self._start_worker(output_path or "output/output.mp4")
+        self._start_worker(output_path or self._get_export_output_filepath())
 
     @Slot(str)
     def _on_export_finished(self, output_path: str) -> None:

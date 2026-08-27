@@ -61,11 +61,7 @@ def test_ensure_default_project_and_prevent_delete():
 def test_get_default_projects_dir():
     dir_path = get_default_projects_dir()
     assert isinstance(dir_path, Path)
-    desktop = Path.home() / "Desktop"
-    if desktop.exists():
-        assert dir_path.resolve() == (desktop / "Subtitle_Editor_Projects").resolve()
-    else:
-        assert dir_path.resolve() == (Path.home() / "Subtitle_Editor_Projects").resolve()
+    assert dir_path.resolve() == (Path.home() / "Subtitle_Editor_Projects").resolve()
 
 
 def test_set_projects_dir():

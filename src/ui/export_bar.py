@@ -42,23 +42,10 @@ class ExportBar(QWidget):
         layout.setContentsMargins(20, 6, 20, 6)
         layout.setSpacing(10)
 
-        # Output Path Label & Edit
-        lbl = QLabel("📁 File Output:")
-        lbl.setStyleSheet("color: #aaaaaa; font-weight: bold; font-size: 11px;")
-        layout.addWidget(lbl)
+        self._current_output_path = ""
 
-        self._path_edit = QLineEdit()
-        self._path_edit.setPlaceholderText("Thư mục / tên file output…")
-        self._path_edit.setObjectName("PathEdit")
-        layout.addWidget(self._path_edit, stretch=1)
-
-        browse_btn = QPushButton("…")
-        browse_btn.setObjectName("BrowseBtn")
-        browse_btn.setFixedWidth(36)
-        browse_btn.setCursor(Qt.PointingHandCursor)
-        browse_btn.setToolTip("Chọn thư mục output")
-        browse_btn.clicked.connect(self._pick_output)
-        layout.addWidget(browse_btn)
+        # Layout stretch before progress indicators
+        layout.addStretch(1)
 
         # Progress bar + timer + cancel
         self._progress = QProgressBar()
@@ -97,14 +84,14 @@ class ExportBar(QWidget):
     # ──────────────────────────────────────────────────────────────────────
 
     def output_path(self) -> str:
-        return self._path_edit.text().strip()
+        return self._current_output_path
 
     def get_output_path(self) -> str:
         """Alias cho output_path() — dùng từ MainWindow header export."""
-        return self._path_edit.text().strip()
+        return self._current_output_path
 
     def set_output_path(self, path: str) -> None:
-        self._path_edit.setText(path)
+        self._current_output_path = path
 
     @Slot(float)
     def update_progress(self, percent: float) -> None:
