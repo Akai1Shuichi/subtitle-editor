@@ -30,7 +30,7 @@ def main() -> None:
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
     app = QApplication(sys.argv)
-    app.setApplicationName("Subtitle Video Editor")
+    app.setApplicationName("Subtitle Video Editor v1.0 - trtoan")
     app.setOrganizationName("LocalTool")
 
     icon_path = Path(__file__).parent.parent / "data" / "assets" / "icon.ico"

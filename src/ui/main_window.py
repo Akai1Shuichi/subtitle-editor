@@ -133,7 +133,7 @@ class ExportWorker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self, projects_dir: str | Path | None = None):
         super().__init__()
-        self.setWindowTitle("Subtitle Video Editor")
+        self.setWindowTitle("Subtitle Video Editor v1.0 - trtoan")
         self.setMinimumSize(1100, 700)
         self.resize(1280, 780)
 
@@ -257,7 +257,13 @@ class MainWindow(QMainWindow):
         self._timeline.seek_requested.connect(self._video_panel.seek)
         editor_layout.addWidget(self._timeline)
 
-        self._view_stack.addWidget(self._editor_container)
+        # Footer Bar (Đáy màn hình Project Editor)
+        from .footer_bar import AppFooter
+        editor_footer = QWidget()
+        editor_footer_layout = QVBoxLayout(editor_footer)
+        editor_footer_layout.setContentsMargins(12, 4, 12, 10)
+        editor_footer_layout.addWidget(AppFooter())
+        editor_layout.addWidget(editor_footer)
 
         self._view_stack.addWidget(self._editor_container)
         root.addWidget(self._view_stack, stretch=1)

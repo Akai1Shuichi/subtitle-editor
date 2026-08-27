@@ -61,11 +61,6 @@ class HeaderBar(QWidget):
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(10)
 
-        # ── Title ─────────────────────────────────────────────────────────
-        title = QLabel("Subtitle Video Editor version 1.0.0")
-        title.setObjectName("AppTitle")
-        layout.addWidget(title)
-
         # ── Home / Dashboard Button ────────────────────────────────────────
         self._projects_btn = QPushButton("🏠 Home")
         self._projects_btn.setObjectName("HeaderSecBtn")

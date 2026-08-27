@@ -10,6 +10,9 @@ block_cipher = None
 # Thư mục gốc của project subtitle-editor
 SPEC_DIR = Path(__file__).parent if '__file__' in globals() else Path.cwd()
 
+print('SPEC_DIR : ', SPEC_DIR)
+
+
 datas = [
     (str(SPEC_DIR / 'data'), 'data'),
 ]
@@ -53,7 +56,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='subtitle_editor',
+    name='subtitle_editor v1.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
