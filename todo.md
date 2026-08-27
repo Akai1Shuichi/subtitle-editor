@@ -30,14 +30,14 @@
 - [x] **Cập nhật `HeaderBar` & Menu (`src/ui/header_bar.py`)**:
   - Thêm nút "Projects" / "Danh sách dự án" trên Header Bar.
   - Thêm danh sách "Recent Projects" (Dự án gần đây) để mở nhanh.
-- [ ] **Quản lý chuyển đổi View trong `MainWindow` (`src/ui/main_window.py`)**:
+- [x] **Quản lý chuyển đổi View trong `MainWindow` (`src/ui/main_window.py`)**:
   - Chuyển đổi linh hoạt giữa giao diện Dashboard Project List và Editor View.
   - Tự động lưu dự án hiện tại (Auto-save) khi chuyển sang dự án khác hoặc đóng app.
   - Nạp state dự án mới vào `EditorProject`, đồng bộ làm mới UI trên Video Panel, Timeline Widget, và Inspector.
 
 ## Phase 4: Unit Testing & Verification (Kiểm Thử)
-- [ ] **Viết Unit Tests (`tests/test_project_manager.py`)**:
+- [x] **Viết Unit Tests (`tests/test_project_manager.py`)**:
   - Kiểm thử CRUD dự án: tạo mới, lưu, đọc, đổi tên, xóa, nhân bản.
   - Kiểm thử xử lý lỗi dữ liệu (file hỏng, thiếu asset video).
-- [ ] **Kiểm thử thủ công (Manual Verification)**:
+- [x] **Kiểm thử thủ công (Manual Verification)**:
   - Thao tác thực tế luồng tạo dự án mới -> chỉnh sửa -> tự động lưu -> chuyển dự án khác -> nạp lại state chính xác.

@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QSizePolicy,
     QSplitter,
+    QStackedWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -44,6 +45,8 @@ from .video_panel         import VideoPanel
 from .inspector           import Inspector
 from .timeline_widget     import TimelineWidget
 from .export_bar          import ExportBar
+from .project_list_view   import ProjectListView
+from ..project_manager    import ProjectManager
 
 from ..models import (
     EditorProject, SubtitleClip, SubtitleStyle,
@@ -127,17 +130,19 @@ class ExportWorker(QObject):
 # ──────────────────────────────────────────────────────────────────────────
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, projects_dir: str | Path | None = None):
         super().__init__()
         self.setWindowTitle("Subtitle Video Editor")
         self.setMinimumSize(1100, 700)
         self.resize(1280, 780)
 
         # ── Application state ──────────────────────────────────────────
-        self._project: EditorProject     = EditorProject()
-        self._selected_clip_id: str | None = None
-        self._current_time_ms: int        = 0   # playhead — wire từ QMediaPlayer (bước 3)
-        self._video_duration_ms: int      = 0   # duration từ QMediaPlayer
+        p_dir = projects_dir if projects_dir is not None else "data/projects"
+        self._project_manager: ProjectManager = ProjectManager(projects_dir=p_dir)
+        self._project: EditorProject           = EditorProject()
+        self._selected_clip_id: str | None       = None
+        self._current_time_ms: int              = 0   # playhead — wire từ QMediaPlayer (bước 3)
+        self._video_duration_ms: int            = 0   # duration từ QMediaPlayer
 
         # ── Export state ───────────────────────────────────────────────
         self._cancel_event: threading.Event | None = None
@@ -154,6 +159,12 @@ class MainWindow(QMainWindow):
         self._apply_stylesheet()
         self._update_ui_state()
 
+        # Nạp danh sách recent projects lên menu
+        self._header_bar.update_recent_projects(self._project_manager.list_projects())
+
+        # Mặc định khởi tạo ở giao diện Dashboard Project List
+        self._show_project_list_view()
+
     # ──────────────────────────────────────────────────────────────────────
     # Build UI
     # ──────────────────────────────────────────────────────────────────────
@@ -168,6 +179,8 @@ class MainWindow(QMainWindow):
 
         # ── Header ─────────────────────────────────────────────────────
         self._header_bar = HeaderBar()
+        self._header_bar.projects_requested.connect(self._show_project_list_view)
+        self._header_bar.open_recent_project_requested.connect(self.open_project)
         self._header_bar.import_video_requested.connect(self._on_video_selected)
         self._header_bar.import_srt_requested.connect(self._on_srt_loaded)
         self._header_bar.import_capcut_json_requested.connect(self._on_capcut_json_loaded)
@@ -178,7 +191,21 @@ class MainWindow(QMainWindow):
         # Separator
         root.addWidget(self._make_hsep())
 
-        # ── Main content: VideoPanel | Inspector (splitter cho phép kéo) ──
+        # ── Main View Stack (Dashboard Project List vs Editor) ─────────
+        self._view_stack = QStackedWidget()
+
+        # Page 0: Project List View / Dashboard
+        self._project_list_view = ProjectListView(project_manager=self._project_manager)
+        self._project_list_view.open_project_requested.connect(self.open_project)
+        self._view_stack.addWidget(self._project_list_view)
+
+        # Page 1: Main Editor View Container
+        self._editor_container = QWidget()
+        editor_layout = QVBoxLayout(self._editor_container)
+        editor_layout.setContentsMargins(0, 0, 0, 0)
+        editor_layout.setSpacing(0)
+
+        # Splitter: VideoPanel | Inspector
         self._h_splitter = QSplitter(Qt.Horizontal)
         self._h_splitter.setHandleWidth(4)
         self._h_splitter.setStyleSheet(
@@ -188,7 +215,6 @@ class MainWindow(QMainWindow):
 
         self._video_panel = VideoPanel()
         self._video_panel.video_selected.connect(self._on_video_selected)
-        # ── Bước 3: wire playback signals ─────────────────────────────
         self._video_panel.time_changed.connect(self._on_time_changed)
         self._video_panel.duration_changed.connect(self._on_duration_changed)
         self._video_panel.playback_state_changed.connect(self._on_playback_state_changed)
@@ -201,36 +227,33 @@ class MainWindow(QMainWindow):
         self._inspector.clip_delete_requested.connect(self._on_clip_delete_requested)
         self._h_splitter.addWidget(self._inspector)
 
-        # Tỉ lệ mặc định: video chiếm phần lớn, inspector ~340px
         self._h_splitter.setStretchFactor(0, 1)
         self._h_splitter.setStretchFactor(1, 0)
         self._h_splitter.setSizes([940, 400])
 
-        root.addWidget(self._h_splitter, stretch=1)
+        editor_layout.addWidget(self._h_splitter, stretch=1)
+        editor_layout.addWidget(self._make_hsep())
 
-        # Separator
-        root.addWidget(self._make_hsep())
-
-        # ── Interactive Timeline ────────────────────────────────────────
+        # Interactive Timeline
         self._timeline = TimelineWidget()
         self._timeline.clip_selected.connect(self._on_clip_selected)
         self._timeline.clip_deselected.connect(self._on_clip_deselected)
         self._timeline.clip_timing_changed.connect(self._on_clip_timing_changed)
         self._timeline.drag_started.connect(self._save_checkpoint)
         self._timeline.add_subtitle_requested.connect(self._on_add_subtitle_requested)
-        # ── Playback & Seek controls ───────────────────────────────────
         self._timeline.play_pause_requested.connect(self._video_panel.toggle_play_pause)
         self._timeline.seek_requested.connect(self._video_panel.seek)
-        root.addWidget(self._timeline)
+        editor_layout.addWidget(self._timeline)
 
+        editor_layout.addWidget(self._make_hsep())
 
-        # Separator
-        root.addWidget(self._make_hsep())
-
-        # ── Export Bar ──────────────────────────────────────────────────
+        # Export Bar
         self._export_bar = ExportBar()
         self._export_bar.cancel_requested.connect(self._on_cancel_requested)
-        root.addWidget(self._export_bar)
+        editor_layout.addWidget(self._export_bar)
+
+        self._view_stack.addWidget(self._editor_container)
+        root.addWidget(self._view_stack, stretch=1)
 
     @staticmethod
     def _make_hsep() -> QWidget:
@@ -245,6 +268,58 @@ class MainWindow(QMainWindow):
         w.setFixedWidth(1)
         w.setObjectName("VSeparator")
         return w
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Project & View Navigation
+    # ──────────────────────────────────────────────────────────────────────
+
+    def _auto_save_current_project(self) -> None:
+        """Tự động lưu dự án hiện tại nếu đã có dữ liệu hoặc ID."""
+        if hasattr(self, "_project") and self._project and self._project.id:
+            try:
+                self._project_manager.save_project(self._project)
+            except Exception as e:
+                print(f"[MainWindow] Lỗi auto-save dự án {self._project.id}: {e}")
+
+    @Slot()
+    def _show_project_list_view(self) -> None:
+        """Chuyển sang giao diện Dashboard quản lý danh sách dự án."""
+        self._auto_save_current_project()
+        self._project_list_view.refresh_projects()
+        self._header_bar.update_recent_projects(self._project_manager.list_projects())
+        self._view_stack.setCurrentWidget(self._project_list_view)
+
+    @Slot(str)
+    def open_project(self, project_id: str) -> None:
+        """Nạp dự án theo project_id và chuyển sang Editor View."""
+        self._auto_save_current_project()
+
+        try:
+            loaded_project = self._project_manager.load_project(project_id)
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Không thể nạp dự án: {e}")
+            return
+
+        self._project = loaded_project
+        self._selected_clip_id = None
+
+        # Synchronize UI with loaded project
+        if self._project.has_video and self._project.video_info and self._project.video_info.path:
+            vpath = str(self._project.video_info.path)
+            if Path(vpath).is_file():
+                self._video_panel.load_video(vpath)
+
+        self._timeline.set_clips(self._project.clips)
+        self._inspector.apply_style(self._project.style)
+        self._update_ui_state()
+
+        self._header_bar.update_recent_projects(self._project_manager.list_projects())
+        self._view_stack.setCurrentWidget(self._editor_container)
+
+    def closeEvent(self, event) -> None:
+        """Tự động lưu dự án trước khi thoát ứng dụng."""
+        self._auto_save_current_project()
+        super().closeEvent(event)
 
     # ──────────────────────────────────────────────────────────────────────
     # State management
@@ -334,6 +409,7 @@ class MainWindow(QMainWindow):
 
     def _save_checkpoint(self) -> None:
         self._project.save_checkpoint(self._selected_clip_id)
+        self._auto_save_current_project()
 
     @Slot()
     def _on_undo_triggered(self) -> None:
