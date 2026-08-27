@@ -240,6 +240,57 @@ class SubtitleRenderer:
     def _word_events(
         self, segment: SubtitleSegment, active_index: int, start: int, end: int
     ) -> list[pysubs2.SSAEvent]:
+        if self.mode == "punch":
+            active_dur = end - start
+            peak = min(80, max(1, active_dur // 2))
+            dur_anim = min(160, max(2, active_dur))
+            anim_end = min(end, start + dur_anim)
+
+            events: list[pysubs2.SSAEvent] = []
+
+            if anim_end > start:
+                # 1. Base line during animation (Layer 0): Active word hidden to prevent double-text underneath
+                anim_base_text = self._render_words_punch_base_anim(segment.words, active_index)
+                events.append(pysubs2.SSAEvent(
+                    start=start,
+                    end=anim_end,
+                    style="Default",
+                    text=anim_base_text,
+                    layer=0,
+                ))
+
+                # 2. Scaling overlay during animation (Layer 1): Active word pops in scale
+                overlay_text = self._render_words_punch_overlay(segment.words, active_index, peak, dur_anim)
+                events.append(pysubs2.SSAEvent(
+                    start=start,
+                    end=anim_end,
+                    style="Default",
+                    text=overlay_text,
+                    layer=1,
+                ))
+
+                # 3. Base line after animation finishes until word end (Layer 0): Active word static in highlight color
+                if end > anim_end:
+                    static_base_text = self._render_words_static(segment.words, active_index)
+                    events.append(pysubs2.SSAEvent(
+                        start=anim_end,
+                        end=end,
+                        style="Default",
+                        text=static_base_text,
+                        layer=0,
+                    ))
+            else:
+                static_base_text = self._render_words_static(segment.words, active_index)
+                events.append(pysubs2.SSAEvent(
+                    start=start,
+                    end=end,
+                    style="Default",
+                    text=static_base_text,
+                    layer=0,
+                ))
+
+            return events
+
         return [pysubs2.SSAEvent(
             start=start,
             end=end,
@@ -252,6 +303,44 @@ class SubtitleRenderer:
         r, g, b = self.settings.highlight_color
         return "&H%02X%02X%02X&" % (b, g, r)
 
+    def _render_words_punch_base_anim(
+        self, words: tuple[SubtitleWord, ...], active_index: int
+    ) -> str:
+        rendered: list[str] = []
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(r"{\1a&HFF&\2a&HFF&\3a&HFF&\4a&HFF&}%s{\r}" % word.text)
+            else:
+                rendered.append(word.text)
+        return " ".join(rendered)
+
+    def _render_words_static(
+        self, words: tuple[SubtitleWord, ...], active_index: int
+    ) -> str:
+        rendered: list[str] = []
+        highlight = self._highlight_ass_color()
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(r"{\1c%s}%s{\r}" % (highlight, word.text))
+            else:
+                rendered.append(word.text)
+        return " ".join(rendered)
+
+    def _render_words_punch_overlay(
+        self, words: tuple[SubtitleWord, ...], active_index: int, peak: int, dur_anim: int
+    ) -> str:
+        rendered: list[str] = []
+        highlight = self._highlight_ass_color()
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(
+                    r"{\1c%s\t(0,%d,\fscx112\fscy112)\t(%d,%d,\fscx100\fscy100)}%s{\r}"
+                    % (highlight, peak, peak, dur_anim, word.text)
+                )
+            else:
+                rendered.append(r"{\1a&HFF&\2a&HFF&\3a&HFF&\4a&HFF&}%s{\r}" % word.text)
+        return " ".join(rendered)
+
     def _render_words(
         self, words: tuple[SubtitleWord, ...], active_index: int, active_dur: int = 200
     ) -> str:
@@ -259,17 +348,9 @@ class SubtitleRenderer:
         highlight = self._highlight_ass_color()
         for index, word in enumerate(words):
             if index == active_index:
-                if self.mode == "punch":
-                    peak = min(80, max(1, active_dur // 2))
-                    dur_anim = min(160, max(2, active_dur))
-                    rendered.append(
-                        r"{\1c%s\t(0,%d,\fscx112\fscy112)\t(%d,%d,\fscx100\fscy100)}%s{\r}"
-                        % (highlight, peak, peak, dur_anim, word.text)
-                    )
-                else:
-                    rendered.append(
-                        r"{\1c%s}%s{\r}" % (highlight, word.text)
-                    )
+                rendered.append(
+                    r"{\1c%s}%s{\r}" % (highlight, word.text)
+                )
             else:
                 rendered.append(word.text)
         return " ".join(rendered)

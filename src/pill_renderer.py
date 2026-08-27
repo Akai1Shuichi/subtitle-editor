@@ -514,11 +514,106 @@ class PillSubtitleRenderer:
             return img
 
         stroke_w = float(style.stroke_width)
-        pill_rect, opacity = self.get_pill_rect(layout.words, words_timing, time_ms, config, stroke_w)
-
         font = get_font(style.fontname, style.fontsize)
-
         draw = ImageDraw.Draw(img)
+
+        inactive_rgba = parse_color_rgba(style.text_color)
+        highlight_rgba = parse_color_rgba(style.highlight_color)
+        stroke_rgba = parse_color_rgba(style.stroke_color)
+
+        if style.mode == "punch":
+            active_idx = find_active_word(words_timing, time_ms, config.hold_last_word_during_gap if config else True)
+
+            # 1. Render Inactive Words (all words at fixed layout positions)
+            for wl in layout.words:
+                if wl.index == active_idx:
+                    continue
+                baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+                if style.shadow > 0:
+                    draw.text(
+                        (wl.x + style.shadow, baseline + style.shadow),
+                        wl.text, font=font, anchor="ls", fill=stroke_rgba,
+                    )
+                if stroke_w > 0:
+                    draw.text(
+                        (wl.x, baseline), wl.text, font=font, anchor="ls",
+                        fill=inactive_rgba, stroke_width=int(stroke_w), stroke_fill=stroke_rgba,
+                    )
+                else:
+                    draw.text((wl.x, baseline), wl.text, font=font, anchor="ls", fill=inactive_rgba)
+
+            # 2. Render Active Word with Punch scale animation
+            if active_idx is not None and active_idx < len(layout.words):
+                wl = layout.words[active_idx]
+                w_timing = words_timing[active_idx]
+                word_elapsed = time_ms - w_timing.start_ms
+
+                if 0 <= word_elapsed <= 80:
+                    t = word_elapsed / 80.0
+                    ease_t = 1.0 - (1.0 - t) ** 2
+                    word_scale = 1.00 + (1.12 - 1.00) * ease_t
+                elif 80 < word_elapsed <= 160:
+                    t = (word_elapsed - 80.0) / 80.0
+                    ease_t = t * t
+                    word_scale = 1.12 + (1.00 - 1.12) * ease_t
+                else:
+                    word_scale = 1.00
+
+                baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+
+                if word_scale != 1.00:
+                    try:
+                        ascent, _ = font.getmetrics() if hasattr(font, "getmetrics") else (style.fontsize, int(style.fontsize * 0.25))
+                    except Exception:
+                        ascent = style.fontsize
+
+                    pad = int(stroke_w * 4 + 32)
+                    temp_w = int(wl.width + pad * 2)
+                    temp_h = int(wl.height + pad * 2)
+                    temp_img = Image.new("RGBA", (temp_w, temp_h), (0, 0, 0, 0))
+                    temp_draw = ImageDraw.Draw(temp_img)
+                    text_y_temp = pad + ascent
+
+                    if style.shadow > 0:
+                        temp_draw.text(
+                            (pad + style.shadow, text_y_temp + style.shadow),
+                            wl.text, font=font, anchor="ls", fill=stroke_rgba,
+                        )
+                    if stroke_w > 0:
+                        temp_draw.text(
+                            (pad, text_y_temp), wl.text, font=font, anchor="ls",
+                            fill=highlight_rgba, stroke_width=int(stroke_w), stroke_fill=stroke_rgba,
+                        )
+                    else:
+                        temp_draw.text((pad, text_y_temp), wl.text, font=font, anchor="ls", fill=highlight_rgba)
+
+                    scaled_w = max(1, int(temp_w * word_scale))
+                    scaled_h = max(1, int(temp_h * word_scale))
+                    scaled_img = temp_img.resize((scaled_w, scaled_h), resample=Image.Resampling.BILINEAR)
+
+                    wcx = wl.x + wl.width / 2.0
+                    wcy = baseline - ascent + wl.height / 2.0
+
+                    paste_x = int(wcx - scaled_w / 2.0)
+                    paste_y = int(wcy - scaled_h / 2.0)
+                    img.alpha_composite(scaled_img, (paste_x, paste_y))
+                else:
+                    if style.shadow > 0:
+                        draw.text(
+                            (wl.x + style.shadow, baseline + style.shadow),
+                            wl.text, font=font, anchor="ls", fill=stroke_rgba,
+                        )
+                    if stroke_w > 0:
+                        draw.text(
+                            (wl.x, baseline), wl.text, font=font, anchor="ls",
+                            fill=highlight_rgba, stroke_width=int(stroke_w), stroke_fill=stroke_rgba,
+                        )
+                    else:
+                        draw.text((wl.x, baseline), wl.text, font=font, anchor="ls", fill=highlight_rgba)
+
+            return img
+
+        pill_rect, opacity = self.get_pill_rect(layout.words, words_timing, time_ms, config, stroke_w)
 
         # 1. Render Pill Background
         if pill_rect and opacity > 0.0:

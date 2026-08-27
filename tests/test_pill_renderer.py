@@ -132,8 +132,21 @@ class TestPillRenderer(unittest.TestCase):
             video_width=640,
             video_height=360,
         )
+    def test_punch_mode_rendering(self):
+        clip = SubtitleClip(id="test-punch", text="Punch mode animation test", start_ms=0, end_ms=1000)
+        style = SubtitleStyle(mode="punch", fontname="Arial", fontsize=40)
+
+        frame = self.renderer.render_frame(
+            clip=clip,
+            time_ms=50,
+            style=style,
+            video_width=640,
+            video_height=360,
+        )
         self.assertIsInstance(frame, Image.Image)
+        self.assertEqual(frame.size, (640, 360))
 
 
 if __name__ == "__main__":
     unittest.main()
+
