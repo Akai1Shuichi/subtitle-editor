@@ -45,14 +45,7 @@
     "multi_language_main": "none",
     "multi_language_current": "none",
     "multi_language_list": [],
-    "subtitle_keywords_config": {
-      "styles": "{\"styles\":[{\"fill\":{\"alpha\":1,\"content\":{\"solid\":{\"color\":[0.7137254901960784,0.5137254901960784,0.996078431372549]}}},\"range\":[0,19],\"size\":9.5}],\"text\":\"The quick brown fox\"}",
-      "font_size_ratio": 1.0,
-      "subtitle_template_original_font_size": 15.0,
-      "subtitle_template_keywords_original_font_size": 15.0,
-      "subtitle_template_font_size": 0.0,
-      "is_change_font_size": false
-    },
+    "subtitle_keywords_config": null,
     "use_float_render": false
   },
   "canvas_config": {
@@ -174,7 +167,7 @@
       "type": "text",
       "segments": [
         {
-          "id": "B25007CE-FC19-49ea-8BBE-222450262484",
+          "id": "AFC1B5C7-0D3E-42a6-9E12-D326510E8797",
           "source_timerange": null,
           "target_timerange": {
             "start": 266666,
@@ -214,9 +207,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "BD803D42-C739-413f-91D5-92AD2EB0D68D",
+          "material_id": "4C588144-BCCC-41ff-9F26-7CF2FCD50FA8",
           "extra_material_refs": [
-            "44935B9C-2B88-471b-A074-0019152EACFC"
+            "4361809A-A7DE-4d53-9CE3-CD842BEA1881"
           ],
           "render_index": 14000,
           "keyframe_refs": [],
@@ -259,7 +252,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "D24C69C4-4C83-43d8-ABFE-ED56D235E4AF",
+          "id": "F9A531E9-84F5-4145-A4C6-38928619AA4A",
           "source_timerange": null,
           "target_timerange": {
             "start": 2900000,
@@ -299,9 +292,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "106D5297-440E-46ec-8515-0A4FBA36AC07",
+          "material_id": "E9C498ED-46A7-4914-B91A-9626DBC389E2",
           "extra_material_refs": [
-            "12ABB7FD-38A0-45ef-84DE-B7B6141DEF53"
+            "68DE5F7D-E16E-4dee-8A82-D963A6CFC394"
           ],
           "render_index": 14001,
           "keyframe_refs": [],
@@ -344,7 +337,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "2FA89C95-7425-49c9-9488-742252513D4E",
+          "id": "9E68ABA0-9C2F-4349-A794-200BC172ECE9",
           "source_timerange": null,
           "target_timerange": {
             "start": 4066666,
@@ -384,9 +377,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "AA499BC5-DAB2-449f-94EC-91CEB9AF8744",
+          "material_id": "2F71031B-683A-44b9-89B8-FF26E5724596",
           "extra_material_refs": [
-            "987A8960-DBA9-441f-A952-57688D9AE58C"
+            "9D2B45BC-AB5F-43d2-AD35-C98596C77C75"
           ],
           "render_index": 14002,
           "keyframe_refs": [],
@@ -429,7 +422,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "C7E46440-7F16-4a82-82F5-07B5339E22EC",
+          "id": "8D936637-13D4-42f1-80E9-756CFD597FCE",
           "source_timerange": null,
           "target_timerange": {
             "start": 5700000,
@@ -469,9 +462,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "BC33C4F5-DC88-4cfb-8E88-5AB1CF692632",
+          "material_id": "93E14C48-E6BE-4b86-920E-D390DA123A7E",
           "extra_material_refs": [
-            "BFA311CB-ED6F-4e51-90E4-CAC05CC6B8C6"
+            "4903D329-AAD5-4dc4-9BE9-7FAE843E8F1F"
           ],
           "render_index": 14003,
           "keyframe_refs": [],
@@ -514,7 +507,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "40D70F81-E529-460e-B7E1-1CEBDB0E5E84",
+          "id": "D6BAEE08-6172-4d93-8BC4-F06BC53D967C",
           "source_timerange": null,
           "target_timerange": {
             "start": 7366666,
@@ -554,9 +547,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "C0F88631-68CA-41fb-B8DD-9774FB2BAE87",
+          "material_id": "8BB1B690-874E-4323-A659-B422456E21C5",
           "extra_material_refs": [
-            "036B3CD9-A239-4094-8430-AF8C6FB81BB7"
+            "57D9AA71-57C3-4e2a-8602-B147A89AE913"
           ],
           "render_index": 14004,
           "keyframe_refs": [],
@@ -599,7 +592,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "B0030C7A-0EA2-44cf-AB95-2A1096E29AF2",
+          "id": "578C5544-38CB-46ce-97D3-975B62C6099B",
           "source_timerange": null,
           "target_timerange": {
             "start": 8766666,
@@ -639,9 +632,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "6012EE1D-1BF2-4aef-98AC-450E4040B58C",
+          "material_id": "630B147D-A846-4661-8B28-515851D38615",
           "extra_material_refs": [
-            "E3A6E61B-7A12-4e72-A43C-08369AF4B381"
+            "ACEAEC12-737D-4125-8D08-57136D32D97B"
           ],
           "render_index": 14005,
           "keyframe_refs": [],
@@ -684,7 +677,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "646B3540-F243-483e-AA47-F447DA6F3CDA",
+          "id": "B767B27A-5899-4e94-96F3-324C74A750FF",
           "source_timerange": null,
           "target_timerange": {
             "start": 10400000,
@@ -724,9 +717,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "EDD34160-4765-4a80-AC15-52EBE83CDA49",
+          "material_id": "5D47E1D9-B2F5-4fa9-8809-B5A7E9DAF5F5",
           "extra_material_refs": [
-            "6432439D-BC7F-4e25-9DC0-4C13AF04831B"
+            "DCC4C1E1-9E6C-485c-9F02-BA0120766B47"
           ],
           "render_index": 14006,
           "keyframe_refs": [],
@@ -769,7 +762,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "0A7C12AE-83F6-4fed-8B03-82A28541E74C",
+          "id": "24C8208C-0436-4f41-AD42-91147395517B",
           "source_timerange": null,
           "target_timerange": {
             "start": 12133333,
@@ -809,9 +802,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "EC8F6EAC-F307-48f5-B526-CF80A2ECEDEC",
+          "material_id": "FED9339E-76DD-4af3-9059-A07E89371278",
           "extra_material_refs": [
-            "C5128F4A-37A4-457c-94ED-F4E211811F85"
+            "9B06D332-0F64-4683-906D-4B70B76A0DD5"
           ],
           "render_index": 14007,
           "keyframe_refs": [],
@@ -854,7 +847,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "562CCA13-D85B-494d-A6A6-6D3B7345E057",
+          "id": "7A6AC025-9356-4057-9F36-FDC2499D0C6B",
           "source_timerange": null,
           "target_timerange": {
             "start": 14866666,
@@ -894,9 +887,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "28587ECC-1081-4040-ABD6-B6800EE36699",
+          "material_id": "4482116A-E07D-4c9c-9FD2-EBCC31646D1F",
           "extra_material_refs": [
-            "43FCAB2F-EE63-485a-80A2-C38AAFAC6D8A"
+            "70023E55-2FCD-4f89-B334-56E33A85424F"
           ],
           "render_index": 14008,
           "keyframe_refs": [],
@@ -939,7 +932,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "0F38047D-94C5-4bad-B4E7-34954AB5C489",
+          "id": "CF9AD75B-D6D4-4de8-BC75-52D257B2BF11",
           "source_timerange": null,
           "target_timerange": {
             "start": 15800000,
@@ -979,9 +972,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "3683BE5C-82BD-4a22-B0D7-A67B9593C8FA",
+          "material_id": "FED5A1E6-B8E0-4a1f-8241-0AB74F52C6D4",
           "extra_material_refs": [
-            "6733283B-300D-4636-96BF-B94D3BFEBC9A"
+            "A854E7BB-1ED5-4fd8-B180-4FEA909BEAC1"
           ],
           "render_index": 14009,
           "keyframe_refs": [],
@@ -1024,7 +1017,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "715FE570-B2CA-401f-8215-02E7C4FE9763",
+          "id": "54700B10-2FA5-4629-B74D-12B4D77CACBB",
           "source_timerange": null,
           "target_timerange": {
             "start": 16533333,
@@ -1064,9 +1057,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "9FF79D3E-5E15-4d52-AC4B-EF43B3A6D58C",
+          "material_id": "565410C0-7EFB-444c-B1DE-5B240773D664",
           "extra_material_refs": [
-            "231C6DB4-33F1-4b6c-A6C2-EB6D1033B690"
+            "800F06DD-3D8B-4280-B73F-2114C190C267"
           ],
           "render_index": 14010,
           "keyframe_refs": [],
@@ -1109,7 +1102,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "E6269C68-6989-46c2-ABE8-E2B80BA4B259",
+          "id": "94BF5793-F503-442c-8900-2DDF0F943DC0",
           "source_timerange": null,
           "target_timerange": {
             "start": 19300000,
@@ -1149,9 +1142,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "DCF8162F-6B45-4b81-AB10-77CBD955CB01",
+          "material_id": "27DD22D2-2A0C-4546-9162-51BF4748E7E2",
           "extra_material_refs": [
-            "907249BE-305A-4b5b-B7C3-7807E3E1E66A"
+            "A89CBBA9-8533-49e1-8BD7-0532392265F6"
           ],
           "render_index": 14011,
           "keyframe_refs": [],
@@ -1194,7 +1187,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "466FC0E6-6BF5-4fbc-85AB-67B3CD46C548",
+          "id": "059F9565-E5C2-4fd5-A37D-850EBED8F194",
           "source_timerange": null,
           "target_timerange": {
             "start": 19700000,
@@ -1234,9 +1227,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "5064B728-BEF9-4092-B29B-A6CA710FAC43",
+          "material_id": "F05C997B-4710-4bb4-B16E-66F0324DC789",
           "extra_material_refs": [
-            "9FEFD2E3-E042-4731-9B3E-87ABAF7A6934"
+            "B55AA4C5-CDCD-4815-B3F5-A1BB70388113"
           ],
           "render_index": 14012,
           "keyframe_refs": [],
@@ -1279,7 +1272,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "A0E84617-77B2-498c-A09B-E98AB62A5A26",
+          "id": "126B4759-334C-4626-AA09-202A3FC0A38A",
           "source_timerange": null,
           "target_timerange": {
             "start": 22600000,
@@ -1319,9 +1312,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "3C6F6D8C-8748-4abe-9594-C247F53C1DF4",
+          "material_id": "54421C1B-4F50-4af4-BA32-3AC159B81D7D",
           "extra_material_refs": [
-            "E7B9FFEE-0D84-46e1-95FB-E3F3D39B9485"
+            "C484BE3B-2B97-4c88-AD33-1065A6148920"
           ],
           "render_index": 14013,
           "keyframe_refs": [],
@@ -1364,7 +1357,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "E9D8CD88-2EB2-4317-974A-26C2E68E9052",
+          "id": "3CC92CA3-A13A-4180-B309-126D25A1456D",
           "source_timerange": null,
           "target_timerange": {
             "start": 24500000,
@@ -1404,9 +1397,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "F7C6CE9A-1103-4829-80C1-DB743C0F80D2",
+          "material_id": "8EBB4FB5-2C26-42a4-B3A0-8988D66C68E3",
           "extra_material_refs": [
-            "900B0888-9D77-4d9c-B953-1F3846918F5C"
+            "D214B6CD-0962-47e8-9B94-0A98D1E6B2DF"
           ],
           "render_index": 14014,
           "keyframe_refs": [],
@@ -1449,7 +1442,7 @@
           "segment_color_tag": ""
         },
         {
-          "id": "C72B4ACA-4C94-48d8-8A44-0ED36624F79D",
+          "id": "68DA4C73-325A-4be5-81B4-44EE96FD81DA",
           "source_timerange": null,
           "target_timerange": {
             "start": 26600000,
@@ -1489,9 +1482,9 @@
             "on": true,
             "value": 1.0
           },
-          "material_id": "86BF12A2-46EF-4fa5-81C8-C84A049C5F2E",
+          "material_id": "FBA677E9-6D35-4285-ADCD-C2CA6E46F292",
           "extra_material_refs": [
-            "4EF3E4EA-1364-41d7-8EF3-A4269B2B8532"
+            "77FE10BA-F40C-45e8-806E-7D697B313F80"
           ],
           "render_index": 14015,
           "keyframe_refs": [],
@@ -1704,14 +1697,14 @@
     "texts": [
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "011564CC-7F66-4093-A6B7-5973A76B2BB1",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "4C588144-BCCC-41ff-9F26-7CF2FCD50FA8",
+        "name": "",
         "recognize_text": "AI đang thay đổi cách chúng ta làm việc mỗi ngày",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"AI đang thay đổi cách chúng ta làm việc mỗi ngày\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,48]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,48],\"size\":7.0}],\"text\":\"AI đang thay đổi cách chúng ta làm việc mỗi ngày\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,48],\"size\":7.0}],\"text\":\"AI đang thay đổi cách chúng ta làm việc mỗi ngày\"}",
         "words": {
           "start_time": [
             0,
@@ -1816,29 +1809,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -1852,13 +1845,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -1867,22 +1860,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "81411E0C-95BE-4b4f-8DC0-1F253FE1817B",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -1910,7 +1888,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -1921,7 +1899,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -1946,14 +1926,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "EB4A3CA1-E000-4fcf-B1FD-20FD5FA5F4CF",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "E9C498ED-46A7-4914-B91A-9626DBC389E2",
+        "name": "",
         "recognize_text": "nhưng điều đó không có nghĩa là",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"nhưng điều đó không có nghĩa là\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,31]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,31],\"size\":7.0}],\"text\":\"nhưng điều đó không có nghĩa là\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,31],\"size\":7.0}],\"text\":\"nhưng điều đó không có nghĩa là\"}",
         "words": {
           "start_time": [
             0,
@@ -2034,29 +2014,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -2070,13 +2050,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -2085,22 +2065,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "2CEB3798-435E-4679-822B-EBCC0363E9A3",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -2128,7 +2093,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -2139,7 +2104,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -2164,14 +2131,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "6FC9DE68-CF79-4778-B7C6-B7158B864359",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "2F71031B-683A-44b9-89B8-FF26E5724596",
+        "name": "",
         "recognize_text": "lập trình viên sẽ biến mất",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"lập trình viên sẽ biến mất\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,26]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,26],\"size\":7.0}],\"text\":\"lập trình viên sẽ biến mất\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,26],\"size\":7.0}],\"text\":\"lập trình viên sẽ biến mất\"}",
         "words": {
           "start_time": [
             0,
@@ -2246,29 +2213,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -2282,13 +2249,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -2297,22 +2264,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "F5454A5D-BB6A-4590-80BA-B56C1FA4B2AC",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -2340,7 +2292,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -2351,7 +2303,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -2376,14 +2330,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "27A7D8E1-19FE-4c28-8BB7-A7A0EE6ADAD1",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "93E14C48-E6BE-4b86-920E-D390DA123A7E",
+        "name": "",
         "recognize_text": "thay vì viết từng dòng code",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"thay vì viết từng dòng code\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,27]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,27],\"size\":7.0}],\"text\":\"thay vì viết từng dòng code\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,27],\"size\":7.0}],\"text\":\"thay vì viết từng dòng code\"}",
         "words": {
           "start_time": [
             0,
@@ -2458,29 +2412,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -2494,13 +2448,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -2509,22 +2463,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "D36E8DF3-B3F3-41ee-BAAB-DE2B970715E7",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -2552,7 +2491,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -2563,7 +2502,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -2588,14 +2529,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "582D161A-2861-49da-89F9-BA0DC3B18711",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "8BB1B690-874E-4323-A659-B422456E21C5",
+        "name": "",
         "recognize_text": "chúng ta đang chuyển sang thiết kế",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"chúng ta đang chuyển sang thiết kế\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,34]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,34],\"size\":7.0}],\"text\":\"chúng ta đang chuyển sang thiết kế\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,34],\"size\":7.0}],\"text\":\"chúng ta đang chuyển sang thiết kế\"}",
         "words": {
           "start_time": [
             0,
@@ -2676,29 +2617,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -2712,13 +2653,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -2727,22 +2668,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "9250AE12-2F0D-4df7-B971-3ACDE9960D0C",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -2770,7 +2696,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -2781,7 +2707,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -2806,14 +2734,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "A5DBFB67-C567-4252-A55F-61EB9C7F82AB",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "630B147D-A846-4661-8B28-515851D38615",
+        "name": "",
         "recognize_text": "và kiểm soát hệ thống",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"và kiểm soát hệ thống\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,21]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,21],\"size\":7.0}],\"text\":\"và kiểm soát hệ thống\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,21],\"size\":7.0}],\"text\":\"và kiểm soát hệ thống\"}",
         "words": {
           "start_time": [
             0,
@@ -2882,29 +2810,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -2918,13 +2846,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -2933,22 +2861,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "1ED59696-ACAF-439b-A76C-B6725E761B56",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -2976,7 +2889,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -2987,7 +2900,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -3012,14 +2927,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "E8A40164-E907-4d9a-ABAF-318692B04C33",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "5D47E1D9-B2F5-4fa9-8809-B5A7E9DAF5F5",
+        "name": "",
         "recognize_text": "AI có thể viết code rất nhanh",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"AI có thể viết code rất nhanh\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,29]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,29],\"size\":7.0}],\"text\":\"AI có thể viết code rất nhanh\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,29],\"size\":7.0}],\"text\":\"AI có thể viết code rất nhanh\"}",
         "words": {
           "start_time": [
             0,
@@ -3100,29 +3015,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -3136,13 +3051,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -3151,22 +3066,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "35F99D11-8498-4321-BF31-02284944AF9E",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -3194,7 +3094,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -3205,7 +3105,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -3230,14 +3132,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "41021253-01BC-49b0-B70C-C46B4442299E",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "FED9339E-76DD-4af3-9059-A07E89371278",
+        "name": "",
         "recognize_text": "nhưng nó vẫn cần con người đưa Ra quyết định đúng",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"nhưng nó vẫn cần con người đưa Ra quyết định đúng\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,49]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,49],\"size\":7.0}],\"text\":\"nhưng nó vẫn cần con người đưa Ra quyết định đúng\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,49],\"size\":7.0}],\"text\":\"nhưng nó vẫn cần con người đưa Ra quyết định đúng\"}",
         "words": {
           "start_time": [
             0,
@@ -3342,29 +3244,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -3378,13 +3280,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -3393,22 +3295,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "D6D2068E-6016-4002-AE1B-B3F589C2261E",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -3436,7 +3323,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -3447,7 +3334,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -3472,14 +3361,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "4564A7CC-4CF9-4e79-A62F-99594E1D1225",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "4482116A-E07D-4c9c-9FD2-EBCC31646D1F",
+        "name": "",
         "recognize_text": "4 hiểu bài toán",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"4 hiểu bài toán\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,15]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,15],\"size\":7.0}],\"text\":\"4 hiểu bài toán\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,15],\"size\":7.0}],\"text\":\"4 hiểu bài toán\"}",
         "words": {
           "start_time": [
             0,
@@ -3542,29 +3431,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -3578,13 +3467,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -3593,22 +3482,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "2F9F8F85-7FEF-4ac0-AA3C-DDED7919177A",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -3636,7 +3510,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -3647,7 +3521,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -3672,14 +3548,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "1812EA8A-4FCC-4268-9CEC-D93E9720244C",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "FED5A1E6-B8E0-4a1f-8241-0AB74F52C6D4",
+        "name": "",
         "recognize_text": "kiến trúc",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"kiến trúc\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,9]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,9],\"size\":7.0}],\"text\":\"kiến trúc\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,9],\"size\":7.0}],\"text\":\"kiến trúc\"}",
         "words": {
           "start_time": [
             0,
@@ -3730,29 +3606,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -3766,13 +3642,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -3781,22 +3657,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "4BA420F4-54DD-46fd-AB30-5CB97C17E5EB",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -3824,7 +3685,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -3835,7 +3696,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -3860,14 +3723,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "E04100DF-1A02-43ab-870D-4E93DF8B01A8",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "565410C0-7EFB-444c-B1DE-5B240773D664",
+        "name": "",
         "recognize_text": "và biết cách kiểm tra kết quả vẫn cực kỳ quan trọng",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"và biết cách kiểm tra kết quả vẫn cực kỳ quan trọng\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,51]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,51],\"size\":7.0}],\"text\":\"và biết cách kiểm tra kết quả vẫn cực kỳ quan trọng\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,51],\"size\":7.0}],\"text\":\"và biết cách kiểm tra kết quả vẫn cực kỳ quan trọng\"}",
         "words": {
           "start_time": [
             0,
@@ -3978,29 +3841,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -4014,13 +3877,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -4029,22 +3892,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "497BB664-05B4-436c-B83F-A7F3CA9A3B70",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -4072,7 +3920,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -4083,7 +3931,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -4108,14 +3958,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "FAB9FDE6-15B8-408a-BF13-7EB450B53860",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "27DD22D2-2A0C-4546-9162-51BF4748E7E2",
+        "name": "",
         "recognize_text": "có lẽ",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"có lẽ\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,5]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,5],\"size\":7.0}],\"text\":\"có lẽ\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,5],\"size\":7.0}],\"text\":\"có lẽ\"}",
         "words": {
           "start_time": [
             0,
@@ -4166,29 +4016,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -4202,13 +4052,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -4217,22 +4067,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "5C6116EB-F491-49f7-A1E1-B8D7895E4735",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -4260,7 +4095,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -4271,7 +4106,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -4296,14 +4133,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "CC2E80E7-0D07-445c-85C8-A25664121D7F",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "F05C997B-4710-4bb4-B16E-66F0324DC789",
+        "name": "",
         "recognize_text": "tương Lai không phải là AI thay thế lập trình viên",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"tương Lai không phải là AI thay thế lập trình viên\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,50]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,50],\"size\":7.0}],\"text\":\"tương Lai không phải là AI thay thế lập trình viên\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,50],\"size\":7.0}],\"text\":\"tương Lai không phải là AI thay thế lập trình viên\"}",
         "words": {
           "start_time": [
             0,
@@ -4408,29 +4245,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -4444,13 +4281,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -4459,22 +4296,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "43CCFACD-6227-412b-9554-E924CEB74003",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -4502,7 +4324,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -4513,7 +4335,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -4538,14 +4362,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "C57E7C64-D573-4874-AC6C-F125A2601D01",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "54421C1B-4F50-4af4-BA32-3AC159B81D7D",
+        "name": "",
         "recognize_text": "mà là lập trình viên biết sử dụng AI",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"mà là lập trình viên biết sử dụng AI\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,36]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,36],\"size\":7.0}],\"text\":\"mà là lập trình viên biết sử dụng AI\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,36],\"size\":7.0}],\"text\":\"mà là lập trình viên biết sử dụng AI\"}",
         "words": {
           "start_time": [
             0,
@@ -4638,29 +4462,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -4674,13 +4498,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -4689,22 +4513,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "06A7174B-620C-47fb-BBC1-C26BE05521B1",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -4732,7 +4541,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -4743,7 +4552,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -4768,14 +4579,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "59C2EA2D-BD6C-4bbf-B8B5-B2BC15058EC4",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "8EBB4FB5-2C26-42a4-B3A0-8988D66C68E3",
+        "name": "",
         "recognize_text": "thay thế những người không biết dùng nó",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"thay thế những người không biết dùng nó\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,39]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,39],\"size\":7.0}],\"text\":\"thay thế những người không biết dùng nó\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,39],\"size\":7.0}],\"text\":\"thay thế những người không biết dùng nó\"}",
         "words": {
           "start_time": [
             0,
@@ -4862,29 +4673,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -4898,13 +4709,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -4913,22 +4724,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "F08CDD92-FC4E-4f3d-9316-A72A65E2776D",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -4956,7 +4752,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -4967,7 +4763,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -4992,14 +4790,14 @@
       },
       {
         "recognize_task_id": "6a8b2c96233dd30204d2b221_8_0",
-        "id": "1618B5DC-4785-4a28-877F-86BE4F13B00E",
-        "name": "A71209B7-E73D-40D2-A13C-CF90BC1D460D",
+        "id": "FBA677E9-6D35-4285-ADCD-C2CA6E46F292",
+        "name": "",
         "recognize_text": "vấn đề là bạn đang ở phía nào",
         "recognize_model": "",
         "punc_model": "",
-        "type": "text",
-        "content": "{\"text\":\"vấn đề là bạn đang ở phía nào\",\"styles\":[{\"fill\":{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[1,0.82353001832962036,0]}}},\"font\":{\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf\",\"id\":\"7340906978828358145\"},\"strokes\":[{\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"width\":0.05000000074505806,\"mode\":0}],\"size\":9.5,\"useLetterColor\":true,\"shadows\":[{\"distance\":2.000124454498291,\"content\":{\"render_type\":\"solid\",\"solid\":{\"color\":[0,0,0]}},\"feather\":0.036502998322248459,\"angle\":11.779999732971191,\"thickness_projection_angle\":-45,\"thickness_projection_enable\":false,\"thickness_projection_distance\":0}],\"range\":[0,29]}]}",
-        "base_content": "",
+        "type": "subtitle",
+        "content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,29],\"size\":7.0}],\"text\":\"vấn đề là bạn đang ở phía nào\"}",
+        "base_content": "{\"styles\":[{\"fill\":{\"alpha\":1.0,\"content\":{\"render_type\":\"solid\",\"solid\":{\"alpha\":1.0,\"color\":[1.0,1.0,1.0]}}},\"font\":{\"id\":\"\",\"path\":\"C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf\"},\"range\":[0,29],\"size\":7.0}],\"text\":\"vấn đề là bạn đang ở phía nào\"}",
         "words": {
           "start_time": [
             0,
@@ -5086,29 +4884,29 @@
         "text_typesetting_path_index": 0,
         "line_spacing": 0.02,
         "has_shadow": false,
-        "shadow_color": "#000000ff",
-        "shadow_alpha": 1.0,
-        "shadow_smoothing": 0.03650299832224846,
-        "shadow_distance": 2.000124454498291,
+        "shadow_color": "",
+        "shadow_alpha": 0.9,
+        "shadow_smoothing": 0.45,
+        "shadow_distance": 5.0,
         "shadow_point": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0.6363961030678928,
+          "y": -0.6363961030678928
         },
-        "shadow_angle": 11.779999732971191,
+        "shadow_angle": -45.0,
         "shadow_thickness_projection_enable": false,
         "shadow_thickness_projection_angle": 0.0,
         "shadow_thickness_projection_distance": 0.0,
-        "border_alpha": 0.0,
-        "border_color": "#000000ff",
-        "border_width": 0.05000000074505806,
+        "border_alpha": 1.0,
+        "border_color": "",
+        "border_width": 0.08,
         "border_mode": 0,
         "style_name": "",
-        "text_color": "#ffd200ff",
+        "text_color": "#FFFFFF",
         "text_alpha": 1.0,
         "font_name": "",
         "font_title": "none",
-        "font_size": 9.5,
-        "font_path": "",
+        "font_size": 7.0,
+        "font_path": "C:/Users/trtoan/AppData/Local/CapCut/Apps/9.3.0.3970/Resources/Font/SystemFont/en.ttf",
         "font_id": "",
         "font_resource_id": "",
         "initial_scale": 1.0,
@@ -5122,13 +4920,13 @@
         "shape_clip_y": false,
         "ktv_color": "",
         "text_to_audio_ids": [],
-        "bold_width": 0.008,
-        "italic_degree": 10,
+        "bold_width": 0.0,
+        "italic_degree": 0,
         "underline": false,
         "underline_width": 0.05,
         "underline_offset": 0.22,
         "sub_type": 0,
-        "check_flag": 47,
+        "check_flag": 7,
         "text_size": 30,
         "font_category_name": "",
         "font_source_platform": 0,
@@ -5137,22 +4935,7 @@
         "add_type": 1,
         "operation_type": 0,
         "recognize_type": 0,
-        "fonts": [
-          {
-            "id": "CC1071D0-88B0-4059-B94A-65E379AA8B41",
-            "resource_id": "7340906978828358145",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        ],
+        "fonts": [],
         "background_color": "",
         "background_alpha": 1.0,
         "background_style": 0,
@@ -5180,7 +4963,7 @@
         "preset_category_id": "",
         "preset_index": 0,
         "preset_has_set_alignment": false,
-        "force_apply_line_max_width": true,
+        "force_apply_line_max_width": false,
         "language": "vi-VN",
         "relevance_segment": [],
         "original_size": [],
@@ -5191,7 +4974,9 @@
         "oneline_cutoff": false,
         "cutoff_postfix": "",
         "subtitle_template_original_fontsize": 0.0,
-        "subtitle_keywords": null,
+        "subtitle_keywords": {
+          "range": []
+        },
         "inner_padding": -1.0,
         "multi_language_current": "none",
         "source_from": "",
@@ -5237,403 +5022,99 @@
     "beats": [],
     "material_animations": [
       {
-        "id": "44935B9C-2B88-471b-A074-0019152EACFC",
+        "id": "4361809A-A7DE-4d53-9CE3-CD842BEA1881",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 2066667,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "12ABB7FD-38A0-45ef-84DE-B7B6141DEF53",
+        "id": "68DE5F7D-E16E-4dee-8A82-D963A6CFC394",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1066665,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "987A8960-DBA9-441f-A952-57688D9AE58C",
+        "id": "9D2B45BC-AB5F-43d2-AD35-C98596C77C75",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1233334,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "BFA311CB-ED6F-4e51-90E4-CAC05CC6B8C6",
+        "id": "4903D329-AAD5-4dc4-9BE9-7FAE843E8F1F",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1466666,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "036B3CD9-A239-4094-8430-AF8C6FB81BB7",
+        "id": "57D9AA71-57C3-4e2a-8602-B147A89AE913",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1300000,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "E3A6E61B-7A12-4e72-A43C-08369AF4B381",
+        "id": "ACEAEC12-737D-4125-8D08-57136D32D97B",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 900000,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "6432439D-BC7F-4e25-9DC0-4C13AF04831B",
+        "id": "DCC4C1E1-9E6C-485c-9F02-BA0120766B47",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1500000,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "C5128F4A-37A4-457c-94ED-F4E211811F85",
+        "id": "9B06D332-0F64-4683-906D-4B70B76A0DD5",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 2166667,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "43FCAB2F-EE63-485a-80A2-C38AAFAC6D8A",
+        "id": "70023E55-2FCD-4f89-B334-56E33A85424F",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 800000,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "6733283B-300D-4636-96BF-B94D3BFEBC9A",
+        "id": "A854E7BB-1ED5-4fd8-B180-4FEA909BEAC1",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 733333,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "231C6DB4-33F1-4b6c-A6C2-EB6D1033B690",
+        "id": "800F06DD-3D8B-4280-B73F-2114C190C267",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 2166667,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "907249BE-305A-4b5b-B7C3-7807E3E1E66A",
+        "id": "A89CBBA9-8533-49e1-8BD7-0532392265F6",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 400000,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "9FEFD2E3-E042-4731-9B3E-87ABAF7A6934",
+        "id": "B55AA4C5-CDCD-4815-B3F5-A1BB70388113",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 2366666,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "E7B9FFEE-0D84-46e1-95FB-E3F3D39B9485",
+        "id": "C484BE3B-2B97-4c88-AD33-1065A6148920",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1766666,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "900B0888-9D77-4d9c-B953-1F3846918F5C",
+        "id": "D214B6CD-0962-47e8-9B94-0A98D1E6B2DF",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1566666,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       },
       {
-        "id": "4EF3E4EA-1364-41d7-8EF3-A4269B2B8532",
+        "id": "77FE10BA-F40C-45e8-806E-7D697B313F80",
         "type": "sticker_animation",
-        "animations": [
-          {
-            "id": "",
-            "type": "caption",
-            "start": 0,
-            "duration": 1733333,
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "platform": "all",
-            "resource_id": "7325378104753394178",
-            "third_resource_id": "",
-            "source_platform": 0,
-            "name": "",
-            "category_id": "",
-            "category_name": "",
-            "panel": "",
-            "material_type": "sticker",
-            "anim_adjust_params": null,
-            "request_id": ""
-          }
-        ],
+        "animations": [],
         "multi_language_current": "none"
       }
     ],
@@ -5660,1880 +5141,7 @@
     ],
     "common_mask": [],
     "chromas": [],
-    "text_templates": [
-      {
-        "id": "BD803D42-C739-413f-91D5-92AD2EB0D68D",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "374C0E63-5487-4198-95F6-9A4BD314DB73",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 2066667,
-              "original_size_width": 714.503173828125,
-              "original_size_height": 61.55208206176758,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "011564CC-7F66-4093-A6B7-5973A76B2BB1",
-            "extra_material_refs": [
-              "44935B9C-2B88-471b-A074-0019152EACFC"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "6C93ADFA-BE6B-4b73-9A5D-D4A5DD577939",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "106D5297-440E-46ec-8515-0A4FBA36AC07",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "78EB6AE2-4FA9-40c2-9DDC-30DA7A6056FC",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1066665,
-              "original_size_width": 494.5342712402344,
-              "original_size_height": 59.7895393371582,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "EB4A3CA1-E000-4fcf-B1FD-20FD5FA5F4CF",
-            "extra_material_refs": [
-              "12ABB7FD-38A0-45ef-84DE-B7B6141DEF53"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "03D9B1F0-4F7A-41c1-A229-80F1C12B7CD7",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "AA499BC5-DAB2-449f-94EC-91CEB9AF8744",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "3299A3EE-D506-472f-BDD2-416874C4F3CF",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1233334,
-              "original_size_width": 374.58880615234375,
-              "original_size_height": 60.60208511352539,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "6FC9DE68-CF79-4778-B7C6-B7158B864359",
-            "extra_material_refs": [
-              "987A8960-DBA9-441f-A952-57688D9AE58C"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "F5E72E6B-DEB2-4773-95CB-B95B407F3286",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "BC33C4F5-DC88-4cfb-8E88-5AB1CF692632",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "DC8EA1F5-680C-4a41-96AD-1F341953D51A",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1466666,
-              "original_size_width": 385.87896728515625,
-              "original_size_height": 59.86870193481445,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "27A7D8E1-19FE-4c28-8BB7-A7A0EE6ADAD1",
-            "extra_material_refs": [
-              "BFA311CB-ED6F-4e51-90E4-CAC05CC6B8C6"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "32825196-6801-42de-9B60-65C4453227E2",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "C0F88631-68CA-41fb-B8DD-9774FB2BAE87",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "6F15EAAC-2330-4f87-AD74-537A005D3AD9",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1300000,
-              "original_size_width": 499.6381530761719,
-              "original_size_height": 60.066619873046875,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "582D161A-2861-49da-89F9-BA0DC3B18711",
-            "extra_material_refs": [
-              "036B3CD9-A239-4094-8430-AF8C6FB81BB7"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "D22709FF-43BC-455d-85F0-D7E7405C7453",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "6012EE1D-1BF2-4aef-98AC-450E4040B58C",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "907783AD-127A-4210-8129-ED9BE393768D",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 900000,
-              "original_size_width": 333.14239501953125,
-              "original_size_height": 60.87916946411133,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "A5DBFB67-C567-4252-A55F-61EB9C7F82AB",
-            "extra_material_refs": [
-              "E3A6E61B-7A12-4e72-A43C-08369AF4B381"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "FF659E33-3636-43ab-A6BB-200BF43D1E26",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "EDD34160-4765-4a80-AC15-52EBE83CDA49",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "EA65CF18-76D9-42ea-B534-AD856E3E194C",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1500000,
-              "original_size_width": 409.0552062988281,
-              "original_size_height": 60.066619873046875,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "E8A40164-E907-4d9a-ABAF-318692B04C33",
-            "extra_material_refs": [
-              "6432439D-BC7F-4e25-9DC0-4C13AF04831B"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "5F88C0A2-0242-4c50-820E-AE317CBC3C5F",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "EC8F6EAC-F307-48f5-B526-CF80A2ECEDEC",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "59FF2ED9-D60E-4389-921E-13E1E85E85E2",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 2166667,
-              "original_size_width": 776.8665771484375,
-              "original_size_height": 61.55208206176758,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "41021253-01BC-49b0-B70C-C46B4442299E",
-            "extra_material_refs": [
-              "C5128F4A-37A4-457c-94ED-F4E211811F85"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "DD404991-EA2E-4657-A9DC-FB20C608F9FF",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "28587ECC-1081-4040-ABD6-B6800EE36699",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "160A7A5B-82F8-403f-8805-E15C27F53799",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 800000,
-              "original_size_width": 223.78533935546875,
-              "original_size_height": 60.066619873046875,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "4564A7CC-4CF9-4e79-A62F-99594E1D1225",
-            "extra_material_refs": [
-              "43FCAB2F-EE63-485a-80A2-C38AAFAC6D8A"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "EFFB5465-E2D8-4cf7-AB7F-116E18DEFAA0",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "3683BE5C-82BD-4a22-B0D7-A67B9593C8FA",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "FD7AF033-C826-4dd3-AEDA-B3DF47248C38",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 733333,
-              "original_size_width": 143.6105194091797,
-              "original_size_height": 59.7895393371582,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "1812EA8A-4FCC-4268-9CEC-D93E9720244C",
-            "extra_material_refs": [
-              "6733283B-300D-4636-96BF-B94D3BFEBC9A"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "7A41B86E-B106-45cb-AC5A-7434CBFCC905",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "9FF79D3E-5E15-4d52-AC4B-EF43B3A6D58C",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "B146EDCD-6552-419b-B733-5EFC68631BB1",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 2166667,
-              "original_size_width": 751.8411865234375,
-              "original_size_height": 61.55208206176758,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "E04100DF-1A02-43ab-870D-4E93DF8B01A8",
-            "extra_material_refs": [
-              "231C6DB4-33F1-4b6c-A6C2-EB6D1033B690"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "F71E06E9-4631-4b4f-BD37-1DBFD7CD9755",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "DCF8162F-6B45-4b81-AB10-77CBD955CB01",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "A7EA341E-44D3-4116-8F07-E7DFAF046FD7",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 400000,
-              "original_size_width": 93.8918228149414,
-              "original_size_height": 55.949954986572266,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "FAB9FDE6-15B8-408a-BF13-7EB450B53860",
-            "extra_material_refs": [
-              "907249BE-305A-4b5b-B7C3-7807E3E1E66A"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "43125061-6570-431b-B218-24DC60EE5063",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "5064B728-BEF9-4092-B29B-A6CA710FAC43",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "A8F47A41-A97D-48ed-A04E-73E87113608B",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 2366666,
-              "original_size_width": 691.2545776367188,
-              "original_size_height": 60.60208511352539,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "CC2E80E7-0D07-445c-85C8-A25664121D7F",
-            "extra_material_refs": [
-              "9FEFD2E3-E042-4731-9B3E-87ABAF7A6934"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "61F379E7-19A1-4d63-8D0F-CE944BF3A134",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "3C6F6D8C-8748-4abe-9594-C247F53C1DF4",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "4D57242F-4AD8-44cd-8722-174EC352F0CE",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1766666,
-              "original_size_width": 511.0246276855469,
-              "original_size_height": 60.60208511352539,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "C57E7C64-D573-4874-AC6C-F125A2601D01",
-            "extra_material_refs": [
-              "E7B9FFEE-0D84-46e1-95FB-E3F3D39B9485"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "408993FB-D939-4a05-B015-BA5376864B94",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "F7C6CE9A-1103-4829-80C1-DB743C0F80D2",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "9DBFB929-32EE-4265-B8B8-78FB8A24A33D",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1566666,
-              "original_size_width": 592.2208251953125,
-              "original_size_height": 59.86870193481445,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "59C2EA2D-BD6C-4bbf-B8B5-B2BC15058EC4",
-            "extra_material_refs": [
-              "900B0888-9D77-4d9c-B953-1F3846918F5C"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "DF2194C2-44E6-4d66-8817-607661A287D6",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      },
-      {
-        "id": "86BF12A2-46EF-4fa5-81C8-C84A049C5F2E",
-        "version": "1.0.0",
-        "effect_id": "7344938359363472646",
-        "resource_id": "7344938359363472646",
-        "third_resource_id": "7344933158686560770",
-        "name": "变色放大综艺体",
-        "type": "text_template_subtitle",
-        "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/7344938359363472646/fd5abc5375f7f707b2b36a43784071ae",
-        "category_id": "",
-        "category_name": "",
-        "platform": "all",
-        "text_to_audio_ids": [],
-        "source_platform": 1,
-        "resources": [
-          {
-            "panel": "fonts",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/218336446/d557c7127eb583608295e11d362c7db5/ZY Vision.ttf",
-            "resource_id": "7340906978828358145",
-            "source_platform": 0
-          },
-          {
-            "panel": "text",
-            "path": "C:/Users/trtoan/AppData/Local/CapCut/User Data/Cache/effect/216138378/d6d6d5855f135143ce9617387626f79f",
-            "resource_id": "7325378104753394178",
-            "source_platform": 0
-          }
-        ],
-        "formula_id": "",
-        "text_info_resources": [
-          {
-            "id": "E0A46C6E-157E-44c6-807C-D02E534C53ED",
-            "attach_info": {
-              "start_time": 0,
-              "duration": 1733333,
-              "original_size_width": 459.7680358886719,
-              "original_size_height": 60.60208511352539,
-              "clip": {
-                "scale": {
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                "rotation": 0.0,
-                "transform": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "flip": {
-                  "vertical": false,
-                  "horizontal": false
-                },
-                "alpha": 1.0
-              }
-            },
-            "text_material_id": "1618B5DC-4785-4a28-877F-86BE4F13B00E",
-            "extra_material_refs": [
-              "4EF3E4EA-1364-41d7-8EF3-A4269B2B8532"
-            ],
-            "clip_type": "",
-            "lyric_keyframes": [],
-            "word_index": [],
-            "order_in_layer": 0,
-            "capital": ""
-          }
-        ],
-        "non_text_info_resources": [],
-        "check_flag": 7,
-        "text_template_preset_resource_id": "",
-        "is_3d": false,
-        "is_pre_rendered": false,
-        "aigc_type": "none",
-        "text_template_resource_type": "subtitle_template",
-        "aigc_config": {
-          "prompt": "",
-          "seed": 0,
-          "model": "",
-          "font_item": {
-            "id": "C13F7EC8-ABCC-4044-BD01-E06E28C42C61",
-            "resource_id": "",
-            "third_resource_id": "",
-            "category_id": "",
-            "category_name": "",
-            "source_platform": 0,
-            "path": "",
-            "effect_id": "",
-            "title": "",
-            "team_id": "",
-            "file_uri": "",
-            "request_id": ""
-          }
-        },
-        "request_id": "",
-        "origin_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "current_word_info": {
-          "text": "",
-          "start_time": 0,
-          "end_time": 0,
-          "words": [],
-          "keyword_ranges": []
-        },
-        "is_dynamic_build": false,
-        "is_ai_emoji": false,
-        "is_lyric_effect": false,
-        "lyric_group_id": "",
-        "merge_content": "",
-        "is_uneven_animation": false,
-        "material_text_ranges": [],
-        "ai_emoji_config": null,
-        "preview_time": 0.1,
-        "render_mode": 0
-      }
-    ],
+    "text_templates": [],
     "realtime_denoises": [],
     "audio_pannings": [],
     "audio_pitch_shifts": [],

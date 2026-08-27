@@ -92,16 +92,25 @@ class HeaderBar(QWidget):
         layout.addWidget(self._import_video_btn)
 
         # ── Import SRT ─────────────────────────────────────────────────────
-        self._import_srt_btn = QPushButton("＋ SRT")
+        self._import_srt_btn = QPushButton("＋ SRT ▼")
         self._import_srt_btn.setObjectName("HeaderSecBtn")
         self._import_srt_btn.setCursor(Qt.PointingHandCursor)
-        self._import_srt_btn.setToolTip("Import file SRT")
+        self._import_srt_btn.setToolTip("Import file SRT hoặc tải file mẫu")
         self._import_srt_btn.setEnabled(False)
-        self._import_srt_btn.clicked.connect(self._on_import_srt)
+
+        self._srt_menu = QMenu(self)
+        act_srt_open = self._srt_menu.addAction("📂 Chọn file SRT từ máy tính...")
+        act_srt_open.triggered.connect(self._on_import_srt)
+        self._srt_menu.addSeparator()
+        act_srt_sample = self._srt_menu.addAction("📥 Tải file mẫu (example.srt)")
+        act_srt_sample.triggered.connect(
+            lambda: self._download_sample("example.srt", "example.srt", "SRT Files (*.srt)", "srt")
+        )
+        self._import_srt_btn.setMenu(self._srt_menu)
         layout.addWidget(self._import_srt_btn)
 
         # ── Import CapCut JSON ──────────────────────────────────────────────
-        self._import_capcut_json_btn = QPushButton("🎬 Import CapCut JSON")
+        self._import_capcut_json_btn = QPushButton("🎬 Import CapCut JSON ▼")
         self._import_capcut_json_btn.setObjectName("HeaderSecBtn")
         self._import_capcut_json_btn.setCursor(Qt.PointingHandCursor)
         self._import_capcut_json_btn.setToolTip(
@@ -109,11 +118,24 @@ class HeaderBar(QWidget):
             "Tự động đọc phụ đề từ materials -> texts và timing từ tracks."
         )
         self._import_capcut_json_btn.setEnabled(False)
-        self._import_capcut_json_btn.clicked.connect(self._on_import_capcut_json)
+
+        self._capcut_menu = QMenu(self)
+        act_capcut_open = self._capcut_menu.addAction("📂 Chọn file CapCut JSON (draft_content.json)...")
+        act_capcut_open.triggered.connect(self._on_import_capcut_json)
+        self._capcut_menu.addSeparator()
+        act_capcut_sample = self._capcut_menu.addAction("📥 Tải file mẫu (draft_content.json)")
+        act_capcut_sample.triggered.connect(
+            lambda: self._download_sample("draft_content.json", "draft_content.json", "JSON Files (*.json)", "capcut")
+        )
+        act_capcut_yt = self._capcut_menu.addAction("📺 Video hướng dẫn lấy file CapCut JSON")
+        act_capcut_yt.triggered.connect(
+            lambda: self._open_youtube_tutorial("https://youtu.be/28OfwAitbBs")
+        )
+        self._import_capcut_json_btn.setMenu(self._capcut_menu)
         layout.addWidget(self._import_capcut_json_btn)
 
         # ── Import JSON (Veed word timing) ──────────────────────────────────
-        self._import_json_btn = QPushButton("🎯 Import JSON (Veed)")
+        self._import_json_btn = QPushButton("🎯 Import VEED JSON ▼")
         self._import_json_btn.setObjectName("HeaderSecBtn")
         self._import_json_btn.setCursor(Qt.PointingHandCursor)
         self._import_json_btn.setToolTip(
@@ -121,7 +143,20 @@ class HeaderBar(QWidget):
             "Chạy được ở cả 2 mode: Normal (dòng tĩnh) và Word Highlight (animate từng từ theo giọng nói)."
         )
         self._import_json_btn.setEnabled(False)
-        self._import_json_btn.clicked.connect(self._on_import_json)
+
+        self._veed_menu = QMenu(self)
+        act_veed_open = self._veed_menu.addAction("📂 Chọn file VEED JSON (subtitle.json)...")
+        act_veed_open.triggered.connect(self._on_import_json)
+        self._veed_menu.addSeparator()
+        act_veed_sample = self._veed_menu.addAction("📥 Tải file mẫu (subtitle.json)")
+        act_veed_sample.triggered.connect(
+            lambda: self._download_sample("subtitle.json", "subtitle.json", "JSON Files (*.json)", "veed")
+        )
+        act_veed_yt = self._veed_menu.addAction("📺 Video hướng dẫn lấy file VEED JSON")
+        act_veed_yt.triggered.connect(
+            lambda: self._open_youtube_tutorial("https://youtu.be/qjWCeXaY5KI")
+        )
+        self._import_json_btn.setMenu(self._veed_menu)
         layout.addWidget(self._import_json_btn)
 
         # ── Export ─────────────────────────────────────────────────────────
@@ -230,3 +265,43 @@ class HeaderBar(QWidget):
         )
         if path:
             self.import_json_requested.emit(path)
+
+    def _download_sample(self, filename: str, default_name: str, file_filter: str, import_type: str) -> None:
+        """Cho phép người dùng lưu file mẫu về máy và tùy chọn nạp vào ứng dụng ngay."""
+        root_data = Path(__file__).parent.parent.parent / "data" / filename
+        local_data = Path("data") / filename
+        src_path = root_data if root_data.is_file() else local_data
+
+        if not src_path.is_file():
+            QMessageBox.warning(self, "Lỗi", f"Không tìm thấy file mẫu: {filename}")
+            return
+
+        dest_path, _ = QFileDialog.getSaveFileName(
+            self, f"Lưu file mẫu {filename}", default_name, file_filter
+        )
+        if dest_path:
+            try:
+                import shutil
+                shutil.copyfile(src_path, dest_path)
+                reply = QMessageBox.question(
+                    self,
+                    "Tải File Mẫu Thành Công",
+                    f"Đã lưu file mẫu thành công tại:\n{dest_path}\n\nBạn có muốn nạp file mẫu này vào dự án ngay không?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.Yes,
+                )
+                if reply == QMessageBox.Yes:
+                    if import_type == "srt":
+                        self.import_srt_requested.emit(dest_path)
+                    elif import_type == "capcut":
+                        self.import_capcut_json_requested.emit(dest_path)
+                    elif import_type == "veed":
+                        self.import_json_requested.emit(dest_path)
+            except Exception as e:
+                QMessageBox.critical(self, "Lỗi", f"Không thể lưu file mẫu: {e}")
+
+    def _open_youtube_tutorial(self, url: str) -> None:
+        """Mở đường dẫn video hướng dẫn trên trình duyệt web mặc định."""
+        from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        QDesktopServices.openUrl(QUrl(url))

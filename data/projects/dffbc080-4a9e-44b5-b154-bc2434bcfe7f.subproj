@@ -1,0 +1,40 @@
+{
+  "id": "dffbc080-4a9e-44b5-b154-bc2434bcfe7f",
+  "name": "Dự án mới 1",
+  "created_at": "2026-08-27T17:14:23.792619",
+  "updated_at": "2026-08-27T17:16:05.932260",
+  "thumbnail_path": "",
+  "video_info": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 28.816009,
+    "fps": 30.0,
+    "path": "C:\\Users\\User\\Documents\\Tool\\subtitle-editor\\data\\example.mp4"
+  },
+  "clips": [],
+  "style": {
+    "mode": "normal",
+    "fontname": "Arial",
+    "fontsize": 54,
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "highlight_color": [
+      255,
+      217,
+      0
+    ],
+    "stroke_color": [
+      0,
+      0,
+      0
+    ],
+    "stroke_width": 1.0,
+    "shadow": 2.0,
+    "position_y": 90,
+    "alignment": 2,
+    "subtitle_width": 80
+  }
+}
