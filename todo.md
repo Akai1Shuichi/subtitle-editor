@@ -6,7 +6,7 @@
 - [x] **Xây dựng Project Serialization / Deserialization**:
   - Hỗ trợ lưu `EditorProject` thành file dự án (định dạng `.subproj` hoặc JSON) chứa clips, style, thông tin video và cấu hình.
   - Hỗ trợ load file dự án khôi phục lại đầy đủ state cho `EditorProject`.
-- [ ] **Tạo Module `ProjectManager` (`src/project_manager.py`)**:
+- [x] **Tạo Module `ProjectManager` (`src/project_manager.py`)**:
   - `list_projects()`: Quét và trả về danh sách tất cả các dự án trong thư mục lưu trữ (`data/projects/`).
   - `create_project(name, video_path, srt_path)`: Khởi tạo dự án mới và lưu trữ ban đầu.
   - `load_project(project_id)`: Đọc và load dữ liệu dự án.
