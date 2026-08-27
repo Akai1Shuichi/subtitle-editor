@@ -59,13 +59,24 @@ class VideoInfo:
 
     @classmethod
     def from_dict(cls, data: dict) -> VideoInfo:
-        """Khôi phục VideoInfo từ dict JSON."""
+        """Khôi phục VideoInfo từ dict JSON với tự động tìm file video nếu đường dẫn tương đối."""
+        raw_path = str(data.get("path", ""))
+        vpath = Path(raw_path) if raw_path else Path("")
+        if raw_path and not vpath.is_file():
+            # Thử tìm tương đối so với root hoặc data/
+            rel_root = Path(__file__).parent.parent / raw_path
+            rel_data = Path(__file__).parent.parent / "data" / Path(raw_path).name
+            if rel_root.is_file():
+                vpath = rel_root
+            elif rel_data.is_file():
+                vpath = rel_data
+
         return cls(
             width=int(data.get("width", 0)),
             height=int(data.get("height", 0)),
             duration=float(data.get("duration", 0.0)),
             fps=float(data.get("fps", 0.0)),
-            path=Path(data.get("path", "")),
+            path=vpath,
         )
 
 

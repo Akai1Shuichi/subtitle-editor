@@ -28,6 +28,31 @@ class ProjectManager:
     def __init__(self, projects_dir: str | Path = "data/projects") -> None:
         self.projects_dir = Path(projects_dir)
         self.projects_dir.mkdir(parents=True, exist_ok=True)
+        self._ensure_default_project()
+
+    def _ensure_default_project(self) -> None:
+        """Tự động khôi phục dự án mẫu mặc định (5f60564a-01bf-4280-8924-d96817b8541d.subproj) nếu chưa có."""
+        default_filename = "5f60564a-01bf-4280-8924-d96817b8541d.subproj"
+        target_file = self.projects_dir / default_filename
+
+        # Chỉ áp dụng cho thư mục ứng dụng mặc định 'data/projects'
+        try:
+            if self.projects_dir.resolve() != (Path(__file__).parent.parent / "data" / "projects").resolve():
+                return
+        except Exception:
+            pass
+
+        if not target_file.is_file():
+            root_sample = Path(__file__).parent.parent / "data" / "projects" / default_filename
+            local_sample = Path("data/projects") / default_filename
+            src_sample = root_sample if root_sample.is_file() else local_sample
+
+            if src_sample.is_file() and src_sample != target_file:
+                import shutil
+                try:
+                    shutil.copyfile(src_sample, target_file)
+                except Exception as e:
+                    print(f"[ProjectManager] Lỗi khôi phục dự án mẫu: {e}")
 
     def _get_project_path(self, project_id: str) -> Path:
         """Trả về đường dẫn file dự án (.subproj) tương ứng với project_id."""
