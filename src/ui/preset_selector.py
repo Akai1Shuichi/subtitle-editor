@@ -20,7 +20,13 @@ from PySide6.QtWidgets import (
     QFrame, QGridLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget,
 )
 
-PREVIEW_DIR = Path(__file__).parent.parent.parent / "data" / "preset_previews"
+import sys
+
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    PREVIEW_DIR = Path(sys._MEIPASS) / "data" / "preset_previews"
+else:
+    PREVIEW_DIR = Path(__file__).parent.parent.parent / "data" / "preset_previews"
+
 PREVIEW_H = 90
 
 

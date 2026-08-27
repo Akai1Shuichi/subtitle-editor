@@ -60,12 +60,13 @@ class VideoInfo:
     @classmethod
     def from_dict(cls, data: dict) -> VideoInfo:
         """Khôi phục VideoInfo từ dict JSON với tự động tìm file video nếu đường dẫn tương đối."""
+        import sys
         raw_path = str(data.get("path", ""))
         vpath = Path(raw_path) if raw_path else Path("")
         if raw_path and not vpath.is_file():
-            # Thử tìm tương đối so với root hoặc data/
-            rel_root = Path(__file__).parent.parent / raw_path
-            rel_data = Path(__file__).parent.parent / "data" / Path(raw_path).name
+            base_dir = Path(sys._MEIPASS) if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS") else Path(__file__).parent.parent
+            rel_root = base_dir / raw_path
+            rel_data = base_dir / "data" / Path(raw_path).name
             if rel_root.is_file():
                 vpath = rel_root
             elif rel_data.is_file():
@@ -90,8 +91,12 @@ def _find_binary(name: str) -> str:
     1. binaries/<name> (bundled)
     2. PATH
     """
-    # Thư mục binaries/ cạnh src/
-    binaries_dir = Path(__file__).parent.parent / "binaries"
+    import sys
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        binaries_dir = Path(sys._MEIPASS) / "binaries"
+    else:
+        binaries_dir = Path(__file__).parent.parent / "binaries"
+
     for ext in ("", ".exe"):
         candidate = binaries_dir / (name + ext)
         if candidate.is_file():
