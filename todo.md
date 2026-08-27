@@ -27,7 +27,7 @@
   - Cảnh báo và hỗ trợ liên kết lại (relink) khi file video gốc bị di chuyển/xóa.
 
 ## Phase 3: Integration & Navigation (Tích Hợp Luồng Ứng Dụng)
-- [ ] **Cập nhật `HeaderBar` & Menu (`src/ui/header_bar.py`)**:
+- [x] **Cập nhật `HeaderBar` & Menu (`src/ui/header_bar.py`)**:
   - Thêm nút "Projects" / "Danh sách dự án" trên Header Bar.
   - Thêm danh sách "Recent Projects" (Dự án gần đây) để mở nhanh.
 - [ ] **Quản lý chuyển đổi View trong `MainWindow` (`src/ui/main_window.py`)**:

@@ -1,19 +1,25 @@
 """
 src/ui/header_bar.py
 ─────────────────────
-Thanh header cố định trên cùng: title, Import Video, Import SRT,
-Import CapCut JSON, Import JSON (Veed / word timing), Export MP4.
+Thanh header cố định trên cùng: title, nút Projects/Dashboard, Recent Projects menu,
+Import Video, Import SRT, Import CapCut JSON, Import JSON (Veed / word timing), Export MP4.
 """
+
 from __future__ import annotations
+
+from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QWidget,
 )
+
+from ..models import ProjectMetadata
 
 
 class HeaderBar(QWidget):
@@ -22,6 +28,8 @@ class HeaderBar(QWidget):
 
     Signals
     -------
+    projects_requested()                     – chuyển sang giao diện danh sách dự án
+    open_recent_project_requested(id: str)   – chọn mở dự án từ danh sách gần đây
     import_video_requested(path: str)        – người dùng chọn file video
     import_srt_requested(path: str)          – người dùng chọn file SRT
     import_capcut_json_requested(path: str)  – người dùng chọn file CapCut JSON
@@ -29,11 +37,13 @@ class HeaderBar(QWidget):
     export_requested()                       – người dùng bấm Export MP4
     """
 
-    import_video_requested       = Signal(str)
-    import_srt_requested         = Signal(str)
-    import_capcut_json_requested = Signal(str)
-    import_json_requested        = Signal(str)
-    export_requested             = Signal()
+    projects_requested            = Signal()
+    open_recent_project_requested = Signal(str)
+    import_video_requested        = Signal(str)
+    import_srt_requested          = Signal(str)
+    import_capcut_json_requested  = Signal(str)
+    import_json_requested         = Signal(str)
+    export_requested              = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -43,10 +53,28 @@ class HeaderBar(QWidget):
         # Internal state
         self._has_video: bool      = False
         self._highlight_mode: bool = False
+        self._recent_projects: list[ProjectMetadata] = []
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(10)
+
+        # ── Projects / Dashboard Button ────────────────────────────────────
+        self._projects_btn = QPushButton("📂 Projects")
+        self._projects_btn.setObjectName("HeaderSecBtn")
+        self._projects_btn.setCursor(Qt.PointingHandCursor)
+        self._projects_btn.setToolTip("Quản lý danh sách dự án")
+        self._projects_btn.clicked.connect(self.projects_requested)
+        layout.addWidget(self._projects_btn)
+
+        # ── Recent Projects Dropdown ───────────────────────────────────────
+        self._recent_btn = QPushButton("Gần đây ▼")
+        self._recent_btn.setObjectName("HeaderSecBtn")
+        self._recent_btn.setCursor(Qt.PointingHandCursor)
+        self._recent_btn.setToolTip("Các dự án mở gần đây")
+        self._recent_menu = QMenu(self)
+        self._recent_btn.setMenu(self._recent_menu)
+        layout.addWidget(self._recent_btn)
 
         # ── Title ─────────────────────────────────────────────────────────
         title = QLabel("Subtitle Video Editor")
@@ -107,6 +135,25 @@ class HeaderBar(QWidget):
     # Public API
     # ──────────────────────────────────────────────────────────────────────
 
+    def update_recent_projects(self, projects: list[ProjectMetadata]) -> None:
+        """Cập nhật danh sách dự án gần đây trong menu dropdown."""
+        self._recent_projects = projects
+        self._recent_menu.clear()
+
+        if not projects:
+            action = self._recent_menu.addAction("Không có dự án nào")
+            action.setEnabled(False)
+            return
+
+        for meta in projects[:8]:  # Hiển thị tối đa 8 dự án gần nhất
+            label_text = f"{meta.name}"
+            if meta.clip_count > 0:
+                label_text += f" ({meta.clip_count} clips)"
+            action = self._recent_menu.addAction(label_text)
+            action.triggered.connect(
+                lambda checked=False, pid=meta.project_id: self.open_recent_project_requested.emit(pid)
+            )
+
     def set_has_video(self, has_video: bool) -> None:
         """Bật/tắt các nút import subtitle dựa theo có video hay chưa."""
         self._has_video = has_video
@@ -131,7 +178,6 @@ class HeaderBar(QWidget):
         """Cập nhật trạng thái khi đang/dừng export."""
         self._export_btn.setText("Đang xuất…" if exporting else "Export MP4")
         self._export_btn.setEnabled(False if exporting else None is None)
-        # re-enable handled by set_export_enabled after finish
 
     # ──────────────────────────────────────────────────────────────────────
     # Private slots
@@ -168,4 +214,3 @@ class HeaderBar(QWidget):
         )
         if path:
             self.import_json_requested.emit(path)
-
