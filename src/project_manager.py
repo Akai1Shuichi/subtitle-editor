@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 import os
+import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -22,12 +23,18 @@ CONFIG_FILE = Path.home() / ".subtitle_editor" / "app_config.json"
 
 
 def get_default_projects_dir() -> Path:
-    """Trả về đường dẫn mặc định lưu project trong thư mục Subtitle_Editor_Projects tại Home của HĐH."""
+    """Trả về đường dẫn mặc định lưu project: Desktop trên Windows, Home trên các HĐH khác."""
+    desktop = Path.home() / "Desktop"
+    if sys.platform == "win32" or desktop.exists():
+        return desktop / "Subtitle_Editor_Projects"
     return Path.home() / "Subtitle_Editor_Projects"
 
 
 def get_default_export_dir() -> Path:
-    """Trả về đường dẫn mặc định xuất video trong thư mục Subtitle_Editor_Video_Export tại Home của HĐH."""
+    """Trả về đường dẫn mặc định xuất video: Desktop trên Windows, Home trên các HĐH khác."""
+    desktop = Path.home() / "Desktop"
+    if sys.platform == "win32" or desktop.exists():
+        return desktop / "Subtitle_Editor_Video_Export"
     return Path.home() / "Subtitle_Editor_Video_Export"
 
 

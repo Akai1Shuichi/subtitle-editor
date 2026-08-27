@@ -376,11 +376,20 @@ class MainWindow(QMainWindow):
     def _get_export_output_filepath(self) -> str:
         export_dir = self._project_manager.export_dir
         export_dir.mkdir(parents=True, exist_ok=True)
-        if self._project and self._project.video_info and self._project.video_info.path:
-            stem = Path(self._project.video_info.path).stem
-        else:
-            stem = "output"
-        return str(export_dir / f"{stem}_subtitled.mp4")
+        raw_name = self._project.name if (self._project and self._project.name) else "output"
+        import re
+        safe_name = re.sub(r'[\\/*?:"<>|]', '_', raw_name).strip() or "output"
+
+        candidate = export_dir / f"{safe_name}.mp4"
+        if not candidate.exists():
+            return str(candidate)
+
+        counter = 1
+        while True:
+            candidate = export_dir / f"{safe_name} ({counter}).mp4"
+            if not candidate.exists():
+                return str(candidate)
+            counter += 1
 
     @Slot(str)
     def _on_video_selected(self, path: str) -> None:
