@@ -27,6 +27,7 @@ from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject, QTimer
 from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QHBoxLayout,
     QLineEdit,
     QMainWindow,
@@ -728,9 +729,25 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _on_header_export(self) -> None:
-        """Header Export MP4 button → dùng path từ ExportBar."""
-        output_path = self._export_bar.get_output_path()
-        self._on_export_requested(output_path)
+        """Header Export MP4 button → Bật hộp thoại lưu file với tên mặc định theo tên dự án và cho phép sửa tên."""
+        if not self._project or not self._project.has_video or not self._project.has_clips:
+            return
+
+        default_filepath = self._get_export_output_filepath()
+        save_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Xuất Video MP4",
+            default_filepath,
+            "Video Files (*.mp4);;All Files (*.*)",
+        )
+        if not save_path:
+            return
+
+        if not save_path.endswith(".mp4"):
+            save_path += ".mp4"
+
+        self._export_bar.set_output_path(save_path)
+        self._on_export_requested(save_path)
 
     # ──────────────────────────────────────────────────────────────────────
     # Slots – Export (ExportBar)
