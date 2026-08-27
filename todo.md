@@ -16,7 +16,7 @@
   - `rename_project(project_id, new_name)`: Đổi tên dự án.
 
 ## Phase 2: Project List UI Component (Giao Diện Danh Sách Dự Án)
-- [ ] **Thiết kế Component `ProjectCardWidget` (`src/ui/project_card.py`)**:
+- [x] **Thiết kế Component `ProjectCardWidget` (`src/ui/project_card.py`)**:
   - Hiển thị thumbnail video, tên dự án, thời lượng, số lượng clip, thời gian cập nhật lần cuối.
   - Các nút thao tác nhanh (Mở, Đổi tên, Nhân bản, Xóa).
 - [ ] **Thiết kế Component `ProjectListView` (`src/ui/project_list_view.py`)**:
