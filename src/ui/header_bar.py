@@ -91,73 +91,60 @@ class HeaderBar(QWidget):
         self._import_video_btn.clicked.connect(self._on_import_video)
         layout.addWidget(self._import_video_btn)
 
-        # ── Import SRT ─────────────────────────────────────────────────────
-        self._import_srt_btn = QPushButton("＋ SRT ▼")
-        self._import_srt_btn.setObjectName("HeaderSecBtn")
-        self._import_srt_btn.setCursor(Qt.PointingHandCursor)
-        self._import_srt_btn.setToolTip("Import file SRT hoặc tải file mẫu")
-        self._import_srt_btn.setEnabled(False)
+        # ── Import Phụ Đề (Gộp chung SRT, CapCut JSON, VEED JSON) ───────────
+        self._import_sub_btn = QPushButton("📥 Import Phụ Đề ▼")
+        self._import_sub_btn.setObjectName("HeaderSecBtn")
+        self._import_sub_btn.setCursor(Qt.PointingHandCursor)
+        self._import_sub_btn.setToolTip("Import phụ đề từ file SRT, CapCut JSON, hoặc VEED JSON")
+        self._import_sub_btn.setEnabled(False)
 
-        self._srt_menu = QMenu(self)
-        act_srt_open = self._srt_menu.addAction("📂 Chọn file SRT từ máy tính...")
+        # Trỏ các thuộc tính cũ sang nút gộp để bảo toàn tương thích
+        self._import_srt_btn = self._import_sub_btn
+        self._import_capcut_json_btn = self._import_sub_btn
+        self._import_json_btn = self._import_sub_btn
+
+        self._sub_menu = QMenu(self)
+
+        # Loại 1: File SRT
+        srt_menu = self._sub_menu.addMenu("📄 File Phụ Đề SRT")
+        act_srt_open = srt_menu.addAction("📂 Chọn file SRT từ máy tính...")
         act_srt_open.triggered.connect(self._on_import_srt)
-        self._srt_menu.addSeparator()
-        act_srt_sample = self._srt_menu.addAction("📥 Tải file mẫu (example.srt)")
+        srt_menu.addSeparator()
+        act_srt_sample = srt_menu.addAction("📥 Tải file mẫu (example.srt)")
         act_srt_sample.triggered.connect(
             lambda: self._download_sample("example.srt", "example.srt", "SRT Files (*.srt)", "srt")
         )
-        self._import_srt_btn.setMenu(self._srt_menu)
-        layout.addWidget(self._import_srt_btn)
 
-        # ── Import CapCut JSON ──────────────────────────────────────────────
-        self._import_capcut_json_btn = QPushButton("🎬 Import CapCut JSON ▼")
-        self._import_capcut_json_btn.setObjectName("HeaderSecBtn")
-        self._import_capcut_json_btn.setCursor(Qt.PointingHandCursor)
-        self._import_capcut_json_btn.setToolTip(
-            "Import subtitle từ file JSON CapCut (draft_content.json)\n"
-            "Tự động đọc phụ đề từ materials -> texts và timing từ tracks."
-        )
-        self._import_capcut_json_btn.setEnabled(False)
-
-        self._capcut_menu = QMenu(self)
-        act_capcut_open = self._capcut_menu.addAction("📂 Chọn file CapCut JSON (draft_content.json)...")
+        # Loại 2: CapCut JSON
+        capcut_menu = self._sub_menu.addMenu("🎬 File Phụ Đề theo CapCut")
+        act_capcut_open = capcut_menu.addAction("📂 Chọn file CapCut JSON (draft_content.json)...")
         act_capcut_open.triggered.connect(self._on_import_capcut_json)
-        self._capcut_menu.addSeparator()
-        act_capcut_sample = self._capcut_menu.addAction("📥 Tải file mẫu (draft_content.json)")
+        capcut_menu.addSeparator()
+        act_capcut_sample = capcut_menu.addAction("📥 Tải file mẫu (draft_content.json)")
         act_capcut_sample.triggered.connect(
             lambda: self._download_sample("draft_content.json", "draft_content.json", "JSON Files (*.json)", "capcut")
         )
-        act_capcut_yt = self._capcut_menu.addAction("📺 Video hướng dẫn lấy file CapCut JSON")
+        act_capcut_yt = capcut_menu.addAction("📺 Video hướng dẫn lấy file (YouTube)")
         act_capcut_yt.triggered.connect(
             lambda: self._open_youtube_tutorial("https://youtu.be/28OfwAitbBs")
         )
-        self._import_capcut_json_btn.setMenu(self._capcut_menu)
-        layout.addWidget(self._import_capcut_json_btn)
 
-        # ── Import JSON (Veed word timing) ──────────────────────────────────
-        self._import_json_btn = QPushButton("🎯 Import VEED JSON ▼")
-        self._import_json_btn.setObjectName("HeaderSecBtn")
-        self._import_json_btn.setCursor(Qt.PointingHandCursor)
-        self._import_json_btn.setToolTip(
-            "Import subtitle từ file JSON Veed (word timing)\n"
-            "Chạy được ở cả 2 mode: Normal (dòng tĩnh) và Word Highlight (animate từng từ theo giọng nói)."
-        )
-        self._import_json_btn.setEnabled(False)
-
-        self._veed_menu = QMenu(self)
-        act_veed_open = self._veed_menu.addAction("📂 Chọn file VEED JSON (subtitle.json)...")
+        # Loại 3: VEED JSON
+        veed_menu = self._sub_menu.addMenu("🎯 File Phụ Đề theo VEED")
+        act_veed_open = veed_menu.addAction("📂 Chọn file VEED JSON (subtitle.json)...")
         act_veed_open.triggered.connect(self._on_import_json)
-        self._veed_menu.addSeparator()
-        act_veed_sample = self._veed_menu.addAction("📥 Tải file mẫu (subtitle.json)")
+        veed_menu.addSeparator()
+        act_veed_sample = veed_menu.addAction("📥 Tải file mẫu (subtitle.json)")
         act_veed_sample.triggered.connect(
             lambda: self._download_sample("subtitle.json", "subtitle.json", "JSON Files (*.json)", "veed")
         )
-        act_veed_yt = self._veed_menu.addAction("📺 Video hướng dẫn lấy file VEED JSON")
+        act_veed_yt = veed_menu.addAction("📺 Video hướng dẫn lấy file (YouTube)")
         act_veed_yt.triggered.connect(
             lambda: self._open_youtube_tutorial("https://youtu.be/qjWCeXaY5KI")
         )
-        self._import_json_btn.setMenu(self._veed_menu)
-        layout.addWidget(self._import_json_btn)
+
+        self._import_sub_btn.setMenu(self._sub_menu)
+        layout.addWidget(self._import_sub_btn)
 
         # ── Export ─────────────────────────────────────────────────────────
         self._export_btn = QPushButton("Export MP4")
@@ -181,9 +168,7 @@ class HeaderBar(QWidget):
         self._recent_btn.setVisible(not is_editor)
 
         self._import_video_btn.setVisible(is_editor)
-        self._import_srt_btn.setVisible(is_editor)
-        self._import_capcut_json_btn.setVisible(is_editor)
-        self._import_json_btn.setVisible(is_editor)
+        self._import_sub_btn.setVisible(is_editor)
         self._export_btn.setVisible(is_editor)
 
     def update_recent_projects(self, projects: list[ProjectMetadata]) -> None:
@@ -206,20 +191,16 @@ class HeaderBar(QWidget):
             )
 
     def set_has_video(self, has_video: bool) -> None:
-        """Bật/tắt các nút import subtitle dựa theo có video hay chưa."""
+        """Bật/tắt nút Import Phụ Đề dựa theo có video hay chưa."""
         self._has_video = has_video
-        self._import_srt_btn.setEnabled(has_video)
-        self._import_capcut_json_btn.setEnabled(has_video)
-        self._import_json_btn.setEnabled(has_video)
+        self._import_sub_btn.setEnabled(has_video)
 
     def set_highlight_mode(self, is_highlight: bool) -> None:
         """
         Cập nhật trạng thái mode (Normal ↔ Word Highlight).
-        Các nút import JSON luôn enabled khi đã có video.
         """
         self._highlight_mode = is_highlight
-        self._import_capcut_json_btn.setEnabled(self._has_video)
-        self._import_json_btn.setEnabled(self._has_video)
+        self._import_sub_btn.setEnabled(self._has_video)
 
     def set_export_enabled(self, enabled: bool) -> None:
         """Bật/tắt nút Export MP4."""
