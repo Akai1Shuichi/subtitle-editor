@@ -32,14 +32,16 @@ from PySide6.QtWidgets import (
 
 def get_config_path() -> Path:
     candidates = [
+        Path(__file__).parent.parent / "data" / "config" / "version.json",
+        Path("data/config/version.json"),
+        Path.cwd() / "data" / "config" / "version.json",
         Path(__file__).parent.parent / "data" / "config.json",
-        Path("data") / "config.json",
-        Path.cwd() / "data" / "config.json",
+        Path("data/config.json"),
     ]
     for c in candidates:
         if c.is_file():
             return c
-    return Path("data") / "config.json"
+    return Path("data/config/version.json")
 
 
 def load_config() -> dict[str, Any]:
