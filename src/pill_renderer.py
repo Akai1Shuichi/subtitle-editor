@@ -21,6 +21,7 @@ import math
 import os
 import re
 import subprocess
+import sys
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -1067,12 +1068,17 @@ class PillSubtitleRenderer:
             str(output_path),
         ]
 
+        extra_kwargs = {}
+        if sys.platform == "win32":
+            extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
         try:
             proc = subprocess.Popen(
                 cmd,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 stdout=subprocess.DEVNULL,
+                **extra_kwargs,
             )
         except FileNotFoundError as exc:
             raise FFmpegNotFoundError("ffmpeg binary not found.") from exc

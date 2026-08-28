@@ -46,6 +46,7 @@ class HeaderBar(QWidget):
     import_capcut_json_requested  = Signal(str)
     import_json_requested         = Signal(str)
     export_requested              = Signal()
+    check_update_requested        = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -77,6 +78,14 @@ class HeaderBar(QWidget):
         self._recent_menu = QMenu(self)
         self._recent_btn.setMenu(self._recent_menu)
         layout.addWidget(self._recent_btn)
+
+        # ── Check Update Button ───────────────────────────────────────────
+        self._update_btn = QPushButton("🔄 Cập nhật")
+        self._update_btn.setObjectName("HeaderSecBtn")
+        self._update_btn.setCursor(Qt.PointingHandCursor)
+        self._update_btn.setToolTip("Kiểm tra bản cập nhật mới từ GitHub")
+        self._update_btn.clicked.connect(self.check_update_requested)
+        layout.addWidget(self._update_btn)
 
         layout.addStretch()
 

@@ -8,6 +8,7 @@ Kích thước nhỏ (300x168 = 16:9) để fit card trong inspector.
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -169,9 +170,11 @@ def generate_highlight_preview(
             "-movflags", "+faststart",
             str(mp4_path),
         ]
+        extra_kwargs = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if sys.platform == "win32" else {}
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            **extra_kwargs,
         )
         for b in raw_bytes:
             proc.stdin.write(b)
@@ -319,9 +322,11 @@ def generate_rise_preview(
             "-movflags", "+faststart",
             str(mp4_path),
         ]
+        extra_kwargs = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if sys.platform == "win32" else {}
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            **extra_kwargs,
         )
         for b in raw_bytes:
             proc.stdin.write(b)
@@ -491,9 +496,11 @@ def generate_soft_pop_preview(
             "-movflags", "+faststart",
             str(mp4_path),
         ]
+        extra_kwargs = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if sys.platform == "win32" else {}
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            **extra_kwargs,
         )
         for b in raw_bytes:
             proc.stdin.write(b)
@@ -610,9 +617,11 @@ def generate_pill_preview(
             "-movflags", "+faststart",
             str(mp4_path),
         ]
+        extra_kwargs = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if sys.platform == "win32" else {}
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            **extra_kwargs,
         )
         for b in raw_bytes:
             proc.stdin.write(b)
@@ -781,9 +790,11 @@ def generate_punch_preview(
             "-movflags", "+faststart",
             str(mp4_path),
         ]
+        extra_kwargs = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if sys.platform == "win32" else {}
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            **extra_kwargs,
         )
         for b in raw_bytes:
             proc.stdin.write(b)
@@ -936,9 +947,11 @@ def generate_rounded_box_preview(
             "-movflags", "+faststart",
             str(mp4_path),
         ]
+        extra_kwargs = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if sys.platform == "win32" else {}
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            **extra_kwargs,
         )
         for b in raw_bytes:
             proc.stdin.write(b)

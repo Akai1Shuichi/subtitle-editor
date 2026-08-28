@@ -63,6 +63,7 @@ from ..exporter import (
     export_video, export_video_pill,
     ExportCancelledError, DiskSpaceError, ExportError,
 )
+from ..updater import UpdateCheckerThread, UpdateDialog, APP_VERSION
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -171,6 +172,9 @@ class MainWindow(QMainWindow):
         # Mặc định khởi tạo ở giao diện Dashboard Project List
         self._show_project_list_view()
 
+        # Tự động kiểm tra bản cập nhật ngầm sau khi vừa mở ứng dụng 1.5 giây
+        QTimer.singleShot(1500, self._check_update_auto)
+
     # ──────────────────────────────────────────────────────────────────────
     # Build UI
     # ──────────────────────────────────────────────────────────────────────
@@ -192,6 +196,7 @@ class MainWindow(QMainWindow):
         self._header_bar.import_capcut_json_requested.connect(self._on_capcut_json_loaded)
         self._header_bar.import_json_requested.connect(self._on_json_loaded)
         self._header_bar.export_requested.connect(self._on_header_export)
+        self._header_bar.check_update_requested.connect(self._on_check_update_manual)
         root.addWidget(self._header_bar)
 
         # Separator
@@ -869,6 +874,40 @@ class MainWindow(QMainWindow):
                 subprocess.Popen(["open", folder])
             else:
                 subprocess.Popen(["xdg-open", folder])
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Updater
+    # ──────────────────────────────────────────────────────────────────────
+
+    def _check_update_auto(self) -> None:
+        """Tự động kiểm tra bản cập nhật ngầm khi vừa khởi chạy app (chỉ hiện dialog nếu có bản mới)."""
+        print("[MainWindow] _check_update_auto triggered -> starting UpdateCheckerThread...")
+        self._auto_updater_thread = UpdateCheckerThread(parent=self)
+        self._auto_updater_thread.update_available.connect(self._show_update_dialog)
+        self._auto_updater_thread.start()
+
+    def _on_check_update_manual(self) -> None:
+        """Người dùng bấm nút '🔄 Cập nhật' trên HeaderBar (Giữ phím Shift hoặc Ctrl để ép hiển thị Dialog debug/test)."""
+        modifiers = QApplication.keyboardModifiers()
+        force_test = bool(modifiers & (Qt.ShiftModifier | Qt.ControlModifier))
+        if force_test:
+            print("[MainWindow] Shift/Ctrl key detected -> Forcing UpdateDialog popup for testing!")
+
+        print(f"[MainWindow] _on_check_update_manual triggered -> starting UpdateCheckerThread (force={force_test})...")
+        self._manual_updater_thread = UpdateCheckerThread(parent=self, force=force_test)
+        self._manual_updater_thread.update_available.connect(self._show_update_dialog)
+        self._manual_updater_thread.no_update.connect(
+            lambda msg: QMessageBox.information(self, "Kiểm Tra Cập Nhật", msg)
+        )
+        self._manual_updater_thread.check_failed.connect(
+            lambda msg: QMessageBox.warning(self, "Kiểm Tra Cập Nhật", msg)
+        )
+        self._manual_updater_thread.start()
+
+    def _show_update_dialog(self, update_info: dict) -> None:
+        """Hiển thị UpdateDialog khi phát hiện phiên bản mới."""
+        dialog = UpdateDialog(update_info, parent=self)
+        dialog.exec()
 
     # ──────────────────────────────────────────────────────────────────────
     # Stylesheet

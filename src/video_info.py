@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -161,12 +162,17 @@ def probe_video(path: str | Path) -> VideoInfo:
         str(path),
     ]
 
+    extra_kwargs = {}
+    if sys.platform == "win32":
+        extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=30,
+            **extra_kwargs,
         )
     except FileNotFoundError as exc:
         raise FFmpegNotFoundError("ffprobe không tìm thấy.") from exc

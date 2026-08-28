@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -120,6 +121,10 @@ def export_video(
         str(output_path),
     ]
 
+    extra_kwargs = {}
+    if sys.platform == "win32":
+        extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
     try:
         proc = subprocess.Popen(
             cmd,
@@ -127,6 +132,7 @@ def export_video(
             stdout=subprocess.DEVNULL,
             text=True,
             bufsize=1,
+            **extra_kwargs,
         )
     except FileNotFoundError as exc:
         raise FFmpegNotFoundError("ffmpeg không tìm thấy.") from exc
@@ -274,9 +280,13 @@ def generate_preview_clip(
         str(preview_path),
     ]
 
+    extra_kwargs = {}
+    if sys.platform == "win32":
+        extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
     try:
         proc = subprocess.Popen(
-            cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, bufsize=1
+            cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, bufsize=1, **extra_kwargs
         )
     except FileNotFoundError as exc:
         raise FFmpegNotFoundError("ffmpeg không tìm thấy.") from exc
