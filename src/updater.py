@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-APP_VERSION = "0.9.0"
+APP_VERSION = "1.0.0"
 DEFAULT_GITHUB_REPO = "Akai1Shuichi/subtitle-editor"
 
 
