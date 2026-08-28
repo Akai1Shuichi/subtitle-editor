@@ -413,20 +413,27 @@ class UpdateDialog(QDialog):
         self.progress_bar.setFormat("Tải hoàn tất!")
         self.btn_cancel.setText("Đóng")
 
+        version_str = self.update_info.get("version", "")
         reply = QMessageBox.question(
             self,
             "Cập Nhật Thành Công",
-            f"Đã tải bản cập nhật thành công về:\n{file_path}\n\nBạn có muốn mở / cài đặt file ngay bây giờ không?",
+            f"Ứng dụng đã cập nhật lên phiên bản {version_str}, vui lòng đóng ứng dụng và khởi động lại.",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.Yes,
         )
         if reply == QMessageBox.Yes:
             try:
+                # Khởi chạy file thực thi / cài đặt mới
                 if sys.platform == "win32":
                     os.startfile(file_path)
                 else:
                     QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
+                
                 self.accept()
+                # Tự động thoát ứng dụng hiện tại ngay lập tức
+                from PySide6.QtWidgets import QApplication
+                from PySide6.QtCore import QTimer
+                QTimer.singleShot(200, QApplication.quit)
             except Exception as e:
                 QMessageBox.critical(self, "Lỗi", f"Không thể mở file cập nhật: {e}")
 
