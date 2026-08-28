@@ -592,6 +592,196 @@ class PillSubtitleRenderer:
         except Exception:
             return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
 
+    def render_pill_frame_qt(
+        self,
+        clip: SubtitleClip,
+        time_ms: int,
+        style: SubtitleStyle,
+        line_timing: Optional[LineTiming] = None,
+        video_width: int = 1920,
+        video_height: int = 1080,
+    ) -> Image.Image:
+        """Render a Pill animation frame matching Qt preview 100% identically."""
+        if not clip or not clip.is_active_at(time_ms):
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+        try:
+            from PySide6.QtCore import QRect, Qt
+            from PySide6.QtGui import QColor, QFont, QFontMetrics, QImage, QPainter, QPainterPath, QPen
+
+            qimg = QImage(video_width, video_height, QImage.Format_RGBA8888)
+            qimg.fill(Qt.transparent)
+
+            painter = QPainter(qimg)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.TextAntialiasing)
+
+            font_px = max(1, round(style.fontsize * (72 / 96)))
+            font = QFont(style.fontname)
+            font.setPixelSize(font_px)
+            font.setBold(True)
+            painter.setFont(font)
+            fm = QFontMetrics(font)
+
+            width_pct = getattr(style, "subtitle_width", 80)
+            margin_x = max(4, int((100 - width_pct) / 200 * video_width))
+            safe_w = max(100, video_width - margin_x * 2)
+
+            if style.alignment in (2, 3, 1):   # bottom
+                margin_v = max(0, int((100 - style.position_y) * video_height / 100))
+                base_y = video_height - margin_v
+            elif style.alignment in (5, 6, 4): # center
+                base_y = video_height // 2
+            else:                               # top
+                base_y = int(style.position_y * video_height / 100)
+
+            text_color = QColor(*style.text_color)
+            hl_color = QColor(*style.highlight_color)
+            stroke_color = QColor(*style.stroke_color)
+            stroke_w = float(style.stroke_width)
+            shadow_offset = float(style.shadow)
+
+            hl_hex = f"#{hl_color.red():02x}{hl_color.green():02x}{hl_color.blue():02x}"
+            config = PillAnimationConfig(
+                highlight_color=hl_hex,
+                padding_x=12,
+                padding_y=4,
+                radius=10,
+            )
+
+            words_timing = self.extract_words_from_clip(clip, line_timing)
+            if not words_timing:
+                painter.end()
+                return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+            words_text = clip.text.split()
+            line_spacing = fm.lineSpacing()
+            ascent = fm.ascent()
+            descent = fm.descent()
+            line_h_px = ascent + descent
+
+            lines_words = []
+            curr_line = []
+            for word in words_text:
+                candidate = " ".join(curr_line + [word])
+                if curr_line and fm.horizontalAdvance(candidate) > safe_w:
+                    lines_words.append(curr_line)
+                    curr_line = [word]
+                else:
+                    curr_line.append(word)
+            if curr_line:
+                lines_words.append(curr_line)
+
+            total_h = len(lines_words) * line_spacing
+
+            if style.alignment in (2, 3, 1):
+                start_y = base_y - total_h
+            elif style.alignment in (5, 6, 4):
+                start_y = base_y - total_h // 2
+            else:
+                start_y = base_y
+
+            area_x = margin_x
+            qt_layout = []
+            global_idx = 0
+
+            for line_idx, line in enumerate(lines_words):
+                line_text = " ".join(line)
+                line_w = fm.horizontalAdvance(line_text)
+
+                if style.alignment in (1, 4, 7):
+                    line_x = area_x
+                elif style.alignment in (3, 6, 9):
+                    line_x = area_x + safe_w - line_w
+                else:
+                    line_x = area_x + (safe_w - line_w) // 2
+
+                line_y = start_y + line_idx * line_spacing
+
+                for w_idx, word in enumerate(line):
+                    prefix_before = " ".join(line[:w_idx]) + (" " if w_idx > 0 else "")
+                    prefix_after = " ".join(line[:w_idx + 1])
+
+                    start_adv = fm.horizontalAdvance(prefix_before) if prefix_before else 0
+                    end_adv = fm.horizontalAdvance(prefix_after)
+
+                    word_x = line_x + start_adv
+                    word_w = max(1, end_adv - start_adv)
+
+                    qt_layout.append(
+                        WordLayout(
+                            index=global_idx,
+                            text=word,
+                            x=float(word_x),
+                            y=float(line_y),
+                            width=float(word_w),
+                            height=float(line_h_px),
+                            line_index=line_idx,
+                            baseline_y=float(line_y + ascent),
+                        )
+                    )
+                    global_idx += 1
+
+            pill_rect, opacity = self.get_pill_rect(qt_layout, words_timing, time_ms, config, stroke_w)
+
+            # 1. Render Pill Background
+            if pill_rect and opacity > 0.0:
+                rx = int(pill_rect.x)
+                ry = int(pill_rect.y)
+                rw = int(pill_rect.width)
+                rh = int(pill_rect.height)
+                radius = int(pill_rect.height / 2 if config.radius_mode == "pill" else config.radius)
+
+                bg_color = QColor(hl_color)
+                bg_color.setAlpha(int(255 * config.bg_opacity * opacity))
+
+                painter.save()
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(bg_color)
+                painter.drawRoundedRect(QRect(rx, ry, rw, rh), radius, radius)
+                painter.restore()
+
+            active_idx = find_active_word(words_timing, time_ms, config.hold_last_word_during_gap)
+
+            def _draw_text_with_stroke_local(p, x, y, txt, tc, sc, sw, sh):
+                path = QPainterPath()
+                path.addText(x, y, font, txt)
+                if sh > 0:
+                    p.save()
+                    p.translate(sh, sh)
+                    p.fillPath(path, sc)
+                    p.restore()
+                if sw > 0:
+                    pen = QPen(sc, sw * 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+                    p.strokePath(path, pen)
+                p.fillPath(path, tc)
+
+            # 2. Inactive words
+            for wl in qt_layout:
+                if wl.index == active_idx and pill_rect and opacity > 0.0:
+                    continue
+                _draw_text_with_stroke_local(
+                    painter, int(wl.x), int(wl.baseline_y), wl.text,
+                    text_color, stroke_color, stroke_w, shadow_offset,
+                )
+
+            # 3. Active word
+            if active_idx is not None and active_idx < len(qt_layout) and pill_rect and opacity > 0.0:
+                act_hex = get_contrast_color(hl_hex) if config.active_text_color == "auto" else config.active_text_color
+                act_color = QColor(act_hex)
+                act_color.setAlpha(int(255 * opacity))
+
+                wl = qt_layout[active_idx]
+                _draw_text_with_stroke_local(
+                    painter, int(wl.x), int(wl.baseline_y), wl.text,
+                    act_color, stroke_color, 0, 0,
+                )
+
+            painter.end()
+            return Image.frombytes("RGBA", (video_width, video_height), bytes(qimg.constBits()))
+        except Exception:
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
     def render_frame(
         self,
         clip: SubtitleClip,
@@ -607,6 +797,8 @@ class PillSubtitleRenderer:
         """
         if style and style.mode in ("rounded_box", "rounded-box"):
             return self.render_rounded_box_frame(clip, time_ms, style, video_width, video_height)
+        elif style and style.mode == "pill":
+            return self.render_pill_frame_qt(clip, time_ms, style, line_timing, video_width, video_height)
 
         if config is None:
             hl = style.highlight_color
