@@ -66,12 +66,18 @@ class VideoInfo:
         vpath = Path(raw_path) if raw_path else Path("")
         if raw_path and not vpath.is_file():
             base_dir = Path(sys._MEIPASS) if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS") else Path(__file__).parent.parent
-            rel_root = base_dir / raw_path
-            rel_data = base_dir / "data" / Path(raw_path).name
-            if rel_root.is_file():
-                vpath = rel_root
-            elif rel_data.is_file():
-                vpath = rel_data
+            candidates = [
+                base_dir / raw_path,
+                base_dir / "data" / "samples" / Path(raw_path).name,
+                base_dir / "data" / Path(raw_path).name,
+                Path("data/samples") / Path(raw_path).name,
+                Path.cwd() / "data" / "samples" / Path(raw_path).name,
+                Path.cwd() / "data" / Path(raw_path).name,
+            ]
+            for cand in candidates:
+                if cand.is_file():
+                    vpath = cand
+                    break
 
         return cls(
             width=int(data.get("width", 0)),
