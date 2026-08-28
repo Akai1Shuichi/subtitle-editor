@@ -39,8 +39,11 @@ jobs:
           pip install pyinstaller
 
       - name: Run Unit Tests
+        env:
+          PYTHONPATH: .
+          QT_QPA_PLATFORM: offscreen
         run: |
-          pytest
+          python -m pytest
 
       - name: Build App with PyInstaller
         run: |
