@@ -148,7 +148,6 @@ class UpdateCheckerThread(QThread):
                 print(f"[UpdateCheckerThread] HTTP status: {response.status}")
                 if response.status == 200:
                     data = json.loads(response.read().decode("utf-8"))
-                    print("data:" , data)
                     latest_tag = data.get("tag_name", "")
                     release_notes = data.get("body", "Không có nhật ký thay đổi.")
                     html_url = data.get("html_url", f"https://github.com/{self.repo}/releases")
