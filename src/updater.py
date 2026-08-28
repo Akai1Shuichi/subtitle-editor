@@ -30,8 +30,72 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-APP_VERSION = "0.9.0"
-DEFAULT_GITHUB_REPO = "Akai1Shuichi/subtitle-editor"
+def get_config_path() -> Path:
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        ext_cfg = exe_dir / "data" / "config" / "version.json"
+        if ext_cfg.is_file():
+            return ext_cfg
+        
+        mei_dir = Path(getattr(sys, "_MEIPASS", exe_dir))
+        mei_cfg = mei_dir / "data" / "config" / "version.json"
+        if mei_cfg.is_file():
+            return mei_cfg
+            
+        return ext_cfg
+
+    candidates = [
+        Path.cwd() / "data" / "config" / "version.json",
+        Path(__file__).parent.parent / "data" / "config" / "version.json",
+        Path("data/config/version.json"),
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return Path("data/config/version.json")
+
+
+def load_config() -> dict[str, Any]:
+    cfg_path = get_config_path()
+    if cfg_path.is_file():
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    return json.loads(content)
+        except Exception:
+            pass
+    return {"version": "1.0.0", "github_repo": "Akai1Shuichi/subtitle-editor"}
+
+
+def load_app_version() -> str:
+    return str(load_config().get("version", "1.0.0"))
+
+
+def load_github_repo() -> str:
+    return str(load_config().get("github_repo", "Akai1Shuichi/subtitle-editor"))
+
+
+APP_VERSION = load_app_version()
+DEFAULT_GITHUB_REPO = load_github_repo()
+
+
+def save_app_version(version: str) -> None:
+    cfg = load_config()
+    cfg["version"] = version.lstrip("vV").strip()
+    
+    if getattr(sys, "frozen", False):
+        cfg_path = Path(sys.executable).parent / "data" / "config" / "version.json"
+    else:
+        cfg_path = get_config_path()
+        
+    try:
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(cfg_path, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+        print(f"[Updater] Saved new version '{cfg['version']}' to {cfg_path}")
+    except Exception as e:
+        print(f"[Updater] Save version config error: {e}")
 
 
 def parse_version(v_str: str) -> tuple[int, ...]:
@@ -50,8 +114,10 @@ def parse_version(v_str: str) -> tuple[int, ...]:
     return tuple(parts) if parts else (0,)
 
 
-def is_newer_version(latest_tag: str, current_ver: str = APP_VERSION) -> bool:
+def is_newer_version(latest_tag: str, current_ver: str = None) -> bool:
     """Return True if latest_tag is strictly newer than current_ver."""
+    if current_ver is None:
+        current_ver = load_app_version()
     try:
         v_latest = parse_version(latest_tag)
         v_current = parse_version(current_ver)
@@ -70,39 +136,36 @@ def detect_os_asset(assets: list[dict[str, Any]]) -> tuple[Optional[dict[str, An
 
     if sys_name == "windows":
         os_display = "Windows"
-        for ext in [".exe", ".msi"]:
-            for asset in assets:
-                name = asset.get("name", "").lower()
-                if name.endswith(ext):
-                    return asset, os_display
         for asset in assets:
             name = asset.get("name", "").lower()
             if ("win" in name or "windows" in name) and name.endswith(".zip"):
                 return asset, os_display
+        for ext in [".exe", ".msi", ".zip"]:
+            for asset in assets:
+                if asset.get("name", "").lower().endswith(ext):
+                    return asset, os_display
 
     elif sys_name == "darwin":
         os_display = "macOS"
-        for ext in [".dmg", ".pkg"]:
-            for asset in assets:
-                name = asset.get("name", "").lower()
-                if name.endswith(ext):
-                    return asset, os_display
         for asset in assets:
             name = asset.get("name", "").lower()
             if ("mac" in name or "darwin" in name or "osx" in name) and name.endswith(".zip"):
                 return asset, os_display
+        for ext in [".dmg", ".pkg", ".zip"]:
+            for asset in assets:
+                if asset.get("name", "").lower().endswith(ext):
+                    return asset, os_display
 
     elif sys_name == "linux":
         os_display = "Linux"
-        for ext in [".appimage", ".deb", ".tar.gz"]:
-            for asset in assets:
-                name = asset.get("name", "").lower()
-                if name.endswith(ext):
-                    return asset, os_display
         for asset in assets:
             name = asset.get("name", "").lower()
-            if "linux" in name:
+            if ("linux" in name or "ubuntu" in name) and (name.endswith(".zip") or name.endswith(".tar.gz")):
                 return asset, os_display
+        for ext in [".appimage", ".deb", ".tar.gz", ".zip"]:
+            for asset in assets:
+                if asset.get("name", "").lower().endswith(ext):
+                    return asset, os_display
 
     if assets:
         return assets[0], os_display
@@ -119,8 +182,8 @@ class UpdateCheckerThread(QThread):
     def __init__(
         self,
         parent=None,
-        repo: str = DEFAULT_GITHUB_REPO,
-        current_version: str = APP_VERSION,
+        repo: str = None,
+        current_version: str = None,
         force: bool = False,
     ):
         # Cho phép linh hoạt nếu tham số thứ 1 truyền vào là repo dạng chuỗi
@@ -129,8 +192,8 @@ class UpdateCheckerThread(QThread):
             parent = None
 
         super().__init__(parent)
-        self.repo = repo if isinstance(repo, str) else DEFAULT_GITHUB_REPO
-        self.current_version = current_version
+        self.repo = repo if isinstance(repo, str) and repo else load_github_repo()
+        self.current_version = current_version if current_version else load_app_version()
         self.force = force
 
     def run(self):
@@ -412,6 +475,26 @@ class UpdateDialog(QDialog):
         self.progress_bar.setFormat("Tải hoàn tất!")
         self.btn_cancel.setText("Đóng")
 
+        import zipfile
+        run_file_path = file_path
+
+        # Tự động giải nén nếu file tải về là định dạng .zip
+        if file_path.lower().endswith(".zip"):
+            try:
+                extract_dir = Path(file_path).parent / "Extracted_Update"
+                extract_dir.mkdir(parents=True, exist_ok=True)
+                with zipfile.ZipFile(file_path, "r") as zip_ref:
+                    zip_ref.extractall(extract_dir)
+
+                # Tìm file thực thi (.exe trên Windows)
+                exe_files = list(extract_dir.rglob("*.exe")) if sys.platform == "win32" else list(extract_dir.rglob("*"))
+                if exe_files:
+                    run_file_path = str(exe_files[0])
+                else:
+                    run_file_path = str(extract_dir)
+            except Exception as e:
+                print(f"[UpdateDialog] Giải nén file zip thất bại: {e}")
+
         version_str = self.update_info.get("version", "")
         reply = QMessageBox.question(
             self,
@@ -422,12 +505,19 @@ class UpdateDialog(QDialog):
         )
         if reply == QMessageBox.Yes:
             try:
-                # Khởi chạy file thực thi / cài đặt mới
+                # Lưu thông tin phiên bản mới vào file data/config.json
+                if version_str:
+                    save_app_version(version_str)
+
+                # Khởi chạy file thực thi đã giải nén
                 if sys.platform == "win32":
-                    os.startfile(file_path)
+                    if run_file_path.endswith(".exe"):
+                        os.startfile(run_file_path)
+                    else:
+                        os.startfile(os.path.dirname(run_file_path))
                 else:
-                    QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
-                
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(run_file_path))
+
                 self.accept()
                 # Tự động thoát ứng dụng hiện tại ngay lập tức
                 from PySide6.QtWidgets import QApplication

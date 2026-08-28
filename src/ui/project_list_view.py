@@ -486,7 +486,10 @@ class ProjectListView(QWidget):
     def _show_create_project_dialog(self) -> None:
         """Khởi tạo dự án mới trực tiếp không qua dialog."""
         existing_projects = self.pm.list_projects()
-        count = len(existing_projects) + 1
+        existing_names = {p.name for p in existing_projects}
+        count = 1
+        while f"Dự án mới {count}" in existing_names:
+            count += 1
         name = f"Dự án mới {count}"
         try:
             new_project = self.pm.create_project(name=name)

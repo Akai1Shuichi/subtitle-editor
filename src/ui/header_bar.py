@@ -255,11 +255,19 @@ class HeaderBar(QWidget):
 
     def _download_sample(self, filename: str, default_name: str, file_filter: str, import_type: str) -> None:
         """Cho phép người dùng lưu file mẫu về máy và tùy chọn nạp vào ứng dụng ngay."""
-        root_data = Path(__file__).parent.parent.parent / "data" / filename
-        local_data = Path("data") / filename
-        src_path = root_data if root_data.is_file() else local_data
+        candidates = [
+            Path(__file__).parent.parent.parent / "data" / "samples" / filename,
+            Path(__file__).parent.parent.parent / "data" / filename,
+            Path("data/samples") / filename,
+            Path("data") / filename,
+        ]
+        src_path = None
+        for c in candidates:
+            if c.is_file():
+                src_path = c
+                break
 
-        if not src_path.is_file():
+        if not src_path or not src_path.is_file():
             QMessageBox.warning(self, "Lỗi", f"Không tìm thấy file mẫu: {filename}")
             return
 

@@ -323,10 +323,18 @@ class MainWindow(QMainWindow):
         self._selected_clip_id = None
 
         # Synchronize UI with loaded project
+        self._current_time_ms = 0
         if self._project.has_video and self._project.video_info and self._project.video_info.path:
             vpath = str(self._project.video_info.path)
             if Path(vpath).is_file():
+                self._video_duration_ms = int(self._project.video_info.duration * 1000)
                 self._video_panel.load_video(vpath)
+            else:
+                self._video_duration_ms = 0
+                self._video_panel.clear()
+        else:
+            self._video_duration_ms = 0
+            self._video_panel.clear()
 
         self._export_bar.set_output_path(self._get_export_output_filepath())
         self._timeline.set_clips(self._project.clips)

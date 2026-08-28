@@ -13,7 +13,9 @@ from src.capcut_json_parser import (
     CapCutJsonSubtitleError,
 )
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "samples"
+if not DATA_DIR.exists():
+    DATA_DIR = Path(__file__).parent.parent / "data"
 
 
 class TestCapCutParser(unittest.TestCase):

@@ -16,27 +16,6 @@
 - Hiệu ứng tô sáng chữ/từ tự động theo thời gian thực (word-level highlight) như các ứng dụng chỉnh sửa chuyên nghiệp.
 - Xem trước trực quan ngay trên trình phát video.
 
-### 3. 🎨 Chỉnh Sửa Định Dạng & Vị Trí Phụ Đề
-- Đổi màu chữ, màu chữ tô sáng (highlight color), font chữ, kích thước (font size).
-- Tùy chỉnh viền chữ (outline), bóng (shadow), căn lề (left/center/right) và vị trí hiển thị (top/center/bottom).
-- Hỗ trợ lưu và chọn các bộ mẫu style thiết lập sẵn (Preset Selector).
-
-### 4. ⏱️ Timeline Chỉnh Sửa Trực Quan
-- Dải thanh thời gian (Timeline Widget) hiển thị trực tiếp vị trí các clip phụ đề.
-- Kéo thả chỉnh sửa thời gian bắt đầu (start time) và kết thúc (end time) mượt mà.
-- Hỗ trợ Undo / Redo thao tác chỉnh sửa.
-
-### 5. 🚀 Xuất Video MP4 Siêu Tốc
-- Tích hợp trực tiếp engine **FFmpeg** để render phụ đề ASS/SSA vào video gốc với tốc độ cao và chất lượng sắc nét.
-
-### 6. 🔄 Tự Động Cập Nhật Qua GitHub Releases API (Auto-Updater)
-- **Tự động kiểm tra**: Phát hiện ngầm khi có bản phát hành mới trên GitHub.
-- **Nhận diện OS**: Tự động lọc và tải đúng file cài đặt tương ứng với Hệ Điều Hành hiện tại (**Windows**, **macOS**, **Linux**).
-- **Ghi đè an toàn**: Hỗ trợ tự động thoát app sau khi tải xong để tiến hành cài đặt mà không bị lỗi khóa file (file locking).
-- **Chế độ Debug**: Giữ phím `Shift` hoặc `Ctrl` khi click nút **"🔄 Cập nhật"** để test giao diện Cập Nhật.
-
----
-
 ## 🛠️ Yêu Cầu Hệ Thống & Cài Đặt
 
 ### 1. Môi Trường
@@ -83,13 +62,3 @@ python run.py
 pyinstaller --noconfirm subtitle_editor.spec
 ```
 File thực thi sau khi build nằm trong thư mục `dist/`.
-
----
-
-## 🤖 CI/CD Tự Động Phát Hành Qua GitHub Actions
-
-Dự án đã thiết lập quy trình CI/CD tự động trong `.github/workflows/build.yml`:
-- Khi tạo và push tag mới (ví dụ: `git tag v1.0.0 && git push origin v1.0.0`), GitHub Actions sẽ:
-  1. Chạy tự động bộ unit tests (`pytest`).
-  2. Build file thực thi độc lập trên 3 hệ điều hành: **Windows (`.exe` / `.zip`)**, **macOS (`.zip`)**, **Linux (`.zip`)**.
-  3. Tự động khởi tạo Release trên GitHub và đính kèm danh sách file cài đặt.
