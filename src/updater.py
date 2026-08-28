@@ -31,12 +31,23 @@ from PySide6.QtWidgets import (
 )
 
 def get_config_path() -> Path:
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        ext_cfg = exe_dir / "data" / "config" / "version.json"
+        if ext_cfg.is_file():
+            return ext_cfg
+        
+        mei_dir = Path(getattr(sys, "_MEIPASS", exe_dir))
+        mei_cfg = mei_dir / "data" / "config" / "version.json"
+        if mei_cfg.is_file():
+            return mei_cfg
+            
+        return ext_cfg
+
     candidates = [
+        Path.cwd() / "data" / "config" / "version.json",
         Path(__file__).parent.parent / "data" / "config" / "version.json",
         Path("data/config/version.json"),
-        Path.cwd() / "data" / "config" / "version.json",
-        Path(__file__).parent.parent / "data" / "config.json",
-        Path("data/config.json"),
     ]
     for c in candidates:
         if c.is_file():
@@ -72,11 +83,17 @@ DEFAULT_GITHUB_REPO = load_github_repo()
 def save_app_version(version: str) -> None:
     cfg = load_config()
     cfg["version"] = version.lstrip("vV").strip()
-    cfg_path = get_config_path()
+    
+    if getattr(sys, "frozen", False):
+        cfg_path = Path(sys.executable).parent / "data" / "config" / "version.json"
+    else:
+        cfg_path = get_config_path()
+        
     try:
         cfg_path.parent.mkdir(parents=True, exist_ok=True)
         with open(cfg_path, "w", encoding="utf-8") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
+        print(f"[Updater] Saved new version '{cfg['version']}' to {cfg_path}")
     except Exception as e:
         print(f"[Updater] Save version config error: {e}")
 
