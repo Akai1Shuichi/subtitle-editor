@@ -1,4 +1,4 @@
-name: Build & Release App (Windows & macOS)
+name: Build & Release App (Windows, macOS & Linux)
 
 on:
   push:
@@ -25,6 +25,9 @@ jobs:
           - os: macos-latest
             artifact_name: SubtitleVideoEditor-macOS.zip
             asset_name: SubtitleVideoEditor-macOS
+          - os: ubuntu-latest
+            artifact_name: SubtitleVideoEditor-Linux.zip
+            asset_name: SubtitleVideoEditor-Linux
 
     steps:
       - name: Check out repository
@@ -40,6 +43,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libxcb-cursor0 libegl1 libxkbcommon-x11-0 zip
 
       - name: Install FFmpeg (macOS)
         if: runner.os == 'macOS'
@@ -65,6 +74,11 @@ jobs:
 
       - name: Package macOS Artifact
         if: runner.os == 'macOS'
+        run: |
+          cd dist && zip -r ../${{ matrix.artifact_name }} .
+
+      - name: Package Linux Artifact
+        if: runner.os == 'Linux'
         run: |
           cd dist && zip -r ../${{ matrix.artifact_name }} .
 
