@@ -86,7 +86,7 @@ git push origin develop
 ```
 
 ### B. Tạo Release Tự Động Với Tag (Trigger GitHub Release)
-Khi hoàn tất phiên bản và muốn tạo bản Release chính thức trên GitHub (tự động đính kèm các file zip cài đặt):
+Khi hoàn tất phiên bản và muốn tạo bản Release chính thức trên GitHub (tự động đính kèm các file zip/exe cài đặt):
 
 ```bash
 # 1. Tạo Tag mới (ví dụ v1.0.0)
@@ -99,8 +99,22 @@ git push origin v1.0.0
 GitHub Actions sẽ tự động:
 1. Chạy unit tests trên cả 3 hệ điều hành.
 2. Build ứng dụng trên Windows, macOS & Ubuntu Linux.
-3. Đóng gói 3 file artifact zip:
-   - `SubtitleVideoEditor-Windows.zip`
-   - `SubtitleVideoEditor-macOS.zip`
-   - `SubtitleVideoEditor-Linux.zip`
+3. Đóng gói các file artifact (`SubtitleVideoEditor-Windows.exe`, `SubtitleVideoEditor-Windows.zip`,...).
 4. Đăng tải trực tiếp lên mục **Releases** của GitHub repository.
+
+### C. Cập Nhật / Ghi Đè Tag Đã Tồn Tại (Re-tag & Overwrite Release)
+Trong trường hợp bạn vừa chỉnh sửa code và muốn phát hành lại / ghi đè tag cũ (ví dụ `v1.0.0`) để GitHub Actions build lại bản Release mới nhất:
+
+```bash
+# 1. Xóa tag cũ ở máy local
+git tag -d v1.0.0
+
+# 2. Tạo lại tag v1.0.0 trỏ vào commit mới nhất
+git tag v1.0.0
+
+# 3. Xóa tag v1.0.0 cũ trên GitHub remote (nếu còn tồn tại)
+git push origin :refs/tags/v1.0.0
+
+# 4. Push tag v1.0.0 mới lên GitHub để kích hoạt CI/CD Release
+git push origin v1.0.0
+```
