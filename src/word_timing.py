@@ -82,6 +82,56 @@ class LineTiming:
     def duration_ms(self) -> int:
         return max(0, self.end_ms - self.start_ms)
 
+    @classmethod
+    def from_json_words(
+        cls,
+        index: int,
+        start_ms: int,
+        end_ms: int,
+        json_words: list[dict],
+    ) -> "LineTiming":
+        """
+        Factory: tạo LineTiming từ mảng words của subtitle.json.
+
+        Parameters
+        ----------
+        index      : vị trí 0-based của line trong danh sách sort theo thời gian
+        start_ms   : thời điểm bắt đầu line (ms)
+        end_ms     : thời điểm kết thúc line (ms)
+        json_words : list of dicts với keys 'value', 'from', 'to' (giây float)
+
+        Ví dụ json_words:
+            [
+              {"value": "AI",   "from": 0.159, "to": 0.459},
+              {"value": "đang", "from": 0.539, "to": 0.680},
+            ]
+        """
+        def _sec_ms(s: float) -> int:
+            return max(0, round(s * 1000))
+
+        word_timings: list[WordTiming] = []
+        for w in json_words:
+            value = str(w.get("value", "")).strip()
+            if not value:
+                continue
+            w_start = _sec_ms(float(w.get("from", 0.0)))
+            w_end   = _sec_ms(float(w.get("to",   0.0)))
+            # Đảm bảo end > start, clamp trong phạm vi line
+            w_start = max(start_ms, min(w_start, end_ms))
+            w_end   = max(w_start + 1, min(max(w_end, w_start + 1), end_ms))
+            word_timings.append(WordTiming(
+                word=value,
+                start_ms=w_start,
+                end_ms=w_end,
+            ))
+
+        return cls(
+            index=index,
+            start_ms=start_ms,
+            end_ms=end_ms,
+            words=word_timings,
+        )
+
 
 @dataclass
 class TimingFile:

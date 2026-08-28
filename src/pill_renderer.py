@@ -1,0 +1,1162 @@
+"""
+src/pill_renderer.py
+────────────────────
+Refactored Pill Subtitle Animation Renderer matching HTML inline layout behavior.
+
+Features:
+- Pure Pillow RGBA frame generation (no ASS hacks, no temporary PNG files).
+- Layout box alignment (fixed line height based on font metrics ascent+descent).
+- Character span prefix-range text measurement for 100% exact X and width coordinates.
+- Smooth ease_out_cubic 4D lerp for words on the same line with effective transition duration scaling.
+- Gap holding to prevent blinking between word timing intervals.
+- Relative luminance auto-contrast calculation for active word text color.
+- Debug layout box rendering mode (Red = Word, Green = Pill, Blue = Line).
+- FFmpeg stdin rawvideo RGBA pipe for video export.
+"""
+
+from __future__ import annotations
+
+import functools
+import math
+import os
+import re
+import subprocess
+import sys
+import threading
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable, Literal, Optional, Sequence, Tuple
+
+from PIL import Image, ImageDraw, ImageFont
+
+from .models import SubtitleClip, SubtitleStyle
+from .video_info import VideoInfo, get_ffmpeg, FFmpegNotFoundError, VideoReadError
+from .word_timing import LineTiming, TimingFile, WordTiming
+
+
+# ---------------------------------------------------------------------------
+# Data Models
+# ---------------------------------------------------------------------------
+
+@dataclass
+class SubtitleWord:
+    text: str
+    start_ms: int
+    end_ms: int
+
+
+@dataclass
+class WordLayout:
+    index: int
+    text: str
+    x: float
+    y: float
+    width: float
+    height: float
+    line_index: int
+    baseline_y: float | None = None
+    char_start: int = 0
+    char_end: int = 0
+
+
+@dataclass
+class SubtitleLayout:
+    words: list[WordLayout]
+    phrase_x: float
+    phrase_y: float
+    width: float
+    height: float
+
+
+@dataclass
+class Rect:
+    x: float
+    y: float
+    width: float
+    height: float
+
+
+@dataclass
+class PillAnimationConfig:
+    highlight_color: str = "#FFD84D"
+    bg_opacity: float = 0.88  # ~88% opacity for soft semi-transparent background
+    active_text_color: str = "auto"
+    inactive_text_color: str = "#FFFFFF"
+    padding_x: int = 12
+    padding_y: int = 4
+    radius: int = 10
+    radius_mode: str = "rounded"  # "rounded" = rounded rectangle, "pill" = capsule shape
+    transition_ms: int = 260
+    entrance_ms: int = 140
+    line_fade_ms: int = 80
+    easing: str = "ease_out_cubic"
+    hold_last_word_during_gap: bool = True
+    pill_vertical_offset: float = 0.0
+    debug_layout: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Easing & Math Helpers
+# ---------------------------------------------------------------------------
+
+def lerp(a: float, b: float, t: float) -> float:
+    """Linear interpolation between a and b by factor t."""
+    return a + (b - a) * t
+
+
+def ease_out_cubic(t: float) -> float:
+    """Cubic ease-out: 1 - (1 - t)^3."""
+    t = max(0.0, min(1.0, t))
+    return 1.0 - (1.0 - t) ** 3
+
+
+def parse_color_rgba(color: str | tuple[int, int, int] | tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    """Normalize hex or tuple color into RGBA tuple (R, G, B, A)."""
+    if isinstance(color, tuple):
+        if len(color) == 3:
+            return (color[0], color[1], color[2], 255)
+        elif len(color) == 4:
+            return color
+    elif isinstance(color, str):
+        c = color.lstrip("#")
+        if len(c) == 6:
+            r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+            return (r, g, b, 255)
+        elif len(c) == 8:
+            r, g, b, a = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16), int(c[6:8], 16)
+            return (r, g, b, a)
+    return (255, 255, 255, 255)
+
+
+def calculate_relative_luminance(color: str | tuple[int, int, int] | tuple[int, int, int, int]) -> float:
+    """Calculate sRGB relative luminance according to WCAG 2.1 specifications."""
+    r, g, b, _ = parse_color_rgba(color)
+
+    def channel_luminance(c_255: int) -> float:
+        c = c_255 / 255.0
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    r_lum = channel_luminance(r)
+    g_lum = channel_luminance(g)
+    b_lum = channel_luminance(b)
+    return 0.2126 * r_lum + 0.7152 * g_lum + 0.0722 * b_lum
+
+
+def get_contrast_color(bg_color: str | tuple[int, int, int] | tuple[int, int, int, int]) -> str:
+    """Return dark text '#111111' for bright background, else light text '#FFFFFF'."""
+    lum = calculate_relative_luminance(bg_color)
+    return "#111111" if lum > 0.4 else "#FFFFFF"
+
+
+def find_active_word(words: Sequence[SubtitleWord], time_ms: int, hold_during_gap: bool = True) -> int | None:
+    """Find the index of the word active at time_ms."""
+    if not words:
+        return None
+    for i, w in enumerate(words):
+        if w.start_ms <= time_ms < w.end_ms:
+            return i
+    # If within phrase boundaries but between words (in a gap)
+    if words[0].start_ms <= time_ms <= words[-1].end_ms:
+        for i in range(len(words) - 1, -1, -1):
+            if words[i].start_ms <= time_ms:
+                return i if hold_during_gap else None
+    return None
+
+
+def word_to_pill_rect(word: WordLayout, config: PillAnimationConfig, stroke_width: float = 0.0) -> Rect:
+    """Convert a WordLayout box to a Pill background Rect."""
+    visual_pad = max(1.0, stroke_width * 0.35) if stroke_width > 0 else 0.0
+    return Rect(
+        x=word.x - config.padding_x - visual_pad,
+        y=word.y - config.padding_y - visual_pad + config.pill_vertical_offset,
+        width=word.width + config.padding_x * 2 + visual_pad * 2,
+        height=word.height + config.padding_y * 2 + visual_pad * 2,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Font & Layout Management
+# ---------------------------------------------------------------------------
+
+_FONT_CACHE: dict[tuple[str, int], ImageFont.FreeTypeFont | ImageFont.ImageFont] = {}
+
+
+def get_font(font_name: str, font_size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    """Load or retrieve cached font by name and size with cross-platform and Vietnamese Unicode support."""
+    key = (font_name, font_size)
+    if key in _FONT_CACHE:
+        return _FONT_CACHE[key]
+
+    name_clean = font_name.lower().strip()
+    cands = [font_name]
+
+    # "Arial Black" / "ariblk" lacks extended Vietnamese diacritics in Windows Fonts (ariblk.ttf),
+    # so we prefer fonts with full Unicode support (Arial Bold, Segoe UI Bold, Roboto Bold, Tahoma Bold).
+    if "black" in name_clean or "ariblk" in name_clean:
+        cands.extend(["arialbd.ttf", "segoeuib.ttf", "Roboto-Bold.ttf", "tahomabd.ttf", "arial.ttf"])
+    elif "segoe" in name_clean:
+        cands.extend(["segoeuib.ttf", "segoeui.ttf", "arialbd.ttf"])
+    elif "roboto" in name_clean:
+        cands.extend(["Roboto-Bold.ttf", "Roboto-Regular.ttf", "arialbd.ttf"])
+    else:
+        cands.extend([
+            f"{font_name}.ttf",
+            f"{font_name}.otf",
+            "segoeuib.ttf",
+            "arialbd.ttf",
+            "arial.ttf",
+            "Roboto-Bold.ttf",
+            "tahomabd.ttf",
+            "DejaVuSans-Bold.ttf",
+        ])
+
+    search_dirs = [
+        "",
+        "C:/Windows/Fonts",
+        os.path.expandvars("%WINDIR%/Fonts"),
+        "/usr/share/fonts",
+        "/usr/share/fonts/truetype",
+        "/usr/share/fonts/TTF",
+        "/usr/share/fonts/truetype/dejavu",
+        "/usr/share/fonts/truetype/liberation",
+        "/usr/share/fonts/truetype/freefont",
+        "/Library/Fonts",
+        "/System/Library/Fonts",
+    ]
+
+    font = None
+    for cand in cands:
+        if font is not None:
+            break
+        for sdir in search_dirs:
+            p = os.path.join(sdir, cand) if sdir else cand
+            try:
+                font = ImageFont.truetype(p, font_size)
+                break
+            except (OSError, Exception):
+                continue
+
+    if font is None:
+        try:
+            font = ImageFont.load_default()
+        except Exception:
+            font = ImageFont.load_default()
+
+    _FONT_CACHE[key] = font
+    return font
+
+
+@functools.lru_cache(maxsize=128)
+def _cached_layout(
+    text: str,
+    font_name: str,
+    font_size: int,
+    video_width: int,
+    video_height: int,
+    subtitle_width_pct: int,
+    position_y: int,
+    alignment: int,
+) -> SubtitleLayout:
+    """Calculate word bounding boxes and layout using HTML-style line box metrics."""
+    font = get_font(font_name, font_size)
+    dummy_img = Image.new("RGBA", (1, 1))
+    draw = ImageDraw.Draw(dummy_img)
+
+    # Clean text and find character spans for words
+    words_text = text.split()
+    if not words_text:
+        return SubtitleLayout(words=[], phrase_x=0, phrase_y=0, width=0, height=0)
+
+    # Word wrapping based on max_w
+    max_w = max(100, int(video_width * subtitle_width_pct / 100))
+
+    # Calculate line wrapping preserving exact paragraph breaks
+    lines_words: list[list[str]] = []
+    curr_line: list[str] = []
+
+    for word in words_text:
+        candidate = " ".join(curr_line + [word])
+        w_len = draw.textlength(candidate, font=font)
+        if curr_line and w_len > max_w:
+            lines_words.append(curr_line)
+            curr_line = [word]
+        else:
+            curr_line.append(word)
+
+    if curr_line:
+        lines_words.append(curr_line)
+
+    # Calculate font metrics for fixed line height
+    try:
+        if hasattr(font, "getmetrics"):
+            ascent, descent = font.getmetrics()
+        else:
+            ascent, descent = font_size, int(font_size * 0.25)
+    except Exception:
+        ascent, descent = font_size, int(font_size * 0.25)
+
+    line_h = ascent + descent
+    total_h = len(lines_words) * line_h * 1.15
+
+    # Vertical base position
+    if alignment in (1, 2, 3):  # bottom
+        base_y = video_height - ((100 - position_y) * video_height / 100) - total_h
+    elif alignment in (4, 5, 6):  # center
+        base_y = (video_height / 2) - (total_h / 2)
+    else:  # top
+        base_y = position_y * video_height / 100
+
+    words_layout: list[WordLayout] = []
+    global_idx = 0
+    max_line_w = 0.0
+
+    for line_idx, line in enumerate(lines_words):
+        line_text = " ".join(line)
+        line_w = draw.textlength(line_text, font=font)
+        if line_w > max_line_w:
+            max_line_w = line_w
+
+        # Horizontal alignment
+        if alignment in (1, 4, 7):  # left
+            line_x = (video_width - max_w) / 2
+        elif alignment in (3, 6, 9):  # right
+            line_x = ((video_width - max_w) / 2) + max_w - line_w
+        else:  # center
+            line_x = (video_width - line_w) / 2
+
+        line_y = base_y + line_idx * (line_h * 1.15)
+
+        # Character span prefix-range measurement for 100% exact word X and width
+        for w_in_line_idx, word in enumerate(line):
+            # Compute char spans inside line_text
+            prefix_before = " ".join(line[:w_in_line_idx]) + (" " if w_in_line_idx > 0 else "")
+            prefix_after = " ".join(line[: w_in_line_idx + 1])
+
+            start_adv = draw.textlength(prefix_before, font=font) if prefix_before else 0.0
+            end_adv = draw.textlength(prefix_after, font=font)
+
+            word_x = line_x + start_adv
+            word_w = max(1.0, end_adv - start_adv)
+
+            words_layout.append(
+                WordLayout(
+                    index=global_idx,
+                    text=word,
+                    x=word_x,
+                    y=line_y,
+                    width=word_w,
+                    height=line_h,
+                    line_index=line_idx,
+                    baseline_y=line_y + ascent,
+                    char_start=len(prefix_before),
+                    char_end=len(prefix_after),
+                )
+            )
+            global_idx += 1
+
+    phrase_x = (video_width - max_line_w) / 2
+    phrase_y = base_y
+    return SubtitleLayout(
+        words=words_layout,
+        phrase_x=phrase_x,
+        phrase_y=phrase_y,
+        width=max_line_w,
+        height=total_h,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Pill Geometry & Renderer
+# ---------------------------------------------------------------------------
+
+class PillSubtitleRenderer:
+    """Stateless Pill Subtitle Renderer operating by target frame time_ms."""
+
+    def prepare_layout(
+        self,
+        text: str,
+        style: SubtitleStyle,
+        video_width: int = 1920,
+        video_height: int = 1080,
+    ) -> SubtitleLayout:
+        return _cached_layout(
+            text=text,
+            font_name=style.fontname,
+            font_size=style.fontsize,
+            video_width=video_width,
+            video_height=video_height,
+            subtitle_width_pct=style.subtitle_width,
+            position_y=style.position_y,
+            alignment=int(style.alignment),
+        )
+
+    def extract_words_from_clip(
+        self, clip: SubtitleClip, line_timing: Optional[LineTiming] = None
+    ) -> list[SubtitleWord]:
+        words_text = clip.text.split()
+        if not words_text:
+            return []
+
+        if line_timing and len(line_timing.words) == len(words_text) and line_timing.has_word_timing:
+            return [
+                SubtitleWord(text=w_text, start_ms=tw.start_ms, end_ms=tw.end_ms)
+                for w_text, tw in zip(words_text, line_timing.words)
+            ]
+
+        # Uniform distribution if word timing is missing
+        duration = max(1, clip.end_ms - clip.start_ms)
+        n = len(words_text)
+        return [
+            SubtitleWord(
+                text=w,
+                start_ms=clip.start_ms + round(i * duration / n),
+                end_ms=clip.start_ms + round((i + 1) * duration / n),
+            )
+            for i, w in enumerate(words_text)
+        ]
+
+    def get_pill_rect(
+        self,
+        words_layout: list[WordLayout],
+        words_timing: list[SubtitleWord],
+        time_ms: int,
+        config: PillAnimationConfig,
+        stroke_width: float = 0.0,
+    ) -> tuple[Rect | None, float]:
+        """
+        Calculate animated pill Rect and opacity at time_ms.
+        Returns (Rect, opacity: float in 0..1).
+        """
+        active_idx = find_active_word(words_timing, time_ms, config.hold_last_word_during_gap)
+        if active_idx is None or active_idx >= len(words_layout):
+            return None, 0.0
+
+        curr_wl = words_layout[active_idx]
+        curr_word_rect = word_to_pill_rect(curr_wl, config, stroke_width)
+
+        # First word entrance
+        if active_idx == 0:
+            elapsed = time_ms - words_timing[0].start_ms
+            if elapsed < config.entrance_ms and config.entrance_ms > 0:
+                progress = max(0.0, min(1.0, elapsed / config.entrance_ms))
+                opacity = ease_out_cubic(progress)
+            else:
+                opacity = 1.0
+            return curr_word_rect, opacity
+
+        # Previous word logic
+        prev_idx = active_idx - 1
+        prev_wl = words_layout[prev_idx]
+
+        # If on the same line: smooth 4D lerp with effective_transition_ms
+        if curr_wl.line_index == prev_wl.line_index:
+            prev_word_rect = word_to_pill_rect(prev_wl, config, stroke_width)
+
+            word_dur = words_timing[active_idx].end_ms - words_timing[active_idx].start_ms
+            effective_trans = min(config.transition_ms, max(60.0, word_dur * 0.55))
+
+            elapsed = time_ms - words_timing[active_idx].start_ms
+            if elapsed < effective_trans and effective_trans > 0:
+                t = max(0.0, min(1.0, elapsed / effective_trans))
+                eased_t = ease_out_cubic(t)
+                lerped_rect = Rect(
+                    x=lerp(prev_word_rect.x, curr_word_rect.x, eased_t),
+                    y=lerp(prev_word_rect.y, curr_word_rect.y, eased_t),
+                    width=lerp(prev_word_rect.width, curr_word_rect.width, eased_t),
+                    height=lerp(prev_word_rect.height, curr_word_rect.height, eased_t),
+                )
+                return lerped_rect, 1.0
+            else:
+                return curr_word_rect, 1.0
+        else:
+            # Different line: snap position, optional line fade
+            elapsed = time_ms - words_timing[active_idx].start_ms
+            if elapsed < config.line_fade_ms and config.line_fade_ms > 0:
+                progress = max(0.0, min(1.0, elapsed / config.line_fade_ms))
+                opacity = ease_out_cubic(progress)
+            else:
+                opacity = 1.0
+            return curr_word_rect, opacity
+
+    def render_rounded_box_frame(
+        self,
+        clip: SubtitleClip,
+        time_ms: int,
+        style: SubtitleStyle,
+        video_width: int = 1920,
+        video_height: int = 1080,
+    ) -> Image.Image:
+        """Render a rounded box subtitle card matching Qt preview 100% identically."""
+        if not clip or not clip.is_active_at(time_ms):
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+        try:
+            from PySide6.QtCore import QRect, Qt
+            from PySide6.QtGui import QColor, QFont, QFontMetrics, QImage, QPainter
+
+            qimg = QImage(video_width, video_height, QImage.Format_RGBA8888)
+            qimg.fill(Qt.transparent)
+
+            painter = QPainter(qimg)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.TextAntialiasing)
+
+            # Font setup - scale exact same as video_panel preview
+            font_px = max(1, round(style.fontsize * (72 / 96)))
+            font = QFont(style.fontname)
+            font.setPixelSize(font_px)
+            font.setBold(True)
+            painter.setFont(font)
+            fm = QFontMetrics(font)
+
+            # Margins & Position
+            width_pct = getattr(style, "subtitle_width", 80)
+            margin_x = max(4, int((100 - width_pct) / 200 * video_width))
+            safe_w = max(100, video_width - margin_x * 2)
+
+            if style.alignment in (2, 3, 1):   # bottom
+                margin_v = max(0, int((100 - style.position_y) * video_height / 100))
+                base_y = video_height - margin_v
+            elif style.alignment in (5, 6, 4): # center
+                base_y = video_height // 2
+            else:                               # top
+                base_y = int(style.position_y * video_height / 100)
+
+            # Word wrap using QFontMetrics (same as video_panel)
+            wrapped: list[str] = []
+            for paragraph in clip.text.split("\n"):
+                words = paragraph.split()
+                if not words:
+                    wrapped.append("")
+                    continue
+                current = ""
+                for word in words:
+                    candidate = (current + " " + word).strip()
+                    if fm.horizontalAdvance(candidate) <= safe_w:
+                        current = candidate
+                    else:
+                        if current:
+                            wrapped.append(current)
+                        current = word
+                if current:
+                    wrapped.append(current)
+            if not wrapped:
+                wrapped = [""]
+
+            padding_x = int(16)
+            padding_y = int(10)
+            radius = int(16)
+
+            line_h = fm.lineSpacing()
+            total_h = line_h * len(wrapped)
+            max_lw = max(fm.horizontalAdvance(line) for line in wrapped) if wrapped else 0
+
+            card_w = max_lw + padding_x * 2
+            card_h = total_h + padding_y * 2
+
+            if style.alignment in (2, 3, 1):      # bottom
+                card_top = base_y - card_h
+            elif style.alignment in (5, 6, 4):    # center
+                card_top = base_y - card_h // 2
+            else:                                  # top
+                card_top = base_y
+
+            area_x = margin_x
+            if style.alignment in (1, 4, 7):    # left
+                card_x = area_x
+            elif style.alignment in (3, 6, 9):  # right
+                card_x = area_x + safe_w - card_w
+            else:                                # center
+                card_x = area_x + (safe_w - card_w) // 2
+
+            text_color = QColor(*style.text_color)
+            hl_color = QColor(*style.highlight_color)
+
+            bg_color = QColor(hl_color)
+            txt_color_obj = QColor(17, 17, 17) if text_color == QColor(255, 255, 255) else text_color
+
+            # 1. Paint rounded rectangle box
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(bg_color)
+            painter.drawRoundedRect(QRect(card_x, card_top, card_w, card_h), radius, radius)
+
+            # 2. Paint text centered inside box
+            painter.setPen(txt_color_obj)
+            for i, line in enumerate(wrapped):
+                lw = fm.horizontalAdvance(line)
+                lx = card_x + (card_w - lw) // 2
+                ly = card_top + padding_y + i * line_h + fm.ascent()
+                painter.drawText(lx, ly, line)
+
+            painter.end()
+            return Image.frombytes("RGBA", (video_width, video_height), bytes(qimg.constBits()))
+        except Exception:
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+    def render_pill_frame_qt(
+        self,
+        clip: SubtitleClip,
+        time_ms: int,
+        style: SubtitleStyle,
+        line_timing: Optional[LineTiming] = None,
+        video_width: int = 1920,
+        video_height: int = 1080,
+    ) -> Image.Image:
+        """Render a Pill animation frame matching Qt preview 100% identically."""
+        if not clip or not clip.is_active_at(time_ms):
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+        try:
+            from PySide6.QtCore import QRect, Qt
+            from PySide6.QtGui import QColor, QFont, QFontMetrics, QImage, QPainter, QPainterPath, QPen
+
+            qimg = QImage(video_width, video_height, QImage.Format_RGBA8888)
+            qimg.fill(Qt.transparent)
+
+            painter = QPainter(qimg)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.TextAntialiasing)
+
+            font_px = max(1, round(style.fontsize * (72 / 96)))
+            font = QFont(style.fontname)
+            font.setPixelSize(font_px)
+            font.setBold(True)
+            painter.setFont(font)
+            fm = QFontMetrics(font)
+
+            width_pct = getattr(style, "subtitle_width", 80)
+            margin_x = max(4, int((100 - width_pct) / 200 * video_width))
+            safe_w = max(100, video_width - margin_x * 2)
+
+            if style.alignment in (2, 3, 1):   # bottom
+                margin_v = max(0, int((100 - style.position_y) * video_height / 100))
+                base_y = video_height - margin_v
+            elif style.alignment in (5, 6, 4): # center
+                base_y = video_height // 2
+            else:                               # top
+                base_y = int(style.position_y * video_height / 100)
+
+            text_color = QColor(*style.text_color)
+            hl_color = QColor(*style.highlight_color)
+            stroke_color = QColor(*style.stroke_color)
+            stroke_w = float(style.stroke_width)
+            shadow_offset = float(style.shadow)
+
+            hl_hex = f"#{hl_color.red():02x}{hl_color.green():02x}{hl_color.blue():02x}"
+            config = PillAnimationConfig(
+                highlight_color=hl_hex,
+                padding_x=12,
+                padding_y=4,
+                radius=10,
+            )
+
+            words_timing = self.extract_words_from_clip(clip, line_timing)
+            if not words_timing:
+                painter.end()
+                return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+            words_text = clip.text.split()
+            line_spacing = fm.lineSpacing()
+            ascent = fm.ascent()
+            descent = fm.descent()
+            line_h_px = ascent + descent
+
+            lines_words = []
+            curr_line = []
+            for word in words_text:
+                candidate = " ".join(curr_line + [word])
+                if curr_line and fm.horizontalAdvance(candidate) > safe_w:
+                    lines_words.append(curr_line)
+                    curr_line = [word]
+                else:
+                    curr_line.append(word)
+            if curr_line:
+                lines_words.append(curr_line)
+
+            total_h = len(lines_words) * line_spacing
+
+            if style.alignment in (2, 3, 1):
+                start_y = base_y - total_h
+            elif style.alignment in (5, 6, 4):
+                start_y = base_y - total_h // 2
+            else:
+                start_y = base_y
+
+            area_x = margin_x
+            qt_layout = []
+            global_idx = 0
+
+            for line_idx, line in enumerate(lines_words):
+                line_text = " ".join(line)
+                line_w = fm.horizontalAdvance(line_text)
+
+                if style.alignment in (1, 4, 7):
+                    line_x = area_x
+                elif style.alignment in (3, 6, 9):
+                    line_x = area_x + safe_w - line_w
+                else:
+                    line_x = area_x + (safe_w - line_w) // 2
+
+                line_y = start_y + line_idx * line_spacing
+
+                for w_idx, word in enumerate(line):
+                    prefix_before = " ".join(line[:w_idx]) + (" " if w_idx > 0 else "")
+                    prefix_after = " ".join(line[:w_idx + 1])
+
+                    start_adv = fm.horizontalAdvance(prefix_before) if prefix_before else 0
+                    end_adv = fm.horizontalAdvance(prefix_after)
+
+                    word_x = line_x + start_adv
+                    word_w = max(1, end_adv - start_adv)
+
+                    qt_layout.append(
+                        WordLayout(
+                            index=global_idx,
+                            text=word,
+                            x=float(word_x),
+                            y=float(line_y),
+                            width=float(word_w),
+                            height=float(line_h_px),
+                            line_index=line_idx,
+                            baseline_y=float(line_y + ascent),
+                        )
+                    )
+                    global_idx += 1
+
+            pill_rect, opacity = self.get_pill_rect(qt_layout, words_timing, time_ms, config, stroke_w)
+
+            # 1. Render Pill Background
+            if pill_rect and opacity > 0.0:
+                rx = int(pill_rect.x)
+                ry = int(pill_rect.y)
+                rw = int(pill_rect.width)
+                rh = int(pill_rect.height)
+                radius = int(pill_rect.height / 2 if config.radius_mode == "pill" else config.radius)
+
+                bg_color = QColor(hl_color)
+                bg_color.setAlpha(int(255 * config.bg_opacity * opacity))
+
+                painter.save()
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(bg_color)
+                painter.drawRoundedRect(QRect(rx, ry, rw, rh), radius, radius)
+                painter.restore()
+
+            active_idx = find_active_word(words_timing, time_ms, config.hold_last_word_during_gap)
+
+            def _draw_text_with_stroke_local(p, x, y, txt, tc, sc, sw, sh):
+                path = QPainterPath()
+                path.addText(x, y, font, txt)
+                if sh > 0:
+                    p.save()
+                    p.translate(sh, sh)
+                    p.fillPath(path, sc)
+                    p.restore()
+                if sw > 0:
+                    pen = QPen(sc, sw * 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+                    p.strokePath(path, pen)
+                p.fillPath(path, tc)
+
+            # 2. Inactive words
+            for wl in qt_layout:
+                if wl.index == active_idx and pill_rect and opacity > 0.0:
+                    continue
+                _draw_text_with_stroke_local(
+                    painter, int(wl.x), int(wl.baseline_y), wl.text,
+                    text_color, stroke_color, stroke_w, shadow_offset,
+                )
+
+            # 3. Active word
+            if active_idx is not None and active_idx < len(qt_layout) and pill_rect and opacity > 0.0:
+                act_hex = get_contrast_color(hl_hex) if config.active_text_color == "auto" else config.active_text_color
+                act_color = QColor(act_hex)
+                act_color.setAlpha(int(255 * opacity))
+
+                wl = qt_layout[active_idx]
+                _draw_text_with_stroke_local(
+                    painter, int(wl.x), int(wl.baseline_y), wl.text,
+                    act_color, stroke_color, 0, 0,
+                )
+
+            painter.end()
+            return Image.frombytes("RGBA", (video_width, video_height), bytes(qimg.constBits()))
+        except Exception:
+            return Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+
+    def render_frame(
+        self,
+        clip: SubtitleClip,
+        time_ms: int,
+        style: SubtitleStyle,
+        config: Optional[PillAnimationConfig] = None,
+        line_timing: Optional[LineTiming] = None,
+        video_width: int = 1920,
+        video_height: int = 1080,
+    ) -> Image.Image:
+        """
+        Render a transparent RGBA image containing the pill background and subtitle text.
+        """
+        if style and style.mode in ("rounded_box", "rounded-box"):
+            return self.render_rounded_box_frame(clip, time_ms, style, video_width, video_height)
+        elif style and style.mode == "pill":
+            return self.render_pill_frame_qt(clip, time_ms, style, line_timing, video_width, video_height)
+
+        if config is None:
+            hl = style.highlight_color
+            hl_hex = f"#{hl[0]:02x}{hl[1]:02x}{hl[2]:02x}" if isinstance(hl, tuple) else str(hl)
+            scale = max(0.2, style.fontsize / 54.0)
+            config = PillAnimationConfig(
+                highlight_color=hl_hex,
+                padding_x=max(3, int(12 * scale)),
+                padding_y=max(1, int(4 * scale)),
+                radius=max(3, int(10 * scale)),
+            )
+
+        img = Image.new("RGBA", (video_width, video_height), (0, 0, 0, 0))
+        if not clip or not clip.is_active_at(time_ms):
+            return img
+
+        words_timing = self.extract_words_from_clip(clip, line_timing)
+        if not words_timing:
+            return img
+
+        layout = self.prepare_layout(clip.text, style, video_width, video_height)
+        if not layout.words:
+            return img
+
+        stroke_w = float(style.stroke_width)
+        font = get_font(style.fontname, style.fontsize)
+        draw = ImageDraw.Draw(img)
+
+        inactive_rgba = parse_color_rgba(style.text_color)
+        highlight_rgba = parse_color_rgba(style.highlight_color)
+        stroke_rgba = parse_color_rgba(style.stroke_color)
+
+        if style.mode == "punch":
+            active_idx = find_active_word(words_timing, time_ms, config.hold_last_word_during_gap if config else True)
+
+            # 1. Render Inactive Words (all words at fixed layout positions)
+            for wl in layout.words:
+                if wl.index == active_idx:
+                    continue
+                baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+                if style.shadow > 0:
+                    draw.text(
+                        (wl.x + style.shadow, baseline + style.shadow),
+                        wl.text, font=font, anchor="ls", fill=stroke_rgba,
+                    )
+                if stroke_w > 0:
+                    draw.text(
+                        (wl.x, baseline), wl.text, font=font, anchor="ls",
+                        fill=inactive_rgba, stroke_width=int(stroke_w), stroke_fill=stroke_rgba,
+                    )
+                else:
+                    draw.text((wl.x, baseline), wl.text, font=font, anchor="ls", fill=inactive_rgba)
+
+            # 2. Render Active Word with Punch scale animation
+            if active_idx is not None and active_idx < len(layout.words):
+                wl = layout.words[active_idx]
+                w_timing = words_timing[active_idx]
+                word_elapsed = time_ms - w_timing.start_ms
+
+                if 0 <= word_elapsed <= 80:
+                    t = word_elapsed / 80.0
+                    ease_t = 1.0 - (1.0 - t) ** 2
+                    word_scale = 1.00 + (1.12 - 1.00) * ease_t
+                elif 80 < word_elapsed <= 160:
+                    t = (word_elapsed - 80.0) / 80.0
+                    ease_t = t * t
+                    word_scale = 1.12 + (1.00 - 1.12) * ease_t
+                else:
+                    word_scale = 1.00
+
+                baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+
+                if word_scale != 1.00:
+                    try:
+                        ascent, _ = font.getmetrics() if hasattr(font, "getmetrics") else (style.fontsize, int(style.fontsize * 0.25))
+                    except Exception:
+                        ascent = style.fontsize
+
+                    pad = int(stroke_w * 4 + 32)
+                    temp_w = int(wl.width + pad * 2)
+                    temp_h = int(wl.height + pad * 2)
+                    temp_img = Image.new("RGBA", (temp_w, temp_h), (0, 0, 0, 0))
+                    temp_draw = ImageDraw.Draw(temp_img)
+                    text_y_temp = pad + ascent
+
+                    if style.shadow > 0:
+                        temp_draw.text(
+                            (pad + style.shadow, text_y_temp + style.shadow),
+                            wl.text, font=font, anchor="ls", fill=stroke_rgba,
+                        )
+                    if stroke_w > 0:
+                        temp_draw.text(
+                            (pad, text_y_temp), wl.text, font=font, anchor="ls",
+                            fill=highlight_rgba, stroke_width=int(stroke_w), stroke_fill=stroke_rgba,
+                        )
+                    else:
+                        temp_draw.text((pad, text_y_temp), wl.text, font=font, anchor="ls", fill=highlight_rgba)
+
+                    scaled_w = max(1, int(temp_w * word_scale))
+                    scaled_h = max(1, int(temp_h * word_scale))
+                    scaled_img = temp_img.resize((scaled_w, scaled_h), resample=Image.Resampling.BILINEAR)
+
+                    wcx = wl.x + wl.width / 2.0
+                    wcy = baseline - ascent + wl.height / 2.0
+
+                    paste_x = int(wcx - scaled_w / 2.0)
+                    paste_y = int(wcy - scaled_h / 2.0)
+                    img.alpha_composite(scaled_img, (paste_x, paste_y))
+                else:
+                    if style.shadow > 0:
+                        draw.text(
+                            (wl.x + style.shadow, baseline + style.shadow),
+                            wl.text, font=font, anchor="ls", fill=stroke_rgba,
+                        )
+                    if stroke_w > 0:
+                        draw.text(
+                            (wl.x, baseline), wl.text, font=font, anchor="ls",
+                            fill=highlight_rgba, stroke_width=int(stroke_w), stroke_fill=stroke_rgba,
+                        )
+                    else:
+                        draw.text((wl.x, baseline), wl.text, font=font, anchor="ls", fill=highlight_rgba)
+
+            return img
+
+        pill_rect, opacity = self.get_pill_rect(layout.words, words_timing, time_ms, config, stroke_w)
+
+        # 1. Render Pill Background
+        if pill_rect and opacity > 0.0:
+            bg_rgba = parse_color_rgba(config.highlight_color)
+            fill_color = (bg_rgba[0], bg_rgba[1], bg_rgba[2], int(bg_rgba[3] * config.bg_opacity * opacity))
+            radius = pill_rect.height / 2 if config.radius_mode == "pill" else config.radius
+
+            draw.rounded_rectangle(
+                [
+                    pill_rect.x,
+                    pill_rect.y,
+                    pill_rect.x + pill_rect.width,
+                    pill_rect.y + pill_rect.height,
+                ],
+                radius=max(1, int(radius)),
+                fill=fill_color,
+            )
+
+        # Determine active text color
+        if config.active_text_color == "auto":
+            active_text_color = get_contrast_color(config.highlight_color)
+        else:
+            active_text_color = config.active_text_color
+
+        active_idx = find_active_word(words_timing, time_ms, config.hold_last_word_during_gap)
+
+        # 2. Render Inactive Text (skip active word to prevent color bleeding later)
+        # Use anchor="ls" at baseline_y for consistent vertical position across all glyphs
+        inactive_rgba = parse_color_rgba(style.text_color)
+        stroke_rgba = parse_color_rgba(style.stroke_color)
+
+        for wl in layout.words:
+            # Skip active word – drawn cleanly in step 3 to prevent stroke bleed-through
+            if wl.index == active_idx and pill_rect and opacity > 0.0:
+                continue
+
+            baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+
+            if style.shadow > 0:
+                draw.text(
+                    (wl.x + style.shadow, baseline + style.shadow),
+                    wl.text,
+                    font=font,
+                    anchor="ls",
+                    fill=stroke_rgba,
+                )
+
+            if stroke_w > 0:
+                draw.text(
+                    (wl.x, baseline),
+                    wl.text,
+                    font=font,
+                    anchor="ls",
+                    fill=inactive_rgba,
+                    stroke_width=int(stroke_w),
+                    stroke_fill=stroke_rgba,
+                )
+            else:
+                draw.text((wl.x, baseline), wl.text, font=font, anchor="ls", fill=inactive_rgba)
+
+        # 3. Render Active Word cleanly on top of Pill (no prior stroke underneath to bleed through)
+        if active_idx is not None and active_idx < len(layout.words) and pill_rect and opacity > 0.0:
+            wl = layout.words[active_idx]
+            baseline = wl.baseline_y if wl.baseline_y is not None else wl.y
+            act_rgba = parse_color_rgba(active_text_color)
+            fill_act = (act_rgba[0], act_rgba[1], act_rgba[2], int(act_rgba[3] * opacity))
+            # Draw without stroke so active text colour is pure (pill background is the visual boundary)
+            draw.text((wl.x, baseline), wl.text, font=font, anchor="ls", fill=fill_act)
+
+        # 4. Render Debug Layout Boxes if enabled
+        if config.debug_layout:
+            # Draw Line boxes (Blue)
+            lines_map: dict[int, list[WordLayout]] = {}
+            for wl in layout.words:
+                lines_map.setdefault(wl.line_index, []).append(wl)
+            for l_words in lines_map.values():
+                l_x = l_words[0].x
+                l_y = l_words[0].y
+                l_w = (l_words[-1].x + l_words[-1].width) - l_x
+                l_h = l_words[0].height
+                draw.rectangle([l_x, l_y, l_x + l_w, l_y + l_h], outline=(0, 0, 255, 255), width=2)
+
+            # Draw Word layout boxes (Red)
+            for wl in layout.words:
+                draw.rectangle([wl.x, wl.y, wl.x + wl.width, wl.y + wl.height], outline=(255, 0, 0, 255), width=1)
+
+            # Draw Pill rect (Green)
+            if pill_rect:
+                draw.rectangle(
+                    [pill_rect.x, pill_rect.y, pill_rect.x + pill_rect.width, pill_rect.y + pill_rect.height],
+                    outline=(0, 255, 0, 255),
+                    width=2,
+                )
+
+        return img
+
+    def export_video_with_pill(
+        self,
+        video_info: VideoInfo,
+        clips: list[SubtitleClip],
+        style: SubtitleStyle,
+        output_path: str | Path,
+        word_timings: Optional[TimingFile] = None,
+        cancel_event: Optional[threading.Event] = None,
+        on_progress: Optional[Callable[[float], None]] = None,
+        config: Optional[PillAnimationConfig] = None,
+    ) -> Path:
+        """
+        Export video with animated pill subtitles using FFmpeg stdin rawvideo RGBA pipe.
+        """
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.exists():
+            output_path.unlink()
+
+        ffmpeg = get_ffmpeg()
+        vw, vh = video_info.width, video_info.height
+        fps = video_info.fps or 30.0
+        duration = video_info.duration or 1.0
+        total_frames = int(duration * fps)
+
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-i", str(video_info.path),
+            "-f", "rawvideo",
+            "-pix_fmt", "rgba",
+            "-s", f"{vw}x{vh}",
+            "-r", str(fps),
+            "-i", "pipe:0",
+            "-filter_complex", "[0:v][1:v]overlay=0:0[v]",
+            "-map", "[v]",
+            "-map", "0:a?",
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-threads", "0",
+            "-crf", "23",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-movflags", "+faststart",
+            str(output_path),
+        ]
+
+        extra_kwargs = {}
+        if sys.platform == "win32":
+            extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                **extra_kwargs,
+            )
+        except FileNotFoundError as exc:
+            raise FFmpegNotFoundError("ffmpeg binary not found.") from exc
+
+        stderr_chunks: list[str] = []
+        def _drain_stderr() -> None:
+            try:
+                if proc.stderr:
+                    for chunk in iter(lambda: proc.stderr.read(4096), b""):
+                        stderr_chunks.append(chunk.decode("utf-8", errors="replace"))
+            except Exception:
+                pass
+
+        stderr_thread = threading.Thread(target=_drain_stderr, daemon=True)
+        stderr_thread.start()
+
+        sorted_clips = sorted(clips, key=lambda c: c.start_ms)
+        blank_bytes = b"\x00" * (vw * vh * 4)
+
+        try:
+            for frame_idx in range(total_frames):
+                if cancel_event and cancel_event.is_set():
+                    proc.kill()
+                    proc.wait()
+                    stderr_thread.join(timeout=1.0)
+                    if output_path.exists():
+                        output_path.unlink()
+                    raise RuntimeError("Export cancelled by user.")
+
+                time_ms = int(frame_idx / fps * 1000)
+
+                active_clip = None
+                clip_idx = None
+                for idx, c in enumerate(sorted_clips):
+                    if c.is_active_at(time_ms):
+                        active_clip = c
+                        clip_idx = idx
+                        break
+
+                if active_clip is None:
+                    proc.stdin.write(blank_bytes)
+                else:
+                    line_t = word_timings.get_line(clip_idx) if (word_timings and clip_idx is not None) else None
+
+                    frame_img = self.render_frame(
+                        clip=active_clip,
+                        time_ms=time_ms,
+                        style=style,
+                        config=config,
+                        line_timing=line_t,
+                        video_width=vw,
+                        video_height=vh,
+                    )
+
+                    proc.stdin.write(frame_img.tobytes())
+
+                if on_progress and frame_idx % 10 == 0:
+                    pct = min((frame_idx / total_frames) * 100.0, 99.9)
+                    on_progress(pct)
+
+            if proc.stdin:
+                proc.stdin.close()
+            proc.wait()
+            stderr_thread.join(timeout=2.0)
+        except Exception as exc:
+            proc.kill()
+            if output_path.exists():
+                output_path.unlink()
+            err_msg = "".join(stderr_chunks[-5:]).strip() if stderr_chunks else str(exc)
+            raise RuntimeError(f"Pill export failed: {err_msg}") from exc
+
+        if proc.returncode != 0:
+            if output_path.exists():
+                output_path.unlink()
+            err_msg = "".join(stderr_chunks[-5:]).strip() if stderr_chunks else f"exit code {proc.returncode}"
+            raise RuntimeError(f"FFmpeg process returned non-zero exit code {proc.returncode}: {err_msg}")
+
+        if on_progress:
+            on_progress(100.0)
+
+        return output_path.resolve()

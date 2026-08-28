@@ -1,95 +1,43 @@
-# Subtitle Video Editor — TODO MVP
+# Danh Sách Các Bước Triển Khai Chức Năng: Project List (Quản Lý Dự Án)
 
-## Mục tiêu MVP
+## Phase 1: Data Model & Storage Layer (Lớp Dữ Liệu & Lưu Trữ)
+- [x] **Định nghĩa Data Structure cho Project Metadata (`ProjectMetadata`)**:
+  - Các trường: `project_id`, `name`, `created_at`, `updated_at`, `video_path`, `thumbnail_path`, `duration_ms`, `clip_count`.
+- [x] **Xây dựng Project Serialization / Deserialization**:
+  - Hỗ trợ lưu `EditorProject` thành file dự án (định dạng `.subproj` hoặc JSON) chứa clips, style, thông tin video và cấu hình.
+  - Hỗ trợ load file dự án khôi phục lại đầy đủ state cho `EditorProject`.
+- [x] **Tạo Module `ProjectManager` (`src/project_manager.py`)**:
+  - `list_projects()`: Quét và trả về danh sách tất cả các dự án trong thư mục lưu trữ (`data/projects/`).
+  - `create_project(name, video_path, srt_path)`: Khởi tạo dự án mới và lưu trữ ban đầu.
+  - `load_project(project_id)`: Đọc và load dữ liệu dự án.
+  - `save_project(project)`: Lưu state hiện tại của dự án.
+  - `delete_project(project_id)`: Xóa file dự án và cache dữ liệu liên quan.
+  - `duplicate_project(project_id)`: Nhân bản dự án hiện có.
+  - `rename_project(project_id, new_name)`: Đổi tên dự án.
 
-- App Windows chạy hoàn toàn local.
-- Nhập một video và một file phụ đề `.srt`.
-- Chọn 2 kiểu subtitle: **Normal** và **Word Highlight**.
-- Export ra `.mp4` có subtitle đã được render trực tiếp vào video.
+## Phase 2: Project List UI Component (Giao Diện Danh Sách Dự Án)
+- [x] **Thiết kế Component `ProjectCardWidget` (`src/ui/project_card.py`)**:
+  - Hiển thị thumbnail video, tên dự án, thời lượng, số lượng clip, thời gian cập nhật lần cuối.
+  - Các nút thao tác nhanh (Mở, Đổi tên, Nhân bản, Xóa).
+- [x] **Thiết kế Component `ProjectListView` (`src/ui/project_list_view.py`)**:
+  - Chế độ hiển thị dạng Grid (Cards) hoặc List (Bảng).
+  - Thanh tìm kiếm (Search bar) lọc dự án theo tên.
+  - Nút "Tạo Dự Án Mới" (`+ New Project`) kèm dialog chọn Video / Subtitle.
+  - Hiển thị trạng thái trống (Empty state) khi chưa có dự án nào.
+  - Cảnh báo và hỗ trợ liên kết lại (relink) khi file video gốc bị di chuyển/xóa.
 
-> Stack: Python 3.11+, PySide6, FFmpeg, `pysubs2` (đọc/ghi subtitle ASS), PyInstaller.
+## Phase 3: Integration & Navigation (Tích Hợp Luồng Ứng Dụng)
+- [x] **Cập nhật `HeaderBar` & Menu (`src/ui/header_bar.py`)**:
+  - Thêm nút "Projects" / "Danh sách dự án" trên Header Bar.
+  - Thêm danh sách "Recent Projects" (Dự án gần đây) để mở nhanh.
+- [x] **Quản lý chuyển đổi View trong `MainWindow` (`src/ui/main_window.py`)**:
+  - Chuyển đổi linh hoạt giữa giao diện Dashboard Project List và Editor View.
+  - Tự động lưu dự án hiện tại (Auto-save) khi chuyển sang dự án khác hoặc đóng app.
+  - Nạp state dự án mới vào `EditorProject`, đồng bộ làm mới UI trên Video Panel, Timeline Widget, và Inspector.
 
-## 0. Chuẩn bị dự án
-
-- [ ] Tạo virtual environment Python.
-- [ ] Cài dependencies: `PySide6`, `pysubs2`.
-- [ ] Tải FFmpeg Windows và kiểm tra lệnh `ffmpeg -version` chạy được.
-- [ ] Tạo cấu trúc thư mục:
-
-```text
-src/          # mã Python
-assets/       # icon, font mẫu (nếu cần)
-binaries/     # ffmpeg.exe, ffprobe.exe khi đóng gói
-temp/         # file ASS tạm
-output/       # video export mặc định
-tests/        # test parser/generator
-```
-
-- [ ] Viết `README.md`: cách cài, chạy dev, export `.exe`.
-
-## 1. Xử lý subtitle và render (làm trước UI đẹp)
-
-- [ ] Đọc `.srt`, kiểm tra encoding UTF-8 và hiển thị lỗi dễ hiểu nếu file không hợp lệ.
-- [ ] Chuyển các dòng subtitle sang `.ass`.
-- [ ] Tạo style **Normal**: text trắng, viền tối, shadow nhẹ, vị trí bottom.
-- [ ] Tạo lệnh FFmpeg burn file `.ass` vào video và xuất `.mp4`.
-- [ ] Kiểm tra export với video dọc và video ngang.
-- [ ] Lấy duration/resolution video bằng `ffprobe`.
-- [ ] Parse tiến trình FFmpeg để trả về phần trăm export.
-- [ ] Xử lý lỗi: thiếu FFmpeg, video không đọc được, hết dung lượng, người dùng hủy export.
-
-## 2. Word Highlight / Karaoke
-
-- [ ] Quy định format dữ liệu timing cho từng từ.
-- [ ] Làm bản đơn giản từ SRT: cả câu trắng, khi câu active thì đổi màu hoặc fill theo thời lượng câu.
-- [ ] Sinh hiệu ứng bằng ASS karaoke tags (`\\k` / `\\kf`) khi có timing từng từ.
-- [ ] Thêm dữ liệu timing từng từ thủ công trong editor (giai đoạn sau MVP cơ bản).
-
-> Lưu ý: SRT chỉ có thời gian của **cả câu**, không có thời gian từng từ. Vì vậy highlight chạy chính xác theo từng từ cần người dùng chỉnh timing hoặc một bước AI/transcription về sau.
-
-## 3. UI PySide6
-
-- [ ] Tạo cửa sổ chính theo layout trong `ui.md`.
-- [ ] Nút chọn video; hiển thị tên file, resolution và thời lượng.
-- [ ] Nút chọn/import SRT; hiển thị số dòng subtitle.
-- [ ] Radio chọn `Normal` / `Word Highlight`.
-- [ ] Form style: font, cỡ chữ, text color, highlight color, vị trí.
-- [ ] Nút chọn thư mục/tên file output.
-- [ ] Nút Export: disable khi thiếu video hoặc subtitle.
-- [ ] Progress bar, thời gian đã chạy, nút Cancel.
-- [ ] Thông báo Export thành công và nút mở thư mục output.
-
-## 4. Cấu hình project local
-
-- [ ] Lưu cấu hình thành `.json`: paths, style, mode, output path.
-- [ ] Mở lại project và khôi phục form.
-- [ ] Không copy video vào app; chỉ lưu đường dẫn local để tránh project nặng.
-
-## 5. Kiểm thử MVP
-
-- [ ] Test SRT tiếng Việt có dấu, emoji và ký tự đặc biệt.
-- [ ] Test video ngang 16:9, dọc 9:16 và 1:1.
-- [ ] Test video 1–5 phút; kiểm tra progress và file output.
-- [ ] Test font không tồn tại: fallback font rõ ràng.
-- [ ] Test đường dẫn Windows có khoảng trắng và tiếng Việt.
-- [ ] Test hủy export, rồi export lại không bị file tạm lỗi.
-
-## 6. Đóng gói Windows
-
-- [ ] Bundle `ffmpeg.exe` + `ffprobe.exe` vào app.
-- [ ] Đóng gói với PyInstaller thành `.exe` / installer.
-- [ ] Chạy thử trên một máy Windows chưa cài Python/FFmpeg.
-- [ ] Ghi version, icon app và hướng dẫn cài đặt.
-
-## Không làm trong MVP đầu tiên
-
-- [ ] AI tự tạo phụ đề / Whisper.
-- [ ] Timeline video đầy đủ, kéo thả subtitle theo từng frame.
-- [ ] Nhiều track subtitle, template marketplace, cloud sync.
-- [ ] macOS installer và code signing.
-
-## Tiêu chí hoàn thành MVP
-
-- [ ] Người dùng chọn video + SRT, chọn một trong hai style, bấm Export.
-- [ ] App xuất MP4 thành công trên Windows mà không cần cài thêm FFmpeg/Python.
-- [ ] Video output hiển thị đúng tiếng Việt và style đã chọn.
+## Phase 4: Unit Testing & Verification (Kiểm Thử)
+- [x] **Viết Unit Tests (`tests/test_project_manager.py`)**:
+  - Kiểm thử CRUD dự án: tạo mới, lưu, đọc, đổi tên, xóa, nhân bản.
+  - Kiểm thử xử lý lỗi dữ liệu (file hỏng, thiếu asset video).
+- [x] **Kiểm thử thủ công (Manual Verification)**:
+  - Thao tác thực tế luồng tạo dự án mới -> chỉnh sửa -> tự động lưu -> chuyển dự án khác -> nạp lại state chính xác.

@@ -1,0 +1,137 @@
+{
+  "id": "5f60564a-01bf-4280-8924-d96817b8541d",
+  "name": "Ví dụ",
+  "created_at": "2026-08-27T17:28:32.488478",
+  "updated_at": "2026-08-27T17:40:35.050256",
+  "thumbnail_path": "",
+  "video_info": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 28.816009,
+    "fps": 30.0,
+    "path": "data\\example.mp4"
+  },
+  "clips": [
+    {
+      "id": "9890163b-3993-45c6-8a0c-f164dc5d6740",
+      "text": "AI đang thay đổi cách chúng ta làm việc mỗi ngày",
+      "start_ms": 267,
+      "end_ms": 2334
+    },
+    {
+      "id": "4a6a8c85-c976-4910-9892-6b4765694f6c",
+      "text": "nhưng điều đó không có nghĩa là",
+      "start_ms": 2900,
+      "end_ms": 3967
+    },
+    {
+      "id": "deb55aa6-2bd7-45a6-9cd3-f0cd011185c5",
+      "text": "lập trình viên sẽ biến mất",
+      "start_ms": 4067,
+      "end_ms": 5300
+    },
+    {
+      "id": "313093c1-3bb1-498c-b4ca-1ca0fc8f65dc",
+      "text": "thay vì viết từng dòng code",
+      "start_ms": 5700,
+      "end_ms": 7167
+    },
+    {
+      "id": "a071599e-4894-44d0-a477-ad18874d84f6",
+      "text": "chúng ta đang chuyển sang thiết kế",
+      "start_ms": 7367,
+      "end_ms": 8667
+    },
+    {
+      "id": "527669ff-2baf-4bb3-8c95-01a6734de9d9",
+      "text": "và kiểm soát hệ thống",
+      "start_ms": 8767,
+      "end_ms": 9667
+    },
+    {
+      "id": "733033f4-0e49-481d-ad03-c43d4a9d31de",
+      "text": "AI có thể viết code rất nhanh",
+      "start_ms": 10400,
+      "end_ms": 11900
+    },
+    {
+      "id": "f732fc7f-d1e0-43be-a448-c59020320073",
+      "text": "nhưng nó vẫn cần con người đưa Ra quyết định đúng",
+      "start_ms": 12133,
+      "end_ms": 14300
+    },
+    {
+      "id": "2fe33fb2-04ab-4db7-9eab-5d883666a58a",
+      "text": "4 hiểu bài toán",
+      "start_ms": 14867,
+      "end_ms": 15667
+    },
+    {
+      "id": "10fd5e00-0e3a-4d8a-a7fe-6fdb7a2d6848",
+      "text": "kiến trúc",
+      "start_ms": 15800,
+      "end_ms": 16533
+    },
+    {
+      "id": "ecfb7ff4-0474-47e1-997e-6efbd57006db",
+      "text": "và biết cách kiểm tra kết quả vẫn cực kỳ quan trọng",
+      "start_ms": 16533,
+      "end_ms": 18700
+    },
+    {
+      "id": "eb67a848-19f7-47f2-a09e-46adc53b11a5",
+      "text": "có lẽ",
+      "start_ms": 19300,
+      "end_ms": 19700
+    },
+    {
+      "id": "a9fc7a1a-0967-493d-b1ba-e1e8810c45f9",
+      "text": "tương Lai không phải là AI thay thế lập trình viên",
+      "start_ms": 19700,
+      "end_ms": 22067
+    },
+    {
+      "id": "7cbb1744-4428-4d30-a937-e56014d52a11",
+      "text": "mà là lập trình viên biết sử dụng AI",
+      "start_ms": 22600,
+      "end_ms": 24367
+    },
+    {
+      "id": "e4744083-ac21-4293-8c20-ed01b1cd461a",
+      "text": "thay thế những người không biết dùng nó",
+      "start_ms": 24500,
+      "end_ms": 26067
+    },
+    {
+      "id": "88f4f537-2ec5-48bb-ae8a-5688217125b6",
+      "text": "vấn đề là bạn đang ở phía nào",
+      "start_ms": 26600,
+      "end_ms": 28333
+    }
+  ],
+  "style": {
+    "mode": "highlight",
+    "fontname": "Arial",
+    "fontsize": 54,
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "highlight_color": [
+      255,
+      217,
+      0
+    ],
+    "stroke_color": [
+      0,
+      0,
+      0
+    ],
+    "stroke_width": 1.0,
+    "shadow": 2.0,
+    "position_y": 90,
+    "alignment": 2,
+    "subtitle_width": 80
+  }
+}

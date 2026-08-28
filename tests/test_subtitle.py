@@ -126,11 +126,41 @@ class TestBuildAss:
             assert r"\kf" not in e.text
         assert any(r"\1c&H00D9FF&" in e.text for e in ass.events)
 
+    def test_soft_pop_mode_includes_animation_tags(self):
+        ass = build_ass(self.subs, "soft_pop")
+        assert len(ass.events) == len(self.subs.events)
+        for e in ass.events:
+            assert r"\fscx92" in e.text
+            assert r"\fad(180,0)" in e.text
+            assert r"\t(0,100" in e.text
+
+    def test_punch_mode_includes_word_scale_tags(self):
+        ass = build_ass(self.subs, "punch")
+        assert len(ass.events) > len(self.subs.events)
+        assert any(r"\fscx112" in e.text for e in ass.events)
+        assert any(r"\1c&H00D9FF&" in e.text for e in ass.events)
+
+    def test_rise_mode_includes_move_tags(self):
+        ass = build_ass(self.subs, "rise")
+        assert len(ass.events) == len(self.subs.events)
+        for e in ass.events:
+            assert r"\move(" in e.text
+            assert r"\fad(200,0)" in e.text
+
+    def test_rounded_box_mode_includes_borderstyle_and_no_animation_tags(self):
+        ass = build_ass(self.subs, "rounded_box")
+        assert len(ass.events) == len(self.subs.events)
+        assert ass.styles["Default"].borderstyle == 3
+        for e in ass.events:
+            assert r"\fad" not in e.text
+            assert r"\fscx" not in e.text
+            assert r"\t(" not in e.text
+
     def test_default_style_applied(self):
         ass = build_ass(self.subs, "normal")
         assert "Default" in ass.styles
         style = ass.styles["Default"]
-        assert style.fontname == "Montserrat"
+        assert style.fontname == "Arial"
         assert style.fontsize == 54
 
     def test_custom_style_params(self):

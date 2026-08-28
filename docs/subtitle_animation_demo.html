@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subtitle Animation Presets Demo</title>
+  <style>
+    :root {
+      --bg: #090b10;
+      --panel: #11141b;
+      --panel-2: #161a22;
+      --text: #f7f7f5;
+      --muted: #9298a6;
+      --accent: #ffd84d;
+      --accent-2: #8df0ff;
+      --line: rgba(255,255,255,.08);
+      --shadow: 0 20px 50px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(141,240,255,.06), transparent 26rem),
+        radial-gradient(circle at top right, rgba(255,216,77,.06), transparent 24rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 38px 0 70px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      letter-spacing: -.04em;
+      line-height: 1;
+    }
+
+    .subhead {
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .global-btn,
+    .replay {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: white;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font: inherit;
+      transition: .2s ease;
+    }
+
+    .global-btn:hover,
+    .replay:hover {
+      background: rgba(255,255,255,.10);
+      transform: translateY(-1px);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.012));
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+
+    .num {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: #0a0b0d;
+      background: var(--accent);
+      font-weight: 800;
+    }
+
+    .desc {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .stage {
+      position: relative;
+      height: 265px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        linear-gradient(rgba(0,0,0,.28), rgba(0,0,0,.52)),
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,.11), transparent 38%),
+        linear-gradient(135deg, #283342, #111821 45%, #202834);
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 49.8%, rgba(255,255,255,.035) 50%, transparent 50.2%),
+        linear-gradient(transparent 49.8%, rgba(255,255,255,.03) 50%, transparent 50.2%);
+      pointer-events: none;
+    }
+
+    .person {
+      position: absolute;
+      width: 126px;
+      height: 166px;
+      border-radius: 50% 50% 38% 38%;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.025));
+      top: 36px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+
+    .person::after {
+      content: "";
+      position: absolute;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      left: 24px;
+      top: -18px;
+      background: rgba(255,255,255,.10);
+    }
+
+    .caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 28px;
+      text-align: center;
+      font-weight: 900;
+      line-height: 1.14;
+      letter-spacing: -.03em;
+      font-size: clamp(24px, 2.5vw, 34px);
+      text-shadow:
+        0 2px 0 rgba(0,0,0,.95),
+        2px 0 0 rgba(0,0,0,.9),
+        -2px 0 0 rgba(0,0,0,.9),
+        0 -2px 0 rgba(0,0,0,.9),
+        0 7px 18px rgba(0,0,0,.4);
+    }
+
+    .word {
+      display: inline-block;
+      position: relative;
+      white-space: nowrap;
+      margin-right: .15em;
+      transform-origin: center bottom;
+    }
+
+    /* 1. HIGHLIGHT */
+    .highlight .word {
+      transition: color .16s ease, transform .16s ease;
+    }
+
+    .highlight .word.active {
+      color: var(--accent);
+    }
+
+    /* 2. SOFT POP */
+    .soft-pop.animate .caption {
+      animation: softPop 1.8s cubic-bezier(.2,.8,.2,1) infinite;
+    }
+
+    @keyframes softPop {
+      0%, 72%, 100% {
+        opacity: 0;
+        transform: scale(.92);
+      }
+      8% {
+        opacity: 1;
+        transform: scale(1.04);
+      }
+      14%, 62% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      68% {
+        opacity: 0;
+        transform: scale(.985);
+      }
+    }
+
+    /* 3. PUNCH */
+    .punch .word {
+      transition: color .14s ease;
+    }
+
+    .punch .word.active {
+      color: white;
+      animation: punchWord .34s cubic-bezier(.16,.95,.25,1);
+      z-index: 2;
+    }
+
+    @keyframes punchWord {
+      0% { transform: scale(1); }
+      42% { transform: scale(1.14); }
+      70% { transform: scale(.985); }
+      100% { transform: scale(1); }
+    }
+
+    /* 4. RISE */
+    .rise.animate .caption {
+      animation: riseCaption 1.9s ease-in-out infinite;
+    }
+
+    @keyframes riseCaption {
+      0%, 72%, 100% {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(1px);
+      }
+      9% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+      62% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      68% {
+        opacity: 0;
+        transform: translateY(-7px);
+      }
+    }
+
+    /* 5. MARKER */
+    .marker .word {
+      z-index: 1;
+      padding: 0 .07em;
+      color: white;
+    }
+
+    .marker .word::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: -.08em;
+      right: -.08em;
+      bottom: .04em;
+      height: .62em;
+      border-radius: .12em;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform .12s ease;
+      opacity: .95;
+    }
+
+    .marker .word.active {
+      color: #0a0b0d;
+      text-shadow: none;
+    }
+
+    .marker .word.active::before {
+      animation: markerSwipe .42s cubic-bezier(.18,.9,.18,1) forwards;
+    }
+
+    @keyframes markerSwipe {
+      0% { transform: scaleX(0); }
+      100% { transform: scaleX(1); }
+    }
+
+    /* 6. PILL */
+    .pill-caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 28px;
+      text-align: center;
+      font-weight: 900;
+      font-size: clamp(24px, 2.5vw, 34px);
+      line-height: 1.14;
+      letter-spacing: -.03em;
+      text-shadow:
+        0 2px 0 rgba(0,0,0,.95),
+        2px 0 0 rgba(0,0,0,.9),
+        -2px 0 0 rgba(0,0,0,.9),
+        0 -2px 0 rgba(0,0,0,.9);
+    }
+
+    .pill-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .pill-bg {
+      position: absolute;
+      background: var(--accent);
+      border-radius: .36em;
+      z-index: -1;
+      transition:
+        transform .32s cubic-bezier(.22,.8,.2,1),
+        width .32s cubic-bezier(.22,.8,.2,1),
+        height .32s cubic-bezier(.22,.8,.2,1);
+      box-shadow: 0 6px 16px rgba(255,216,77,.18);
+    }
+
+    .pill-caption .word {
+      padding: 0 .04em;
+      transition: color .18s ease, text-shadow .18s ease;
+    }
+
+    .pill-caption .word.active {
+      color: #08090b;
+      text-shadow: none;
+    }
+
+    .notes {
+      padding: 14px 18px 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      margin-right: 6px;
+      margin-top: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #c8ccd4;
+      font-size: 11px;
+    }
+
+    @media (max-width: 820px) {
+      .header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .grid { grid-template-columns: 1fr; }
+
+      .stage { height: 245px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <div class="eyebrow">Subtitle Animation Lab</div>
+        <h1>6 preset subtitle đẹp, gọn và hiện đại</h1>
+        <p class="subhead">
+          Demo standalone cho Highlight, Soft Pop, Punch, Rise, Marker và Pill.
+          Các hiệu ứng word-level giả lập timing lời nói để bạn đánh giá cảm giác animation.
+        </p>
+      </div>
+      <button class="global-btn" id="replayAll">Replay tất cả</button>
+    </header>
+
+    <section class="grid">
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="num">1</span> Highlight</div>
+            <div class="desc">Active word đổi màu, layout hoàn toàn đứng yên.</div>
+          </div>
+          <button class="replay" data-target="highlight">Replay</button>
+        </div>
+        <div class="stage highlight word-demo" id="highlight">
+          <div class="person"></div>
+          <div class="caption">
+            <span class="word">Build</span>
+            <span class="word">something</span>
+            <span class="word">people</span>
+            <span class="word">love</span>
+          </div>
+        </div>
+        <div class="notes">
+          <span class="badge">Word timing</span>
+          <span class="badge">Stable layout</span>
+          <span class="badge">Readable</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="num">2</span> Soft Pop</div>
+            <div class="desc">Cả phrase pop rất nhẹ khi xuất hiện.</div>
+          </div>
+          <button class="replay" data-target="softPop">Replay</button>
+        </div>
+        <div class="stage soft-pop animate" id="softPop">
+          <div class="person"></div>
+          <div class="caption">This changes everything</div>
+        </div>
+        <div class="notes">
+          <span class="badge">0.92 → 1.04 → 1</span>
+          <span class="badge">Soft overshoot</span>
+          <span class="badge">Talking head</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="num">3</span> Punch</div>
+            <div class="desc">Từ đang nói phóng nhẹ rồi trở về vị trí cũ.</div>
+          </div>
+          <button class="replay" data-target="punch">Replay</button>
+        </div>
+        <div class="stage punch word-demo" id="punch">
+          <div class="person"></div>
+          <div class="caption">
+            <span class="word">This</span>
+            <span class="word">is</span>
+            <span class="word">really</span>
+            <span class="word">important</span>
+          </div>
+        </div>
+        <div class="notes">
+          <span class="badge">Word emphasis</span>
+          <span class="badge">Scale ≈ 1.14</span>
+          <span class="badge">No reflow</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="num">4</span> Rise</div>
+            <div class="desc">Phrase trượt nhẹ từ dưới lên, không bounce.</div>
+          </div>
+          <button class="replay" data-target="rise">Replay</button>
+        </div>
+        <div class="stage rise animate" id="rise">
+          <div class="person"></div>
+          <div class="caption">Keep it simple</div>
+        </div>
+        <div class="notes">
+          <span class="badge">TranslateY 18px</span>
+          <span class="badge">Fade in</span>
+          <span class="badge">Clean</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="num">5</span> Marker</div>
+            <div class="desc">Highlight giống nét bút quét phía sau active word.</div>
+          </div>
+          <button class="replay" data-target="marker">Replay</button>
+        </div>
+        <div class="stage marker word-demo" id="marker">
+          <div class="person"></div>
+          <div class="caption">
+            <span class="word">Make</span>
+            <span class="word">every</span>
+            <span class="word">word</span>
+            <span class="word">matter</span>
+          </div>
+        </div>
+        <div class="notes">
+          <span class="badge">Background swipe</span>
+          <span class="badge">High readability</span>
+          <span class="badge">Education</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="num">6</span> Pill</div>
+            <div class="desc">Pill di chuyển mượt giữa các từ thay vì teleport.</div>
+          </div>
+          <button class="replay" data-target="pill">Replay</button>
+        </div>
+        <div class="stage" id="pill">
+          <div class="person"></div>
+          <div class="pill-caption">
+            <span class="pill-wrap">
+              <span class="pill-bg"></span>
+              <span class="word">Design</span>
+              <span class="word">for</span>
+              <span class="word">human</span>
+              <span class="word">attention</span>
+            </span>
+          </div>
+        </div>
+        <div class="notes">
+          <span class="badge">Moving highlight</span>
+          <span class="badge">Tween x + width</span>
+          <span class="badge">Premium feel</span>
+        </div>
+      </article>
+
+    </section>
+  </main>
+
+  <script>
+    const timers = new Map();
+
+    function clearTimer(id) {
+      const timer = timers.get(id);
+      if (timer) clearInterval(timer);
+      timers.delete(id);
+    }
+
+    function startWordDemo(container) {
+      clearTimer(container.id);
+      const words = [...container.querySelectorAll('.word')];
+      if (!words.length) return;
+
+      let index = 0;
+      words.forEach(w => w.classList.remove('active'));
+      words[0].classList.add('active');
+
+      const timer = setInterval(() => {
+        words[index].classList.remove('active');
+        index = (index + 1) % words.length;
+        words[index].classList.add('active');
+      }, 620);
+
+      timers.set(container.id, timer);
+    }
+
+    function restartCssAnimation(container) {
+      container.classList.remove('animate');
+      void container.offsetWidth;
+      container.classList.add('animate');
+    }
+
+    function positionPill(stage, word) {
+      const pill = stage.querySelector('.pill-bg');
+      const wrap = stage.querySelector('.pill-wrap');
+      const wrapRect = wrap.getBoundingClientRect();
+      const rect = word.getBoundingClientRect();
+
+      const padX = 8;
+      const padY = 3;
+
+      pill.style.width = `${rect.width + padX * 2}px`;
+      pill.style.height = `${rect.height + padY * 2}px`;
+      pill.style.transform = `translate(${rect.left - wrapRect.left - padX}px, ${rect.top - wrapRect.top - padY}px)`;
+    }
+
+    function startPill(stage) {
+      clearTimer(stage.id);
+
+      const words = [...stage.querySelectorAll('.word')];
+      let index = 0;
+
+      words.forEach(w => w.classList.remove('active'));
+      words[0].classList.add('active');
+
+      requestAnimationFrame(() => positionPill(stage, words[0]));
+
+      const timer = setInterval(() => {
+        words[index].classList.remove('active');
+        index = (index + 1) % words.length;
+        words[index].classList.add('active');
+        positionPill(stage, words[index]);
+      }, 700);
+
+      timers.set(stage.id, timer);
+    }
+
+    function replay(id) {
+      const target = document.getElementById(id);
+      if (!target) return;
+
+      if (target.classList.contains('word-demo')) {
+        startWordDemo(target);
+        return;
+      }
+
+      if (id === 'pill') {
+        startPill(target);
+        return;
+      }
+
+      restartCssAnimation(target);
+    }
+
+    function replayAll() {
+      document.querySelectorAll('.word-demo').forEach(startWordDemo);
+      document.querySelectorAll('.soft-pop, .rise').forEach(restartCssAnimation);
+      startPill(document.getElementById('pill'));
+    }
+
+    document.querySelectorAll('.replay').forEach(btn => {
+      btn.addEventListener('click', () => replay(btn.dataset.target));
+    });
+
+    document.getElementById('replayAll').addEventListener('click', replayAll);
+
+    window.addEventListener('resize', () => {
+      const pillStage = document.getElementById('pill');
+      const active = pillStage.querySelector('.word.active') || pillStage.querySelector('.word');
+      positionPill(pillStage, active);
+    });
+
+    replayAll();
+  </script>
+</body>
+</html>

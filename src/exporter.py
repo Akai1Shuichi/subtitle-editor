@@ -14,12 +14,17 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
 from typing import Callable
 
 from .video_info import get_ffmpeg, VideoInfo, FFmpegNotFoundError, VideoReadError
+from .pill_renderer import PillSubtitleRenderer
+from .models import SubtitleClip, SubtitleStyle
+from .word_timing import TimingFile
+
 
 
 # ---------------------------------------------------------------------------
@@ -116,6 +121,10 @@ def export_video(
         str(output_path),
     ]
 
+    extra_kwargs = {}
+    if sys.platform == "win32":
+        extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
     try:
         proc = subprocess.Popen(
             cmd,
@@ -123,6 +132,7 @@ def export_video(
             stdout=subprocess.DEVNULL,
             text=True,
             bufsize=1,
+            **extra_kwargs,
         )
     except FileNotFoundError as exc:
         raise FFmpegNotFoundError("ffmpeg không tìm thấy.") from exc
@@ -177,6 +187,32 @@ def export_video(
         on_progress(100.0)
 
     return output_path.resolve()
+
+
+def export_video_pill(
+    video_info: VideoInfo,
+    clips: list[SubtitleClip],
+    style: SubtitleStyle,
+    output_path: str | Path,
+    *,
+    word_timings: TimingFile | None = None,
+    cancel_event: threading.Event | None = None,
+    on_progress: Callable[[float], None] | None = None,
+) -> Path:
+    """
+    Export video với Pill Subtitle Animation thông qua raw RGBA stream đến FFmpeg.
+    """
+    renderer = PillSubtitleRenderer()
+    return renderer.export_video_with_pill(
+        video_info=video_info,
+        clips=clips,
+        style=style,
+        output_path=output_path,
+        word_timings=word_timings,
+        cancel_event=cancel_event,
+        on_progress=on_progress,
+    )
+
 
 
 # ---------------------------------------------------------------------------
@@ -244,9 +280,13 @@ def generate_preview_clip(
         str(preview_path),
     ]
 
+    extra_kwargs = {}
+    if sys.platform == "win32":
+        extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
     try:
         proc = subprocess.Popen(
-            cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, bufsize=1
+            cmd, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, bufsize=1, **extra_kwargs
         )
     except FileNotFoundError as exc:
         raise FFmpegNotFoundError("ffmpeg không tìm thấy.") from exc

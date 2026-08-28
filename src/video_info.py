@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -47,6 +48,39 @@ class VideoInfo:
         m, s = divmod(int(self.duration), 60)
         return f"{m:02d}:{s:02d}"
 
+    def to_dict(self) -> dict:
+        """Chuyển VideoInfo thành dict để serialize JSON."""
+        return {
+            "width": self.width,
+            "height": self.height,
+            "duration": self.duration,
+            "fps": self.fps,
+            "path": str(self.path),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> VideoInfo:
+        """Khôi phục VideoInfo từ dict JSON với tự động tìm file video nếu đường dẫn tương đối."""
+        import sys
+        raw_path = str(data.get("path", ""))
+        vpath = Path(raw_path) if raw_path else Path("")
+        if raw_path and not vpath.is_file():
+            base_dir = Path(sys._MEIPASS) if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS") else Path(__file__).parent.parent
+            rel_root = base_dir / raw_path
+            rel_data = base_dir / "data" / Path(raw_path).name
+            if rel_root.is_file():
+                vpath = rel_root
+            elif rel_data.is_file():
+                vpath = rel_data
+
+        return cls(
+            width=int(data.get("width", 0)),
+            height=int(data.get("height", 0)),
+            duration=float(data.get("duration", 0.0)),
+            fps=float(data.get("fps", 0.0)),
+            path=vpath,
+        )
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -55,22 +89,40 @@ class VideoInfo:
 def _find_binary(name: str) -> str:
     """
     Tìm binary theo thứ tự:
-    1. binaries/<name> (bundled)
-    2. PATH
+    1. binaries/<name> trong _MEIPASS (nếu đóng gói trong EXE)
+    2. binaries/<name> cùng cấp file executable (.exe)
+    3. Cùng thư mục với file executable (.exe)
+    4. binaries/<name> trong thư mục mã nguồn
+    5. PATH hệ thống
     """
-    # Thư mục binaries/ cạnh src/
-    binaries_dir = Path(__file__).parent.parent / "binaries"
-    for ext in ("", ".exe"):
-        candidate = binaries_dir / (name + ext)
-        if candidate.is_file():
-            return str(candidate)
+    import os
+    import sys
+    candidates: list[Path] = []
+
+    if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
+            candidates.append(Path(sys._MEIPASS) / "binaries")
+        exe_dir = Path(sys.executable).parent
+        candidates.append(exe_dir / "binaries")
+        candidates.append(exe_dir)
+    
+    candidates.append(Path(__file__).parent.parent / "binaries")
+
+    exts = (".exe", "") if sys.platform == "win32" else ("",)
+
+    for binaries_dir in candidates:
+        for ext in exts:
+            candidate = binaries_dir / (name + ext)
+            if candidate.is_file():
+                if sys.platform == "win32" or os.access(candidate, os.X_OK):
+                    return str(candidate)
 
     found = shutil.which(name)
     if found:
         return found
 
     raise FFmpegNotFoundError(
-        f"Không tìm thấy '{name}'. Hãy cài FFmpeg hoặc đặt file vào thư mục binaries/."
+        f"Không tìm thấy '{name}'. Hãy cài FFmpeg vào PATH hệ thống hoặc đặt file '{name}' vào thư mục binaries/."
     )
 
 
@@ -110,12 +162,17 @@ def probe_video(path: str | Path) -> VideoInfo:
         str(path),
     ]
 
+    extra_kwargs = {}
+    if sys.platform == "win32":
+        extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=30,
+            **extra_kwargs,
         )
     except FileNotFoundError as exc:
         raise FFmpegNotFoundError("ffprobe không tìm thấy.") from exc

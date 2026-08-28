@@ -18,24 +18,25 @@ from pysubs2 import Alignment
 
 from .word_timing import LineTiming, TimingFile, WordTiming
 
-StyleMode = Literal["normal", "highlight"]
+StyleMode = Literal["normal", "highlight", "soft_pop", "soft-pop", "punch", "rise", "pill", "rounded_box", "rounded-box"]
 
 
 @dataclass(frozen=True)
 class SubtitleSettings:
     """Visual settings in the actual ASS/video pixel coordinate system."""
 
-    fontname: str = "Arial Black"
+    fontname: str = "Arial"
     fontsize: int = 54
     fontweight: int = 900
     text_color: tuple[int, int, int] = (255, 255, 255)
     highlight_color: tuple[int, int, int] = (255, 217, 0)
     stroke_color: tuple[int, int, int] = (0, 0, 0)
-    stroke_width: float = 4.0
+    stroke_width: float = 1.0
     shadow: float = 2.0
-    position_y: int = 82  # top-origin percentage; equivalent to bottom: 18%
+    position_y: int = 90  # top-origin percentage; equivalent to bottom: 10%
     max_words_per_group: int = 5
     alignment: Alignment = Alignment.BOTTOM_CENTER
+    subtitle_width: int = 80  # % chiều rộng video mà subtitle chiếm (30–100)
 
 
 @dataclass(frozen=True)
@@ -54,9 +55,55 @@ class SubtitleSegment:
     words: tuple[SubtitleWord, ...]
 
 
-def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAStyle:
+def _style_for(
+    settings: SubtitleSettings,
+    *,
+    video_height: int,
+    video_width: int = 1920,
+    mode: StyleMode = "normal",
+) -> pysubs2.SSAStyle:
     # ASS uses the video's PlayRes.  Do not downscale a configured 54px font
     # merely because the source is 720×1280: 54px must remain 54px there.
+    alignment = settings.alignment
+    if alignment in (Alignment.BOTTOM_LEFT, Alignment.BOTTOM_CENTER, Alignment.BOTTOM_RIGHT):
+        margin_v = max(0, round((100 - settings.position_y) * video_height / 100))
+    elif alignment in (Alignment.TOP_LEFT, Alignment.TOP_CENTER, Alignment.TOP_RIGHT):
+        margin_v = max(0, round(settings.position_y * video_height / 100))
+    else:
+        # ASS không áp dụng MarginV cho middle alignment; realtime preview
+        # cũng luôn căn chính giữa trong trường hợp này.
+        margin_v = 0
+
+    # Tính margin ngang từ subtitle_width (%)
+    # margin_x = phần thừa mỗi bên = (100 - width_pct) / 2 % của video_width
+    width_pct = max(10, min(100, settings.subtitle_width))
+    margin_x = max(4, round((100 - width_pct) / 200 * video_width))
+
+    if mode in ("rounded_box", "rounded-box"):
+        txt_color = settings.text_color if settings.text_color != (255, 255, 255) else (17, 17, 17)
+        bg_color = settings.highlight_color
+        return pysubs2.SSAStyle(
+            fontname=settings.fontname,
+            fontsize=max(10, settings.fontsize),
+            primarycolor=pysubs2.Color(*txt_color, 0),
+            secondarycolor=pysubs2.Color(*bg_color, 0),
+            outlinecolor=pysubs2.Color(*bg_color, 0),
+            backcolor=pysubs2.Color(*bg_color, 0),
+            bold=True,
+            italic=False,
+            scalex=100,
+            scaley=100,
+            spacing=0,
+            borderstyle=3,
+            outline=max(6, settings.stroke_width * 2.5),
+            shadow=0,
+            alignment=alignment,
+            marginl=margin_x,
+            marginr=margin_x,
+            marginv=margin_v if video_height else 30,
+            encoding=1,
+        )
+
     return pysubs2.SSAStyle(
         fontname=settings.fontname,
         fontsize=max(10, settings.fontsize),
@@ -72,11 +119,10 @@ def _style_for(settings: SubtitleSettings, *, video_height: int) -> pysubs2.SSAS
         borderstyle=1,
         outline=max(1, settings.stroke_width),
         shadow=max(0, settings.shadow),
-        alignment=settings.alignment,
-        marginl=60,
-        marginr=60,
-        marginv=max(0, round((100 - settings.position_y) * video_height / 100))
-        if video_height else 30,
+        alignment=alignment,
+        marginl=margin_x,
+        marginr=margin_x,
+        marginv=margin_v if video_height else 30,
         encoding=1,
     )
 
@@ -101,7 +147,20 @@ class SubtitleRenderer:
             out.info["PlayResX"] = str(video_width)
             out.info["PlayResY"] = str(video_height)
         out.info["ScaledBorderAndShadow"] = "yes"
-        out.styles["Default"] = _style_for(self.settings, video_height=video_height)
+        # Preview canvas wraps words greedily from left to right.  ASS's
+        # default smart wrapping rebalances lines, making Normal mode use
+        # different line breaks from realtime preview.  WrapStyle 1 keeps
+        # the same greedy behaviour; highlight mode already has explicit \N.
+        out.info["WrapStyle"] = "1"
+        out.styles["Default"] = _style_for(
+            self.settings,
+            video_height=video_height,
+            video_width=video_width if video_width else 1920,
+            mode=self.mode,
+        )
+
+        vh = video_height if video_height else 1080
+        vw = video_width if video_width else 1920
 
         for index, event in enumerate(subs.events):
             if not event.text.strip():
@@ -111,6 +170,33 @@ class SubtitleRenderer:
                 clean = copy.deepcopy(event)
                 clean.style = "Default"
                 clean.text = text
+                out.events.append(clean)
+                continue
+            elif self.mode in ("soft_pop", "soft-pop"):
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                # Soft Pop animation: start 0.92 -> overshoot 1.04 (100ms) -> end 1.00 (180ms) + fade in 180ms
+                anim_tag = r"{\fscx92\fscy92\fad(180,0)\t(0,100,\fscx104\fscy104)\t(100,180,\fscx100\fscy100)}"
+                clean.text = anim_tag + text
+                out.events.append(clean)
+                continue
+            elif self.mode in ("rounded_box", "rounded-box"):
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                clean.text = text
+                out.events.append(clean)
+                continue
+            elif self.mode == "rise":
+                clean = copy.deepcopy(event)
+                clean.style = "Default"
+                # Rise animation: move upwards from 16px below over 200ms + fade in 200ms
+                margin_v = max(0, round((100 - self.settings.position_y) * vh / 100))
+                align_val = int(self.settings.alignment)
+                x = round(vw / 2)
+                y_end = round(vh - margin_v) if align_val in (1, 2, 3) else (round(vh / 2) if align_val in (4, 5, 6) else margin_v)
+                y_start = y_end + 16
+                anim_tag = r"{\an%d\move(%d,%d,%d,%d,0,200)\fad(200,0)}" % (align_val, x, y_start, x, y_end)
+                clean.text = anim_tag + text
                 out.events.append(clean)
                 continue
 
@@ -154,43 +240,128 @@ class SubtitleRenderer:
     def _word_events(
         self, segment: SubtitleSegment, active_index: int, start: int, end: int
     ) -> list[pysubs2.SSAEvent]:
-        # ASS applies inline scale to glyph advance width, unlike CSS
-        # transform. That makes neighbouring words shift. Keep the full group
-        # geometrically identical and switch colour only, so highlighting can
-        # never move or shake the caption.
+        if self.mode == "punch":
+            active_dur = end - start
+            peak = min(80, max(1, active_dur // 2))
+            dur_anim = min(160, max(2, active_dur))
+            anim_end = min(end, start + dur_anim)
+
+            events: list[pysubs2.SSAEvent] = []
+
+            if anim_end > start:
+                # 1. Base line during animation (Layer 0): Active word hidden to prevent double-text underneath
+                anim_base_text = self._render_words_punch_base_anim(segment.words, active_index)
+                events.append(pysubs2.SSAEvent(
+                    start=start,
+                    end=anim_end,
+                    style="Default",
+                    text=anim_base_text,
+                    layer=0,
+                ))
+
+                # 2. Scaling overlay during animation (Layer 1): Active word pops in scale
+                overlay_text = self._render_words_punch_overlay(segment.words, active_index, peak, dur_anim)
+                events.append(pysubs2.SSAEvent(
+                    start=start,
+                    end=anim_end,
+                    style="Default",
+                    text=overlay_text,
+                    layer=1,
+                ))
+
+                # 3. Base line after animation finishes until word end (Layer 0): Active word static in highlight color
+                if end > anim_end:
+                    static_base_text = self._render_words_static(segment.words, active_index)
+                    events.append(pysubs2.SSAEvent(
+                        start=anim_end,
+                        end=end,
+                        style="Default",
+                        text=static_base_text,
+                        layer=0,
+                    ))
+            else:
+                static_base_text = self._render_words_static(segment.words, active_index)
+                events.append(pysubs2.SSAEvent(
+                    start=start,
+                    end=end,
+                    style="Default",
+                    text=static_base_text,
+                    layer=0,
+                ))
+
+            return events
+
         return [pysubs2.SSAEvent(
             start=start,
             end=end,
             style="Default",
-            text=self._render_words(segment.words, active_index),
+            text=self._render_words(segment.words, active_index, active_dur=end - start),
         )]
 
-    def _render_words(
+    def _highlight_ass_color(self) -> str:
+        """Convert settings.highlight_color (R, G, B) to ASS inline colour tag format &HBBGGRR&."""
+        r, g, b = self.settings.highlight_color
+        return "&H%02X%02X%02X&" % (b, g, r)
+
+    def _render_words_punch_base_anim(
         self, words: tuple[SubtitleWord, ...], active_index: int
     ) -> str:
         rendered: list[str] = []
-        split_at = max(1, (len(words) + 1) // 2)  # at most two balanced lines
-        # All tokens are present from the beginning of the segment. Never
-        # build up a sentence word-by-word: that causes width changes, reflow,
-        # and a visibly jumping caption.
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(r"{\1a&HFF&\2a&HFF&\3a&HFF&\4a&HFF&}%s{\r}" % word.text)
+            else:
+                rendered.append(word.text)
+        return " ".join(rendered)
+
+    def _render_words_static(
+        self, words: tuple[SubtitleWord, ...], active_index: int
+    ) -> str:
+        rendered: list[str] = []
+        highlight = self._highlight_ass_color()
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(r"{\1c%s}%s{\r}" % (highlight, word.text))
+            else:
+                rendered.append(word.text)
+        return " ".join(rendered)
+
+    def _render_words_punch_overlay(
+        self, words: tuple[SubtitleWord, ...], active_index: int, peak: int, dur_anim: int
+    ) -> str:
+        rendered: list[str] = []
+        highlight = self._highlight_ass_color()
         for index, word in enumerate(words):
             if index == active_index:
                 rendered.append(
-                    r"{\1c&H00D9FF&}%s{\r}" % word.text
+                    r"{\1c%s\t(0,%d,\fscx112\fscy112)\t(%d,%d,\fscx100\fscy100)}%s{\r}"
+                    % (highlight, peak, peak, dur_anim, word.text)
+                )
+            else:
+                rendered.append(r"{\1a&HFF&\2a&HFF&\3a&HFF&\4a&HFF&}%s{\r}" % word.text)
+        return " ".join(rendered)
+
+    def _render_words(
+        self, words: tuple[SubtitleWord, ...], active_index: int, active_dur: int = 200
+    ) -> str:
+        rendered: list[str] = []
+        highlight = self._highlight_ass_color()
+        for index, word in enumerate(words):
+            if index == active_index:
+                rendered.append(
+                    r"{\1c%s}%s{\r}" % (highlight, word.text)
                 )
             else:
                 rendered.append(word.text)
-            if index + 1 == split_at and index + 1 < len(words):
-                rendered.append(r"\N")
-        text = " ".join(rendered).replace(" \\N ", r"\N")
-        return text
+        return " ".join(rendered)
+
 
 
 def build_ass(
     subs: pysubs2.SSAFile,
     mode: StyleMode = "normal",
     *,
-    fontname: str = "Arial Black",
+    fontname: str = "Arial",
     fontsize: int = 54,
     text_color: tuple[int, int, int] = (255, 255, 255),
     highlight_color: tuple[int, int, int] = (255, 217, 0),
@@ -199,9 +370,9 @@ def build_ass(
     word_timings: Optional[TimingFile] = None,
     video_width: int = 0,
     video_height: int = 0,
-    position_y: int = 82,
+    position_y: int = 90,
     stroke_color: tuple[int, int, int] = (0, 0, 0),
-    stroke_width: float = 4.0,
+    stroke_width: float = 1.0,
 ) -> pysubs2.SSAFile:
     """Build a reusable normal or word-pop-highlight ASS subtitle track.
 
