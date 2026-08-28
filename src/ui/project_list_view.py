@@ -502,18 +502,6 @@ class ProjectListView(QWidget):
             if proj.video_info and proj.video_info.path:
                 vpath = Path(proj.video_info.path)
                 if not vpath.is_file():
-                    sample_path = Path("data/samples") / vpath.name
-                    alt_sample = Path(__file__).parent.parent.parent / "data" / "samples" / vpath.name
-                    if sample_path.is_file():
-                        proj.video_info.path = sample_path
-                        self.pm.save_project(proj)
-                        vpath = sample_path
-                    elif alt_sample.is_file():
-                        proj.video_info.path = alt_sample
-                        self.pm.save_project(proj)
-                        vpath = alt_sample
-
-                if not vpath.is_file():
                     reply = QMessageBox.warning(
                         self,
                         "Thiếu File Video Gốc",
