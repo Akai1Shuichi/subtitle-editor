@@ -30,8 +30,53 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-APP_VERSION = "1.0.0"
-DEFAULT_GITHUB_REPO = "Akai1Shuichi/subtitle-editor"
+def get_config_path() -> Path:
+    candidates = [
+        Path(__file__).parent.parent / "data" / "config.json",
+        Path("data") / "config.json",
+        Path.cwd() / "data" / "config.json",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return Path("data") / "config.json"
+
+
+def load_config() -> dict[str, Any]:
+    cfg_path = get_config_path()
+    if cfg_path.is_file():
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    return json.loads(content)
+        except Exception:
+            pass
+    return {"version": "1.0.0", "github_repo": "Akai1Shuichi/subtitle-editor"}
+
+
+def load_app_version() -> str:
+    return str(load_config().get("version", "1.0.0"))
+
+
+def load_github_repo() -> str:
+    return str(load_config().get("github_repo", "Akai1Shuichi/subtitle-editor"))
+
+
+APP_VERSION = load_app_version()
+DEFAULT_GITHUB_REPO = load_github_repo()
+
+
+def save_app_version(version: str) -> None:
+    cfg = load_config()
+    cfg["version"] = version.lstrip("vV").strip()
+    cfg_path = get_config_path()
+    try:
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(cfg_path, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[Updater] Save version config error: {e}")
 
 
 def parse_version(v_str: str) -> tuple[int, ...]:
@@ -50,8 +95,10 @@ def parse_version(v_str: str) -> tuple[int, ...]:
     return tuple(parts) if parts else (0,)
 
 
-def is_newer_version(latest_tag: str, current_ver: str = APP_VERSION) -> bool:
+def is_newer_version(latest_tag: str, current_ver: str = None) -> bool:
     """Return True if latest_tag is strictly newer than current_ver."""
+    if current_ver is None:
+        current_ver = load_app_version()
     try:
         v_latest = parse_version(latest_tag)
         v_current = parse_version(current_ver)
@@ -116,8 +163,8 @@ class UpdateCheckerThread(QThread):
     def __init__(
         self,
         parent=None,
-        repo: str = DEFAULT_GITHUB_REPO,
-        current_version: str = APP_VERSION,
+        repo: str = None,
+        current_version: str = None,
         force: bool = False,
     ):
         # Cho phép linh hoạt nếu tham số thứ 1 truyền vào là repo dạng chuỗi
@@ -126,8 +173,8 @@ class UpdateCheckerThread(QThread):
             parent = None
 
         super().__init__(parent)
-        self.repo = repo if isinstance(repo, str) else DEFAULT_GITHUB_REPO
-        self.current_version = current_version
+        self.repo = repo if isinstance(repo, str) and repo else load_github_repo()
+        self.current_version = current_version if current_version else load_app_version()
         self.force = force
 
     def run(self):
@@ -439,6 +486,10 @@ class UpdateDialog(QDialog):
         )
         if reply == QMessageBox.Yes:
             try:
+                # Lưu thông tin phiên bản mới vào file data/config.json
+                if version_str:
+                    save_app_version(version_str)
+
                 # Khởi chạy file thực thi đã giải nén
                 if sys.platform == "win32":
                     if run_file_path.endswith(".exe"):
