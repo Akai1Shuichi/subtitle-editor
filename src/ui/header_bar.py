@@ -132,7 +132,7 @@ class HeaderBar(QWidget):
         )
         act_capcut_yt = capcut_menu.addAction("📺 Video hướng dẫn lấy file (YouTube)")
         act_capcut_yt.triggered.connect(
-            lambda: self._open_youtube_tutorial("https://youtu.be/28OfwAitbBs")
+            lambda: self._open_youtube_tutorial("https://youtu.be/v1QH6_EKniY")
         )
 
         # Loại 3: VEED JSON
