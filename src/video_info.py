@@ -94,6 +94,7 @@ def _find_binary(name: str) -> str:
     4. binaries/<name> trong thư mục mã nguồn
     5. PATH hệ thống
     """
+    import os
     import sys
     candidates: list[Path] = []
 
@@ -106,18 +107,21 @@ def _find_binary(name: str) -> str:
     
     candidates.append(Path(__file__).parent.parent / "binaries")
 
+    exts = (".exe", "") if sys.platform == "win32" else ("",)
+
     for binaries_dir in candidates:
-        for ext in ("", ".exe"):
+        for ext in exts:
             candidate = binaries_dir / (name + ext)
             if candidate.is_file():
-                return str(candidate)
+                if sys.platform == "win32" or os.access(candidate, os.X_OK):
+                    return str(candidate)
 
     found = shutil.which(name)
     if found:
         return found
 
     raise FFmpegNotFoundError(
-        f"Không tìm thấy '{name}'. Hãy cài FFmpeg vào PATH hệ thống hoặc đặt file '{name}.exe' vào thư mục binaries/ (cùng cấp với file .exe)."
+        f"Không tìm thấy '{name}'. Hãy cài FFmpeg vào PATH hệ thống hoặc đặt file '{name}' vào thư mục binaries/."
     )
 
 

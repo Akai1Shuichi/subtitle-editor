@@ -38,6 +38,11 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Install FFmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          which ffprobe || brew install ffmpeg
+
       - name: Run Unit Tests
         env:
           PYTHONPATH: .
