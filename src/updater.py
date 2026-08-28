@@ -70,39 +70,36 @@ def detect_os_asset(assets: list[dict[str, Any]]) -> tuple[Optional[dict[str, An
 
     if sys_name == "windows":
         os_display = "Windows"
-        for ext in [".exe", ".msi"]:
-            for asset in assets:
-                name = asset.get("name", "").lower()
-                if name.endswith(ext):
-                    return asset, os_display
         for asset in assets:
             name = asset.get("name", "").lower()
             if ("win" in name or "windows" in name) and name.endswith(".zip"):
                 return asset, os_display
+        for ext in [".exe", ".msi", ".zip"]:
+            for asset in assets:
+                if asset.get("name", "").lower().endswith(ext):
+                    return asset, os_display
 
     elif sys_name == "darwin":
         os_display = "macOS"
-        for ext in [".dmg", ".pkg"]:
-            for asset in assets:
-                name = asset.get("name", "").lower()
-                if name.endswith(ext):
-                    return asset, os_display
         for asset in assets:
             name = asset.get("name", "").lower()
             if ("mac" in name or "darwin" in name or "osx" in name) and name.endswith(".zip"):
                 return asset, os_display
+        for ext in [".dmg", ".pkg", ".zip"]:
+            for asset in assets:
+                if asset.get("name", "").lower().endswith(ext):
+                    return asset, os_display
 
     elif sys_name == "linux":
         os_display = "Linux"
-        for ext in [".appimage", ".deb", ".tar.gz"]:
-            for asset in assets:
-                name = asset.get("name", "").lower()
-                if name.endswith(ext):
-                    return asset, os_display
         for asset in assets:
             name = asset.get("name", "").lower()
-            if "linux" in name:
+            if ("linux" in name or "ubuntu" in name) and (name.endswith(".zip") or name.endswith(".tar.gz")):
                 return asset, os_display
+        for ext in [".appimage", ".deb", ".tar.gz", ".zip"]:
+            for asset in assets:
+                if asset.get("name", "").lower().endswith(ext):
+                    return asset, os_display
 
     if assets:
         return assets[0], os_display
@@ -412,6 +409,26 @@ class UpdateDialog(QDialog):
         self.progress_bar.setFormat("Tải hoàn tất!")
         self.btn_cancel.setText("Đóng")
 
+        import zipfile
+        run_file_path = file_path
+
+        # Tự động giải nén nếu file tải về là định dạng .zip
+        if file_path.lower().endswith(".zip"):
+            try:
+                extract_dir = Path(file_path).parent / "Extracted_Update"
+                extract_dir.mkdir(parents=True, exist_ok=True)
+                with zipfile.ZipFile(file_path, "r") as zip_ref:
+                    zip_ref.extractall(extract_dir)
+
+                # Tìm file thực thi (.exe trên Windows)
+                exe_files = list(extract_dir.rglob("*.exe")) if sys.platform == "win32" else list(extract_dir.rglob("*"))
+                if exe_files:
+                    run_file_path = str(exe_files[0])
+                else:
+                    run_file_path = str(extract_dir)
+            except Exception as e:
+                print(f"[UpdateDialog] Giải nén file zip thất bại: {e}")
+
         version_str = self.update_info.get("version", "")
         reply = QMessageBox.question(
             self,
@@ -422,12 +439,15 @@ class UpdateDialog(QDialog):
         )
         if reply == QMessageBox.Yes:
             try:
-                # Khởi chạy file thực thi / cài đặt mới
+                # Khởi chạy file thực thi đã giải nén
                 if sys.platform == "win32":
-                    os.startfile(file_path)
+                    if run_file_path.endswith(".exe"):
+                        os.startfile(run_file_path)
+                    else:
+                        os.startfile(os.path.dirname(run_file_path))
                 else:
-                    QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
-                
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(run_file_path))
+
                 self.accept()
                 # Tự động thoát ứng dụng hiện tại ngay lập tức
                 from PySide6.QtWidgets import QApplication
