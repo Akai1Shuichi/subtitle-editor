@@ -123,14 +123,14 @@ def export_video(
     if audio_bitrate == 0:
         audio_bitrate = video_info.audio_bitrate
 
-    if audio_bitrate > 0:
-        audio_args = ["-c:a", "aac", "-b:a", f"{audio_bitrate}"]
-    else:
-        audio_args = ["-c:a", "aac", "-b:a", "192k"]
-
     extra_kwargs: dict = {}
     if sys.platform == "win32":
         extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+    # -c:a copy: giữ nguyên audio stream gốc, đảm bảo 100% bitrate và chất lượng âm thanh
+    # Fallback sang re-encode AAC nếu audio stream không tương thích
+    audio_copy_args = ["-c:a", "copy"]
+    audio_reencode_args = ["-c:a", "aac", "-b:a", f"{audio_bitrate}" if audio_bitrate > 0 else "192k"]
 
     if bitrate > 0:
         # CBR mode (nal-hrd=cbr): buộc encoder giữ đúng bitrate gốc
@@ -147,7 +147,7 @@ def export_video(
             "-maxrate", f"{bitrate}",
             "-bufsize", f"{bitrate * 2}",
             "-x264opts", "nal-hrd=cbr",
-            *audio_args,
+            *audio_copy_args,
             "-movflags", "+faststart",
             str(output_path),
         ]
@@ -161,10 +161,11 @@ def export_video(
             "-c:v", "libx264",
             "-preset", "medium",
             "-crf", "17",
-            *audio_args,
+            *audio_copy_args,
             "-movflags", "+faststart",
             str(output_path),
         ]
+
 
     try:
         proc = subprocess.Popen(

@@ -1081,10 +1081,8 @@ class PillSubtitleRenderer:
                 "-crf", "17",
             ]
 
-        if audio_bitrate > 0:
-            audio_args = ["-c:a", "aac", "-b:a", f"{audio_bitrate}"]
-        else:
-            audio_args = ["-c:a", "aac", "-b:a", "192k"]
+        # -c:a copy: giữ nguyên audio stream gốc (bitrate và chất lượng 100%)
+        audio_args = ["-c:a", "copy"]
 
         cmd = [
             ffmpeg,
