@@ -30,7 +30,7 @@ from typing import Callable, Literal, Optional, Sequence, Tuple
 from PIL import Image, ImageDraw, ImageFont
 
 from .models import SubtitleClip, SubtitleStyle
-from .video_info import VideoInfo, get_ffmpeg, FFmpegNotFoundError, VideoReadError
+from .video_info import VideoInfo, get_ffmpeg, probe_video, FFmpegNotFoundError, VideoReadError
 from .word_timing import LineTiming, TimingFile, WordTiming
 
 
@@ -1046,6 +1046,46 @@ class PillSubtitleRenderer:
         duration = video_info.duration or 1.0
         total_frames = int(duration * fps)
 
+        # Luôn probe lại video gốc để lấy bitrate chính xác
+        bitrate = 0
+        audio_bitrate = 0
+        if video_info.path.is_file():
+            try:
+                probed = probe_video(video_info.path)
+                bitrate = probed.bitrate
+                audio_bitrate = probed.audio_bitrate
+            except Exception:
+                pass
+        if bitrate == 0:
+            bitrate = video_info.bitrate
+        if audio_bitrate == 0:
+            audio_bitrate = video_info.audio_bitrate
+
+        if bitrate > 0:
+            # CBR mode (nal-hrd=cbr): buộc encoder giữ đúng bitrate gốc
+            video_args = [
+                "-c:v", "libx264",
+                "-preset", "medium",
+                "-threads", "0",
+                "-b:v", f"{bitrate}",
+                "-minrate", f"{bitrate}",
+                "-maxrate", f"{bitrate}",
+                "-bufsize", f"{bitrate * 2}",
+                "-x264opts", "nal-hrd=cbr",
+            ]
+        else:
+            video_args = [
+                "-c:v", "libx264",
+                "-preset", "medium",
+                "-threads", "0",
+                "-crf", "17",
+            ]
+
+        if audio_bitrate > 0:
+            audio_args = ["-c:a", "aac", "-b:a", f"{audio_bitrate}"]
+        else:
+            audio_args = ["-c:a", "aac", "-b:a", "192k"]
+
         cmd = [
             ffmpeg,
             "-y",
@@ -1058,12 +1098,8 @@ class PillSubtitleRenderer:
             "-filter_complex", "[0:v][1:v]overlay=0:0[v]",
             "-map", "[v]",
             "-map", "0:a?",
-            "-c:v", "libx264",
-            "-preset", "veryfast",
-            "-threads", "0",
-            "-crf", "23",
-            "-c:a", "aac",
-            "-b:a", "192k",
+            *video_args,
+            *audio_args,
             "-movflags", "+faststart",
             str(output_path),
         ]
@@ -1071,6 +1107,7 @@ class PillSubtitleRenderer:
         extra_kwargs = {}
         if sys.platform == "win32":
             extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
 
         try:
             proc = subprocess.Popen(

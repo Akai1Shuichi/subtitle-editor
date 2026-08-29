@@ -35,3 +35,13 @@ class TestProbeVideo:
         fake.write_text("this is not a video", encoding="utf-8")
         with pytest.raises(VideoReadError):
             probe_video(fake)
+
+    def test_probe_sample_video_bitrate(self):
+        sample = Path("data/samples/example.mp4")
+        if sample.is_file():
+            info = probe_video(sample)
+            assert info.bitrate > 0
+            assert info.audio_bitrate > 0
+            assert info.width == 1920
+            assert info.height == 1080
+

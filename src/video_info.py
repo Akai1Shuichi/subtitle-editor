@@ -37,6 +37,8 @@ class VideoInfo:
     duration: float      # giây
     fps: float
     path: Path
+    bitrate: int = 0         # video bitrate in bps (e.g. 2422000)
+    audio_bitrate: int = 0   # audio bitrate in bps (e.g. 192000)
 
     @property
     def resolution(self) -> str:
@@ -56,6 +58,8 @@ class VideoInfo:
             "duration": self.duration,
             "fps": self.fps,
             "path": str(self.path),
+            "bitrate": self.bitrate,
+            "audio_bitrate": self.audio_bitrate,
         }
 
     @classmethod
@@ -79,6 +83,8 @@ class VideoInfo:
             duration=float(data.get("duration", 0.0)),
             fps=float(data.get("fps", 0.0)),
             path=vpath,
+            bitrate=int(data.get("bitrate", 0)),
+            audio_bitrate=int(data.get("audio_bitrate", 0)),
         )
 
 
@@ -220,10 +226,50 @@ def probe_video(path: str | Path) -> VideoInfo:
     except ValueError:
         duration = 0.0
 
+    # Bitrate & Audio Bitrate
+    audio_stream = next(
+        (s for s in data.get("streams", []) if s.get("codec_type") == "audio"),
+        None,
+    )
+
+    audio_bitrate = 0
+    if audio_stream and audio_stream.get("bit_rate"):
+        try:
+            audio_bitrate = int(audio_stream["bit_rate"])
+        except ValueError:
+            pass
+
+    fmt_bitrate_raw = data.get("format", {}).get("bit_rate")
+    total_bitrate = 0
+    if fmt_bitrate_raw:
+        try:
+            total_bitrate = int(fmt_bitrate_raw)
+        except ValueError:
+            pass
+
+    if total_bitrate == 0 and duration > 0:
+        try:
+            total_bitrate = int(path.stat().st_size * 8 / duration)
+        except OSError:
+            total_bitrate = 0
+
+    video_bitrate = 0
+    if video_stream.get("bit_rate"):
+        try:
+            video_bitrate = int(video_stream["bit_rate"])
+        except ValueError:
+            pass
+
+    if video_bitrate == 0 and total_bitrate > 0:
+        eff_audio_br = audio_bitrate if audio_bitrate > 0 else 192000
+        video_bitrate = max(0, total_bitrate - eff_audio_br)
+
     return VideoInfo(
         width=width,
         height=height,
         duration=duration,
         fps=fps,
         path=path.resolve(),
+        bitrate=video_bitrate,
+        audio_bitrate=audio_bitrate,
     )

@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import Callable
 
-from .video_info import get_ffmpeg, VideoInfo, FFmpegNotFoundError, VideoReadError
+from .video_info import get_ffmpeg, probe_video, VideoInfo, FFmpegNotFoundError, VideoReadError
 from .pill_renderer import PillSubtitleRenderer
 from .models import SubtitleClip, SubtitleStyle
 from .word_timing import TimingFile
@@ -107,23 +107,64 @@ def export_video(
     # Escape đường dẫn cho filter subtitle (Windows: backslash → /)
     ass_escaped = str(ass_path).replace("\\", "/").replace(":", "\\:")
 
-    cmd = [
-        ffmpeg,
-        "-y",                                       # ghi đè không hỏi
-        "-i", str(video_info.path),
-        "-vf", f"ass='{ass_escaped}'",
-        "-c:v", "libx264",
-        "-preset", "fast",
-        "-crf", "23",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        "-movflags", "+faststart",
-        str(output_path),
-    ]
+    # Luôn probe lại video gốc để lấy bitrate chính xác (không phụ thuộc vào dữ liệu lưu trong project)
+    bitrate = 0
+    audio_bitrate = 0
+    if video_info.path.is_file():
+        try:
+            probed = probe_video(video_info.path)
+            bitrate = probed.bitrate
+            audio_bitrate = probed.audio_bitrate
+        except Exception:
+            pass
+    # Fallback: dùng giá trị đã lưu trong project nếu probe thất bại
+    if bitrate == 0:
+        bitrate = video_info.bitrate
+    if audio_bitrate == 0:
+        audio_bitrate = video_info.audio_bitrate
 
-    extra_kwargs = {}
+    if audio_bitrate > 0:
+        audio_args = ["-c:a", "aac", "-b:a", f"{audio_bitrate}"]
+    else:
+        audio_args = ["-c:a", "aac", "-b:a", "192k"]
+
+    extra_kwargs: dict = {}
     if sys.platform == "win32":
         extra_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+    if bitrate > 0:
+        # CBR mode (nal-hrd=cbr): buộc encoder giữ đúng bitrate gốc
+        # minrate = maxrate = bitrate → constant bitrate
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-i", str(video_info.path),
+            "-vf", f"ass='{ass_escaped}'",
+            "-c:v", "libx264",
+            "-preset", "medium",
+            "-b:v", f"{bitrate}",
+            "-minrate", f"{bitrate}",
+            "-maxrate", f"{bitrate}",
+            "-bufsize", f"{bitrate * 2}",
+            "-x264opts", "nal-hrd=cbr",
+            *audio_args,
+            "-movflags", "+faststart",
+            str(output_path),
+        ]
+    else:
+        # Không có bitrate → dùng CRF visually-lossless
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-i", str(video_info.path),
+            "-vf", f"ass='{ass_escaped}'",
+            "-c:v", "libx264",
+            "-preset", "medium",
+            "-crf", "17",
+            *audio_args,
+            "-movflags", "+faststart",
+            str(output_path),
+        ]
 
     try:
         proc = subprocess.Popen(
